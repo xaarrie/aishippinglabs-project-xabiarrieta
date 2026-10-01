@@ -191,6 +191,6 @@ Final correction verification:
 - `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 8 tests, 0 failures.
 - `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build`: startup probe reached `http://localhost:5000`; the host remained available while initialization reported the expected unavailable PostgreSQL connection diagnostic because no connection variable was supplied; probe was stopped after 10 seconds. No live migration execution is claimed.
 - `git diff --check main...HEAD`: passed with no output before commit.
-- `git status --short`: pending only the final correction files before commit; final status is recorded after the commits below.
+- `git status --short`: passed with no output after the final correction commits.
 
 Final correction commit: `8a42376 fix(timeline): complete recovery and administrator access`.
