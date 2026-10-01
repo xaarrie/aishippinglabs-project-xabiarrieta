@@ -1,0 +1,16 @@
+[project]
+name = "ai-buildcamp-project"
+version = "0.1.0"
+description = "My AI Engineering Buildcamp project"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "minsearch>=0.2.0",
+    "openai>=3.16.2",
+    "python-dotenv>=1.2.3",
+]
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+]
