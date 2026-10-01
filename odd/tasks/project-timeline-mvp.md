@@ -73,6 +73,7 @@ Observed evidence:
 - `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed, 2 tests, 0 failures.
 - `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build`: startup established on `http://localhost:5000`; PostgreSQL initialization reported `The ConnectionString property has not been initialized` because no local connection environment variable was supplied to this process, while the host remained available.
 - The initial Debug `--no-build` invocation failed because its executable did not exist; a Debug build was run and the required startup command then succeeded.
-- Final `git status --short` and `git log --oneline --max-count=10` are recorded in the handoff and must be rerun after the final work-unit commit.
+- Final `git status --short`: clean (no output).
+- Final `git log --oneline --max-count=10`: `4477a8a chore(timeline): ignore generated dotnet output`; `36b4953 feat(timeline): add project timeline MVP`; `f59f054 feat(rag): add timeline inconsistency prototype`; `5ed6ce7 gitignore`; `6f7a00b docs: describe project memory timeline`; `eae34b5 first commit`.
 
 Known implementation limitation: the repository includes a migration/deployment marker and uses `MigrateAsync` plus `EnsureCreatedAsync` for a fresh development database because the EF CLI was not installed locally; provider-specific migration generation remains a deployment follow-up.
