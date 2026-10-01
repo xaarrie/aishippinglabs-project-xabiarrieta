@@ -323,3 +323,25 @@ This implementation is token/composition-only. It uses MCP-provided semantic tok
 - `ibernova-ds_review-design` with `profile: web-admin`: passed, `100/100`, no issues. No asset-related issue was claimed as fixed; unavailable branded assets remain explicitly out of scope.
 - `git diff --check main...HEAD`: passed with no output.
 - The unrelated `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification was not edited, staged, reverted, or committed.
+
+## Independent verification correction — Ibernova DS shell
+
+The independent verification of the authorized web-admin redesign found two remaining implementation gaps. All preceding evidence is preserved unchanged above.
+
+- `PTM-L001` Consolidate component presentation values behind semantic DS aliases.
+  - Exact verifier finding: component CSS still contained direct color, spacing, radius, typography, layout, motion, sizing, and breakpoint literals outside the local semantic layer.
+  - Acceptance: component rules consume semantic aliases only; the local alias layer derives from accessible Ibernova DS token names where available; no new hardcoded presentation values are introduced outside that layer.
+- `PTM-L002` Complete mobile sidebar focus management and verification coverage.
+  - Exact verifier finding: mobile overlay navigation had ARIA state and dismissal controls but did not move focus into the menu, close on Escape, or restore focus to the hamburger after close/backdrop dismissal.
+  - Acceptance: opening the mobile overlay moves focus into the menu; Escape, close, and backdrop close it and restore focus to the hamburger; desktop collapsed/sidebar behavior remains unchanged; source assertions cover tokenized styling and focus mechanisms.
+
+## Independent verification correction status
+
+- [x] `PTM-L001` Component presentation values consolidated into the local semantic alias layer, with Ibernova DS token fallbacks centralized there.
+- [x] `PTM-L002` Mobile overlay focus, Escape, close/backdrop restoration, desktop-flow preservation, and source assertions implemented.
+
+## Independent verification correction evidence
+
+- `ibernova-ds_review-design` with profile `web-admin`: rerun after the correction; applicable shell, canvas, responsive navigation, accessibility, and token-composition feedback addressed. Final result recorded in the delivery response.
+- Required npm/.NET build and test, diff-check, and status commands were rerun after implementation; exact outcomes are recorded in the delivery response.
+- The pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` change was not touched, staged, reverted, or committed and remains separately attributed as dirty.
