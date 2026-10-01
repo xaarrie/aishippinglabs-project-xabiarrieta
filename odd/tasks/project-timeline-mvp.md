@@ -223,7 +223,7 @@ evidence above is preserved unchanged.
 - `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed, 8 tests, 0 failures; hosted UI assertions verify React imports, `createRoot`, workflow source, and the generated module entrypoint.
 - `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build --configuration Release`: host remained running and listened on `http://localhost:5000`; initialization reported the expected unavailable PostgreSQL connection because no connection variable was supplied, and the probe was stopped after 8 seconds. No live PostgreSQL or browser testing is claimed.
 - `git diff --check main...HEAD`: passed with no output.
-- `git status --short`: recorded before commit; final status is recorded below.
+- `git status --short`: clean after the final commits (no output).
 
 ## Final bounded correction commits and limits
 
