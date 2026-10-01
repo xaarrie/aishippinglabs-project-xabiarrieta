@@ -12,7 +12,15 @@ public sealed class HostedUiTests
         var html = File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "wwwroot", "index.html"));
         Assert.Contains("from \"react\"", source);
         Assert.Contains("createRoot", File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src", "main.jsx")));
-        Assert.Contains("Request password recovery", source);
+        var login = source[source.IndexOf("function Login", StringComparison.Ordinal)..source.IndexOf("function RecoveryRequest", StringComparison.Ordinal)];
+        Assert.Contains("/recovery-request", login);
+        Assert.DoesNotContain("Request password recovery", login);
+        Assert.DoesNotContain("Reset password", login);
+        Assert.Contains("function RecoveryRequest", source);
+        Assert.Contains("function ResetPassword", source);
+        Assert.Contains("/api/auth/recovery", source);
+        Assert.Contains("/api/auth/recovery/reset", source);
+        Assert.Contains("/reset-password", source);
         Assert.Contains("Save profile", source);
         Assert.Contains("/api/admin/users", source);
         Assert.Contains("/api/entries/${entry.id}/artifacts", source);

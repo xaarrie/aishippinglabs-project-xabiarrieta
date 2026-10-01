@@ -8,11 +8,21 @@ function ErrorMessage({ error }) { return error ? <p className="error" role="ale
 
 function Login({ onLogin }) {
   const [error, setError] = useState("");
-  const recoveryToken = new URLSearchParams(location.search).get("recoveryToken") || "";
   const submit = async values => { try { const result = await api("/api/auth/login", { method: "POST", body: JSON.stringify(values) }); setToken(result.token); onLogin(result.user); } catch (e) { setError(e.message); } };
-  const recover = async values => { try { await api("/api/auth/recovery", { method: "POST", body: JSON.stringify(values) }); setError("Recovery instructions were delivered through the configured local recovery channel."); } catch (e) { setError(e.message); } };
-  const reset = async values => { try { await api("/api/auth/recovery/reset", { method: "POST", body: JSON.stringify(values) }); history.replaceState({}, "", location.pathname); setError("Password reset completed. Sign in with the new password."); } catch (e) { setError(e.message); } };
-  return <main className="auth"><section className="card"><h1>Project Timeline</h1><h2>Sign in</h2><Form onSubmit={submit}><Field name="email" label="Email" type="email" /><Field name="password" label="Password" type="password" /><button>Sign in</button></Form><h2>Request password recovery</h2><Form onSubmit={recover}><Field name="email" label="Email" type="email" /><button>Request recovery</button></Form><h2>Reset password</h2><Form onSubmit={reset}><Field name="token" label="Recovery token" value={recoveryToken} /><Field name="newPassword" label="New password (12+ characters)" type="password" /><button>Reset password</button></Form><ErrorMessage error={error} /></section></main>;
+  return <main className="auth"><section className="card"><h1>Project Timeline</h1><h2>Sign in</h2><Form onSubmit={submit}><Field name="email" label="Email" type="email" /><Field name="password" label="Password" type="password" /><button>Sign in</button></Form><a href="/recovery-request">Forgot your password?</a><ErrorMessage error={error} /></section></main>;
+}
+
+function RecoveryRequest() {
+  const [message, setMessage] = useState(""); const [error, setError] = useState("");
+  const submit = async values => { try { await api("/api/auth/recovery", { method: "POST", body: JSON.stringify(values) }); setMessage("If the account exists, recovery instructions were delivered through the configured local recovery channel."); setError(""); } catch (e) { setError(e.message); setMessage(""); } };
+  return <main className="auth"><section className="card"><h1>Request password recovery</h1><p>Enter your account email to request recovery instructions.</p><Form onSubmit={submit}><Field name="email" label="Email" type="email" /><button>Request recovery</button></Form><p className="success" role="status">{message}</p><ErrorMessage error={error} /><a href="/">Back to sign in</a></section></main>;
+}
+
+function ResetPassword() {
+  const [message, setMessage] = useState(""); const [error, setError] = useState("");
+  const token = new URLSearchParams(location.search).get("token") || new URLSearchParams(location.search).get("recoveryToken") || "";
+  const submit = async values => { try { await api("/api/auth/recovery/reset", { method: "POST", body: JSON.stringify(values) }); history.replaceState({}, "", "/"); setMessage("Password reset completed. Sign in with the new password."); setError(""); } catch (e) { setError(e.message); setMessage(""); } };
+  return <main className="auth"><section className="card"><h1>Reset password</h1><Form onSubmit={submit}><Field name="token" label="Recovery token" value={token} /><Field name="newPassword" label="New password (12+ characters)" type="password" /><button>Reset password</button></Form><p className="success" role="status">{message}</p><ErrorMessage error={error} /><a href="/">Back to sign in</a></section></main>;
 }
 
 function Profile({ user, onSaved }) {
@@ -52,4 +62,4 @@ function Workspace({ user, onSignOut }) {
   return <><header><strong>Project Timeline</strong><span>{user.email}</span><button onClick={() => { clearToken(); onSignOut(); }}>Sign out</button></header><main><Profile user={user} onSaved={() => location.reload()} />{user.roles.includes("Administrator") && <AdminUsers />}<section className="card"><h2>Projects</h2><Form onSubmit={create}><Field name="code" label="Project code" /><Field name="name" label="Project name" /><label>Description<textarea name="description" /></label><button>Create project</button></Form><ul>{projects.map(project => <li key={project.id}><button onClick={() => setSelected(project)}>{project.code}: {project.name}</button></li>)}</ul><ErrorMessage error={error} /></section>{selected && <Project project={selected} />}</main></>;
 }
 
-export default function App() { const [user, setUser] = useState(null); useEffect(() => { if (localStorage.getItem("projectTimelineToken")) api("/api/me").then(setUser).catch(clearToken); }, []); return user ? <Workspace user={user} onSignOut={() => setUser(null)} /> : <Login onLogin={setUser} />; }
+export default function App() { const [user, setUser] = useState(null); const path = location.pathname.replace(/\/$/, "") || "/"; useEffect(() => { if (localStorage.getItem("projectTimelineToken")) api("/api/me").then(setUser).catch(clearToken); }, []); if (path === "/recovery-request") return <RecoveryRequest />; if (path === "/reset-password") return <ResetPassword />; return user ? <Workspace user={user} onSignOut={() => setUser(null)} /> : <Login onLogin={setUser} />; }

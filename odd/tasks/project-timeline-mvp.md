@@ -232,3 +232,22 @@ evidence above is preserved unchanged.
 - `f48d53b feat(timeline): add provider-neutral review contracts`
 - `778f623 fix(timeline): authenticate artifact downloads`
 - Limits: no live PostgreSQL migration, authenticated browser session, or provider-backed AI/RAG execution was performed. The RAG routes intentionally expose contract shape and authorization only; they do not claim provider behavior.
+
+## Authorized UI behavior correction
+
+The existing feature tracker is reopened for one focused UI behavior correction. All prior evidence above is preserved unchanged.
+
+- `PTM-I001` Separate password recovery request and reset screens from login.
+  - Acceptance: login renders only login fields/actions plus a link to the recovery-request screen; recovery request is directly accessible, accepts an email, and calls the existing API; reset password is directly accessible, accepts a recovery token from the URL/query string and a new password, and calls the existing reset API; both screens link back appropriately to login, survive direct browser refresh, retain secure API behavior, and focused tests/build assertions cover the three routes and absence of recovery forms on login.
+
+## Authorized UI behavior correction status
+
+- [x] `PTM-I001` Separate login, recovery-request, and reset-password routes/screens with focused coverage. Implemented as dependency-free React path routing with hosted fallback, query-token support, and source assertions.
+
+## Authorized UI behavior correction verification
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed; Vite 7.1.7 transformed 30 modules and emitted the production bundle.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 8 tests, 0 failures.
+- `git diff --check main...HEAD`: passed with no output.
+- `git status --short`: source and generated bundle changes are present; the pre-existing `ProjectTimeline.UI.WebApi.csproj` modification is preserved and intentionally not part of this work unit.
