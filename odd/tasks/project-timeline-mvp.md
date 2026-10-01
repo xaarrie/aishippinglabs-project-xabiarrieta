@@ -251,3 +251,24 @@ The existing feature tracker is reopened for one focused UI behavior correction.
 - `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 8 tests, 0 failures.
 - `git diff --check main...HEAD`: passed with no output.
 - `git status --short`: source and generated bundle changes are present; the pre-existing `ProjectTimeline.UI.WebApi.csproj` modification is preserved and intentionally not part of this work unit.
+
+## Authorized responsive application-navigation correction
+
+The authorized requirement is reopened as a focused navigation-shell work unit. All prior evidence above is preserved unchanged. The delegated route is the existing dependency-free React application under `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`; the write rationale is to keep routing, authentication state, API calls, responsive layout, and accessibility behavior in one maintainable client boundary while preserving the existing ASP.NET Core SPA fallback and local assets. No WebApi project-file or unrelated dirty file changes are authorized.
+
+- `PTM-J001` Add the authenticated responsive application shell and dedicated client routes.
+  - Acceptance: after authentication, a left navigation toolbar exposes accessible Projects and Profile entries and exposes Users only to administrators; a hamburger button toggles the sidebar on desktop and mobile with responsive content layout and accessible expanded/hidden state; Projects, Profile, and Users are dedicated client routes/pages; existing detail, participant, timeline, entry, artifact, authentication, recovery-request, and reset-password routes remain usable through direct-refresh SPA fallback.
+- `PTM-J002` Add focused navigation route, authorization-visibility, and sidebar accessibility coverage.
+  - Acceptance: focused tests or static assertions cover the dedicated routes, toolbar entries, administrator-only Users visibility, hamburger semantics, and sidebar accessibility state without changing the existing WebApi fallback contract.
+
+## Authorized responsive application-navigation status
+
+- [x] `PTM-J001` Authenticated responsive shell and dedicated Projects/Profile/Users routes. Implemented in the existing React client with hosted SPA fallback preserved; nested project paths continue to resolve to the project detail page.
+- [x] `PTM-J002` Focused route, toolbar, administrator visibility, and sidebar accessibility coverage. Static hosted UI assertions cover routes, role-gated Users navigation, hamburger state, and responsive CSS.
+
+## Authorized responsive application-navigation verification
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed; Vite 7.1.7 transformed 30 modules and emitted the committed hosted bundle.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 8 tests, 0 failures.
+- Verification limitation: the first parallel build/test probe raced the generated Vite asset and reported a stale asset path; the required commands were rerun sequentially and passed. No source or project-file workaround was made.

@@ -26,6 +26,17 @@ public sealed class HostedUiTests
         Assert.Contains("/api/entries/${entry.id}/artifacts", source);
         Assert.Contains("/api/projects/${project.id}/participants", source);
         Assert.Contains("Artifact upload", source);
+        Assert.Contains("function Shell", source);
+        Assert.Contains("href=\"/projects\"", source);
+        Assert.Contains("href=\"/profile\"", source);
+        Assert.Contains("href=\"/users\"", source);
+        Assert.Contains("user.roles.includes(\"Administrator\")", source);
+        Assert.Contains("aria-controls=\"app-navigation\"", source);
+        Assert.Contains("aria-expanded={sidebarOpen}", source);
+        Assert.Contains("aria-hidden={!sidebarOpen}", source);
+        Assert.Contains("@media (max-width: 700px)", File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src", "styles.css")));
+        Assert.Contains("path === \"/profile\"", source);
+        Assert.Contains("path === \"/users\"", source);
         Assert.DoesNotContain("app.js", html);
         Assert.Contains("type=\"module\"", html);
         Assert.Contains("assets/", html);
