@@ -28,7 +28,9 @@ CREATE TABLE "TimelineEntries" ("Id" uuid NOT NULL PRIMARY KEY, "TimelineId" uui
 CREATE UNIQUE INDEX "IX_TimelineEntries_TimelineId_EntryNumber" ON "TimelineEntries" ("TimelineId", "EntryNumber");
 CREATE TABLE "TimelineArtifacts" ("Id" uuid NOT NULL PRIMARY KEY, "EntryId" uuid NOT NULL REFERENCES "TimelineEntries"("Id") ON DELETE CASCADE, "FileName" varchar(255) NOT NULL, "RelativePath" varchar(1024) NOT NULL, "ContentType" text NOT NULL, "Length" bigint NOT NULL, "CreatedAtUtc" timestamp with time zone NOT NULL, "UpdatedAtUtc" timestamp with time zone NOT NULL);
 CREATE TABLE "MergeRequests" ("Id" uuid NOT NULL PRIMARY KEY, "TimelineId" uuid NOT NULL REFERENCES "Timelines"("Id") ON DELETE CASCADE, "AuthorId" uuid NOT NULL REFERENCES "Users"("Id") ON DELETE RESTRICT, "Summary" varchar(4000) NOT NULL, "Status" varchar(30) NOT NULL, "CreatedAtUtc" timestamp with time zone NOT NULL, "UpdatedAtUtc" timestamp with time zone NOT NULL);
+CREATE TABLE "PasswordRecoveryStates" ("Id" uuid NOT NULL PRIMARY KEY, "UserId" uuid NOT NULL REFERENCES "Users"("Id") ON DELETE CASCADE, "TokenHash" varchar(128) NOT NULL, "ExpiresAtUtc" timestamp with time zone NOT NULL, "IsUsed" boolean NOT NULL, "CreatedAtUtc" timestamp with time zone NOT NULL, "UpdatedAtUtc" timestamp with time zone NOT NULL);
+CREATE UNIQUE INDEX "IX_PasswordRecoveryStates_TokenHash" ON "PasswordRecoveryStates" ("TokenHash");
 """);
     }
-    protected override void Down(MigrationBuilder migrationBuilder) => migrationBuilder.Sql("DROP TABLE IF EXISTS \"MergeRequests\", \"TimelineArtifacts\", \"TimelineEntries\", \"Timelines\", \"ProjectRoles\", \"ProjectParticipants\", \"Projects\", \"UserRoles\", \"Users\";");
+    protected override void Down(MigrationBuilder migrationBuilder) => migrationBuilder.Sql("DROP TABLE IF EXISTS \"PasswordRecoveryStates\", \"MergeRequests\", \"TimelineArtifacts\", \"TimelineEntries\", \"Timelines\", \"ProjectRoles\", \"ProjectParticipants\", \"Projects\", \"UserRoles\", \"Users\";");
 }

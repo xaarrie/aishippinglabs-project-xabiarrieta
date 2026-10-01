@@ -2,6 +2,7 @@ namespace ProjectTimeline.BusinessLogic;
 
 public sealed record LoginRequest(string Email, string Password);
 public sealed record RecoveryRequest(string Email);
+public sealed record RecoveryResetRequest(string Token, string NewPassword);
 public sealed record CreateUserRequest(string Email, string DisplayName, string Password, bool IsActive = true, string[]? Roles = null);
 public sealed record UpdateUserRequest(string DisplayName, string? Password, bool IsActive, string[]? Roles = null);
 public sealed record CreateProjectRequest(string Code, string Name, string? Description);

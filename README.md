@@ -12,7 +12,13 @@ The Web API hosts the dependency-free React UI and the layered .NET 10 applicati
 
 ## API and authorization
 
-JWTs contain role claims. `/api/admin/*` requires the `Administrator` policy. Project, timeline, entry, and artifact endpoints check owner or participant access; project writes require owner, Creator, or Contributor behavior. Password hashes are never returned by DTOs. Artifact paths are normalized and confined below the configured base path.
+JWTs contain role claims. `/api/admin/*` requires the `Administrator` policy. Project, timeline, entry, and artifact endpoints check owner or participant access; project writes require owner, Creator, or Contributor behavior. Password hashes are never returned by DTOs. Artifact paths are normalized and confined below the configured base path. Administrators are authorized by the same centralized project predicates for every descendant resource, including projects they do not own or participate in.
+
+## Password recovery
+
+`POST /api/auth/recovery` always returns a generic acknowledgement. For an active account it creates a one-time token that expires after `Recovery:LifetimeMinutes` (30 by default), stores only its SHA-256 representation, and sends a recovery link to the configurable local outbox. `POST /api/auth/recovery/reset` accepts the token and a new password; successful reset invalidates the token and stores a PBKDF2 password hash. Tokens, passwords, and hashes are never returned or logged.
+
+Set `Recovery__BaseUrl` and `Recovery__OutboxPath` for local development. The default provider writes JSON messages to `recovery-outbox` beside the application. Inspect that directory during development to copy the link into the hosted UI's **Reset password** form; do not commit outbox files or paste their secret values into logs, source, or documentation. The UI supports both request and reset journeys.
 
 ## OData
 
