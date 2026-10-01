@@ -1,0 +1,90 @@
+[
+  {
+    "id": "rec-001",
+    "title": "Project kickoff meeting",
+    "content": "The team agreed to build a project memory timeline that can answer questions from dated project records. The first prototype should use local data and preserve source dates.",
+    "record_type": "meeting_transcript",
+    "occurred_at": "2026-03-02T10:00:00Z",
+    "project_id": "timeline-rag",
+    "version": 1,
+    "source": "meeting-2026-03-02",
+    "supersedes_id": null
+  },
+  {
+    "id": "rec-002",
+    "title": "Initial objective: searchable project memory",
+    "content": "Objective v1: provide a searchable timeline for project decisions, meeting notes, and requirements. The first release should support local retrieval before any hosted storage is considered.",
+    "record_type": "objective",
+    "occurred_at": "2026-03-04T09:00:00Z",
+    "project_id": "timeline-rag",
+    "version": 1,
+    "source": "objective-document-v1",
+    "supersedes_id": null
+  },
+  {
+    "id": "rec-003",
+    "title": "Specification v1: timeline record schema",
+    "content": "Specification v1 requires records to include an identifier, title, content, record type, occurrence date, project identifier, version, source, and supersession reference. The prototype uses JSON files as its source.",
+    "record_type": "specification",
+    "occurred_at": "2026-03-05T14:30:00Z",
+    "project_id": "timeline-rag",
+    "version": 1,
+    "source": "specification-v1",
+    "supersedes_id": null
+  },
+  {
+    "id": "rec-004",
+    "title": "Objective v2: offline-first evidence review",
+    "content": "Objective v2 changes the priority to offline-first evidence review. A local prototype must explain which dated records support an answer and must not silently merge conflicting versions. Target review date: 2026-03-20.",
+    "record_type": "objective",
+    "occurred_at": "2026-03-10T11:00:00Z",
+    "project_id": "timeline-rag",
+    "version": 2,
+    "source": "objective-document-v2",
+    "supersedes_id": "rec-002"
+  },
+  {
+    "id": "rec-005",
+    "title": "Specification v2: cloud synchronization requirement",
+    "content": "Specification v2 states that the first release must synchronize records to hosted object storage and expose cloud-backed retrieval by 2026-03-18. It does not explain whether this requirement overrides the offline-first objective.",
+    "record_type": "specification",
+    "occurred_at": "2026-03-12T15:00:00Z",
+    "project_id": "timeline-rag",
+    "version": 2,
+    "source": "specification-v2",
+    "supersedes_id": "rec-003"
+  },
+  {
+    "id": "rec-006",
+    "title": "Scope review meeting: unresolved delivery mode",
+    "content": "The team noticed a conflict: Objective v2 prioritizes an offline-first local prototype, while Specification v2 requires cloud synchronization for the first release. The meeting recorded the conflict as unresolved and assigned no final decision.",
+    "record_type": "meeting_transcript",
+    "occurred_at": "2026-03-14T16:00:00Z",
+    "project_id": "timeline-rag",
+    "version": 1,
+    "source": "meeting-2026-03-14",
+    "supersedes_id": null
+  },
+  {
+    "id": "rec-007",
+    "title": "Lifecycle snapshot: prototype retrieval validated",
+    "content": "Lifecycle snapshot: the local JSON dataset and in-memory retrieval path were validated. Cloud synchronization was not implemented in this snapshot, and the objective/specification conflict remained open.",
+    "record_type": "lifecycle_snapshot",
+    "occurred_at": "2026-03-16T17:30:00Z",
+    "project_id": "timeline-rag",
+    "version": 1,
+    "source": "lifecycle-snapshot-2026-03-16",
+    "supersedes_id": null
+  },
+  {
+    "id": "rec-008",
+    "title": "Objective v3: local RAG demonstration",
+    "content": "Objective v3 narrows this demonstration to a local RAG prototype over synthetic records. It keeps the offline-first evidence-review priority and asks the assistant to state unresolved inconsistencies rather than resolve them automatically.",
+    "record_type": "objective",
+    "occurred_at": "2026-03-17T09:30:00Z",
+    "project_id": "timeline-rag",
+    "version": 3,
+    "source": "objective-document-v3",
+    "supersedes_id": "rec-004"
+  }
+]
