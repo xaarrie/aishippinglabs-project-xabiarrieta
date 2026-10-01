@@ -117,3 +117,11 @@ Corrective evidence:
 - `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed, 3 tests, 0 failures.
 
 Remaining limitations are recorded honestly: the hosted UI is a dependency-free static MVP surface and does not yet provide full end-to-end forms for every nested workflow; authorization/OData behavior has not been exercised through a live TestServer; no live PostgreSQL server was available for migration execution.
+
+Corrective work-unit commit: `2b3bacf fix(timeline): close MVP verification gaps`.
+
+Final corrective verification:
+
+- `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build`: host listened on `http://localhost:5000`; initialization logged the expected unavailable-connection diagnostic because no PostgreSQL connection was supplied; command was stopped after 10 seconds.
+- `git diff --check main...HEAD`: passed with no output.
+- `git status --short`: clean with no output.
