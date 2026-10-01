@@ -7,3 +7,6 @@ __pycache__/
 .DS_Store
 **/obj/*
 **/packages/*
+# .NET build output
+dotnet/**/bin/
+dotnet/**/obj/
