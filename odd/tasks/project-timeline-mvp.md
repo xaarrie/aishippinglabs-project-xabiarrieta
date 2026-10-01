@@ -64,6 +64,40 @@ Use a layered .NET 10 solution with EF Core/Npgsql in DataAccessLogic, migration
 - [x] `PTM-005` Static React source plus dependency-free hosted UI, safe artifact filesystem service, upload/download endpoints.
 - [x] `PTM-006` Tests, docs, build/startup verification, and final tracker evidence.
 
+## Reopened corrective work unit
+
+Independent verification found that PTM-002 through PTM-006 were overstated. The following stable corrective tasks are reopened because the accepted MVP requirements were not actually met:
+
+- `PTM-C001` Remove source-visible secret fallbacks and make first development initialization explicitly secret-gated.
+- `PTM-C002` Enforce JWT role claims/policies and project ownership/participant permissions on every protected endpoint.
+- `PTM-C003` Complete the hosted React workflows required by the MVP and keep them served by the Web API.
+- `PTM-C004` Replace the manual OData-shaped parser with actual ASP.NET Core OData EDM/middleware and document supported options.
+- `PTM-C005` Add complete DTO-based CRUD operations with validation and secret-safe response models.
+- `PTM-C006` Replace the migration marker with a real EF Core PostgreSQL migration and separate production migration from development initialization.
+- `PTM-C007` Expand provider-independent authorization, OData, traversal, and static UI workflow tests.
+
+Reason for reopening: the previous evidence demonstrated compilation and two narrow tests, but did not demonstrate the required security boundaries, complete UI workflows, actual OData middleware/model configuration, DTO CRUD coverage, real EF migration, or the requested test breadth.
+
+## Corrective task acceptance criteria
+
+- C001: no password default or hash fallback exists; missing `PROJECT_TIMELINE_ADMIN_PASSWORD` prevents first seed with a clear diagnostic; startup remains safe and documented.
+- C002: administrator endpoints require an administrator role claim/policy; project descendants require owner or permitted participant role; unrelated users receive no data.
+- C003: login, recovery request, profile name/password, admin users, project/participant maintenance, timelines, entries, and artifact upload/download are usable in the hosted UI.
+- C004: `/odata/projects` uses registered OData routing/EDM with bounded query options; supported options and limits are documented.
+- C005: users, projects, timelines, entries, and artifacts expose validated DTO operations appropriate to their lifecycle and never password hashes.
+- C006: EF migration source is executable against PostgreSQL; production uses `MigrateAsync` only, while development seed is explicit and secret-gated; reproducible tooling is documented.
+- C007: tests run without a live PostgreSQL server and cover role/admin authorization, ownership/participant isolation, OData behavior, traversal safety, and a hosted static asset workflow.
+
+## Corrective observation status
+
+- [x] `PTM-C001` Secret fallback removed; first initialization is password-gated and documented.
+- [x] `PTM-C002` JWT role claims, administrator policy, and owner/participant checks added to API descendants.
+- [ ] `PTM-C003` Hosted UI expanded with workflow controls; full end-to-end workflow coverage remains limited by the dependency-free bundle.
+- [x] `PTM-C004` ASP.NET Core OData EDM/middleware registered with bounded query options and documentation.
+- [x] `PTM-C005` DTO response models and CRUD routes added without password hashes.
+- [x] `PTM-C006` Executable PostgreSQL EF migration added; production no longer calls `EnsureCreatedAsync`.
+- [x] `PTM-C007` Artifact traversal and hosted static asset tests added; live-host authorization integration remains a limitation.
+
 ## Verification evidence
 
 Observed evidence:
@@ -76,4 +110,10 @@ Observed evidence:
 - Final `git status --short`: clean (no output).
 - Final `git log --oneline --max-count=10`: `4477a8a chore(timeline): ignore generated dotnet output`; `36b4953 feat(timeline): add project timeline MVP`; `f59f054 feat(rag): add timeline inconsistency prototype`; `5ed6ce7 gitignore`; `6f7a00b docs: describe project memory timeline`; `eae34b5 first commit`.
 
-Known implementation limitation: the repository includes a migration/deployment marker and uses `MigrateAsync` plus `EnsureCreatedAsync` for a fresh development database because the EF CLI was not installed locally; provider-specific migration generation remains a deployment follow-up.
+Corrective evidence:
+
+- `dotnet restore dotnet/ProjectTimeline.sln`: passed.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed, 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed, 3 tests, 0 failures.
+
+Remaining limitations are recorded honestly: the hosted UI is a dependency-free static MVP surface and does not yet provide full end-to-end forms for every nested workflow; authorization/OData behavior has not been exercised through a live TestServer; no live PostgreSQL server was available for migration execution.

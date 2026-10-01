@@ -1,3 +1,9 @@
-# Database deployment
+# PostgreSQL migration
 
-The application runs `DatabaseSetup.MigrateAndSeedAsync` at development startup. Production deployments should review and apply the generated EF migration scripts through the deployment pipeline. The checked-in model is the source of truth for migrations; no credentials are stored here.
+`202610010001_InitialCreate.cs` is an executable EF Core migration source. Apply it with:
+
+```powershell
+dotnet ef database update --project dotnet/src/ProjectTimeline.Database --startup-project dotnet/src/ProjectTimeline.UI.WebApi --connection "$env:ConnectionStrings__ProjectTimeline"
+```
+
+The application uses `Database.MigrateAsync()` at startup. It does not call `EnsureCreatedAsync()`; development seeding is separate and requires `PROJECT_TIMELINE_ADMIN_PASSWORD` only when the migrated database has no users.

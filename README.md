@@ -1,33 +1,37 @@
 # Project Timeline MVP
 
-This repository now includes a layered .NET 10 Project Timeline MVP. The Web API serves the static React UI, so one process is enough for local development.
+The Web API hosts the dependency-free React UI and the layered .NET 10 application. Run one process for local development.
 
 ## Quick path
 
-1. Install the .NET 10 SDK and PostgreSQL locally.
-2. Set the environment variables in `dotnet/.env.example` in your shell. **Do not commit the real password.**
-3. Run `dotnet restore dotnet/ProjectTimeline.sln` and `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi`.
-4. Open `http://localhost:5000` (or the URL printed by ASP.NET Core).
+1. Install the .NET 10 SDK and PostgreSQL.
+2. Set `ConnectionStrings__ProjectTimeline` and a 32-character `Authentication__SigningKey` in the shell. Never commit either value.
+3. On the first empty database only, set `PROJECT_TIMELINE_ADMIN_PASSWORD` to create `x.arrieta@ibernova.com`. There is no password fallback. A missing value logs an explicit initialization error and creates no administrator.
+4. Run `dotnet restore dotnet/ProjectTimeline.sln`, then `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi`.
+5. Open the URL printed by ASP.NET Core.
 
-The development seed creates `x.arrieta@ibernova.com`; set `PROJECT_TIMELINE_ADMIN_PASSWORD` to choose its local password. If no password is supplied, the fallback is development-only and must be changed.
+## API and authorization
 
-## Architecture
+JWTs contain role claims. `/api/admin/*` requires the `Administrator` policy. Project, timeline, entry, and artifact endpoints check owner or participant access; project writes require owner, Creator, or Contributor behavior. Password hashes are never returned by DTOs. Artifact paths are normalized and confined below the configured base path.
 
-| Project | Responsibility |
-|---|---|
-| `ProjectTimeline.Database` | Development migration/seed orchestration and deployment notes |
-| `ProjectTimeline.DataAccessLogic` | EF Core/Npgsql entities, DbContext, audit stamps, repository base |
-| `ProjectTimeline.BusinessLogic` | Validation, transactions, password hashing, project and entry use cases |
-| `ProjectTimeline.UI.WebApi` | ASP.NET Core API, JWT authentication, OData-style bounded read endpoint, static React UI |
+## OData
+
+`/odata/Projects` is served by ASP.NET Core OData with a convention EDM. Supported options are `$select`, `$filter`, `$orderby`, `$top`, `$skip`, and `$count`; server page size and `$top` are capped at 100. The project query is authorization-filtered before OData applies client query options.
 
 ## Database
 
-The application calls `Database.MigrateAsync` at startup and then seeds roles `Administrator`, `Consultant`, `UserChief`, project roles `Creator`, `Reviewer`, `Contributor`, and the development administrator. The PostgreSQL password is read only from `ConnectionStrings__ProjectTimeline`; it is not in source control or logs.
+PostgreSQL schema creation is an executable EF Core migration in `dotnet/src/ProjectTimeline.Database/Migrations/202610010001_InitialCreate.cs`. Runtime initialization uses `MigrateAsync()` only. To apply it explicitly:
 
-## MVP boundaries
+```powershell
+dotnet ef database update --project dotnet/src/ProjectTimeline.Database --startup-project dotnet/src/ProjectTimeline.UI.WebApi --connection "$env:ConnectionStrings__ProjectTimeline"
+```
 
-Artifact storage is designed around `BASE_PATH/ProjectCode/TimelineCode/EntryNumber/filename`; the API extension point should enforce filename normalization and traversal checks before enabling uploads. Review/merge requests are represented as a foundation only: no AI/RAG provider or guessed conflict-resolution algorithm is included.
+Development seeding is separate and secret-gated. No credentials are stored in source control.
+
+## Hosted UI workflows
+
+The hosted UI contains sign-in, recovery request, profile name/password maintenance, project creation/listing, participant-maintenance entry point, timeline workspace entry point, admin-user maintenance entry point, and artifact upload/download controls. All calls use the Web API and the bearer token.
 
 ## Verification
 
-Run the commands listed in `odd/tasks/project-timeline-mvp.md`. The task document records exact observed results and the final commit identities.
+Run the commands in `odd/tasks/project-timeline-mvp.md`. The canonical tracker records original evidence without alteration, reopened corrective tasks, and final correction evidence. The complete mirror is `odd/project-timeline-mvp/tasks`.

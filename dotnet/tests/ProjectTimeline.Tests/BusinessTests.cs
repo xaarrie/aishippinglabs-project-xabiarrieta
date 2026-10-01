@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using ProjectTimeline.BusinessLogic;
 using ProjectTimeline.DataAccessLogic;
 using Xunit;
@@ -6,6 +7,16 @@ using Xunit;
 namespace ProjectTimeline.Tests;
 public sealed class BusinessTests
 {
+    [Fact]
+    public void Artifact_storage_rejects_traversal_and_normalizes_safe_names()
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["ArtifactStorage:BasePath"] = Path.Combine(Path.GetTempPath(), "timeline-tests") }).Build();
+        var storage = new ArtifactStorage(configuration);
+        Assert.Throws<ArgumentException>(() => storage.GetSafePath("P1", "T1", 1, "..\\secret.txt"));
+        Assert.Throws<ArgumentException>(() => storage.GetSafePath("P1", "T1", 1, "nested/secret.txt"));
+        Assert.EndsWith(Path.Combine("P1", "T1", "1", "safe.txt"), storage.GetSafePath("P1", "T1", 1, "safe.txt"));
+    }
+
     [Fact]
     public async Task Entry_numbers_are_sequential_and_audited()
     {

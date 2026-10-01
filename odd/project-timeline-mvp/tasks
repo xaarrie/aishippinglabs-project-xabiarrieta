@@ -1,0 +1,27 @@
+# ODD Task: Project Timeline MVP
+
+## Reopened corrective work unit
+
+Independent verification found that the original PTM-002 through PTM-006 completion evidence overstated the implementation. This mirror tracks the bounded correction on `feat/project-timeline-mvp`.
+
+- [x] PTM-C001 — Removed source-visible secret fallbacks; first development initialization requires `PROJECT_TIMELINE_ADMIN_PASSWORD` and documents the diagnostic.
+- [x] PTM-C002 — Added JWT role claims, an administrator policy, and owner/participant checks for project descendants.
+- [ ] PTM-C003 — Expanded the hosted React surface, but full end-to-end forms for every nested workflow remain limited by the dependency-free bundle.
+- [x] PTM-C004 — Registered ASP.NET Core OData EDM/middleware with bounded query options and documented them.
+- [x] PTM-C005 — Added validated DTO response models and CRUD routes without password-hash exposure.
+- [x] PTM-C006 — Replaced the marker with executable PostgreSQL EF migration source and removed production `EnsureCreatedAsync`.
+- [x] PTM-C007 — Added artifact traversal and hosted static asset tests; live-host authorization integration remains a limitation.
+
+## Reason
+
+The previous verification only established compilation, two narrow tests, and static startup. It did not prove the required security boundaries, complete workflows, actual OData middleware, DTO CRUD, real EF migration, or test breadth. Prior completed evidence remains unchanged in the canonical tracker; corrections are recorded separately.
+
+## Observed verification
+
+- `dotnet restore dotnet/ProjectTimeline.sln`: passed.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed, 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed, 3 tests, 0 failures.
+
+## Remaining limitations
+
+The hosted UI is still a dependency-free static MVP surface and does not yet provide full end-to-end forms for every nested workflow. Authorization/OData behavior was not exercised through a live TestServer, and no live PostgreSQL server was available for migration execution. No credential was committed or logged.
