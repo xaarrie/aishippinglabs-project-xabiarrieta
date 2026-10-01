@@ -125,3 +125,40 @@ Final corrective verification:
 - `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build`: host listened on `http://localhost:5000`; initialization logged the expected unavailable-connection diagnostic because no PostgreSQL connection was supplied; command was stopped after 10 seconds.
 - `git diff --check main...HEAD`: passed with no output.
 - `git status --short`: clean with no output.
+
+## Final corrective work unit
+
+The verifier’s remaining blockers are reopened as two stable tasks. Earlier evidence above is preserved unchanged.
+
+- `PTM-F001` Make the PostgreSQL EF Core migration executable and registered.
+  - Exact verifier reason: “The migration uses literal backslash-escaped quotes inside a C# raw string and lacks visible MigrationAttribute/model snapshot; no live PostgreSQL execution was available.”
+  - Acceptance: raw SQL contains valid PostgreSQL identifiers, EF can discover the migration from the configured migrations assembly, `MigrateAsync()` remains the only production initialization path, and provider-independent tests catch registration and escaped identifiers.
+- `PTM-F002` Complete hosted static React workflows and supporting API endpoints.
+  - Exact verifier reason: “Hosted admin/participant buttons are alerts, artifact input has no upload handler, and timeline UI only adds entries.”
+  - Acceptance: authorized admin user list/create/update/deactivate with optional password reset, participant list/add/update/remove, timeline and entry load/create/update, artifact upload/list/download, and profile/recovery workflows operate through the hosted Web API without alert placeholders or nonfunctional file inputs.
+
+Final corrective observation status before implementation:
+
+- [ ] `PTM-F001` Migration SQL/registration and provider-independent tests.
+- [ ] `PTM-F002` Hosted UI workflows and supporting endpoint completion.
+
+Final corrective observation status after implementation:
+
+- [x] `PTM-F001` Migration SQL uses PostgreSQL identifiers without C# escape artifacts; `MigrationAttribute`, `DbContextAttribute`, and the configured `ProjectTimeline.Database` migrations assembly allow EF discovery; tests inspect migration operations without a live server.
+- [x] `PTM-F002` Hosted UI now performs authorized admin user CRUD/deactivation with optional password reset, participant list/add/update/remove, timeline and entry load/create/update, artifact upload/list/download, and profile/recovery operations. Alert placeholders and nonfunctional file inputs were removed.
+
+Final corrective commits:
+
+- `b20efa6 fix(timeline): register executable PostgreSQL migration`
+- `92bc8c0 fix(timeline): complete hosted workflow operations`
+
+Final corrective verification:
+
+- `dotnet restore dotnet/ProjectTimeline.sln`: passed; all 5 projects restored or were already current.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 6 tests, 0 failures.
+- `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build`: startup was exercised from the Release build; the host reached its startup path and logged the expected unavailable PostgreSQL connection diagnostic because no connection variable was supplied. No live PostgreSQL migration execution is claimed.
+- `git diff --check main...HEAD`: passed with no output.
+- `git status --short`: clean with no output.
+
+Known limitations: no live PostgreSQL server was available, so migration execution remains source/provider-registration verified only; the browser UI is dependency-free static JavaScript and was not driven through a live authenticated browser session.
