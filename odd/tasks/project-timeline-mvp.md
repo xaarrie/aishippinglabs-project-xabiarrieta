@@ -272,3 +272,6 @@ The authorized requirement is reopened as a focused navigation-shell work unit. 
 - `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
 - `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 8 tests, 0 failures.
 - Verification limitation: the first parallel build/test probe raced the generated Vite asset and reported a stale asset path; the required commands were rerun sequentially and passed. No source or project-file workaround was made.
+- Work-unit commit: `eb1e898 feat(timeline): add responsive application navigation`.
+- `git diff --check main...HEAD`: passed with no output after the work-unit commit.
+- `git status --short`: only the pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains uncommitted; all responsive navigation files are committed.
