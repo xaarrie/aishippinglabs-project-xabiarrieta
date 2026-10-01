@@ -10,3 +10,4 @@ __pycache__/
 # .NET build output
 dotnet/**/bin/
 dotnet/**/obj/
+dotnet/src/ProjectTimeline.UI.WebApi/ClientApp/node_modules/

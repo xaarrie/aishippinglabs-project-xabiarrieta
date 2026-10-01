@@ -1,6 +1,6 @@
 # Project Timeline MVP
 
-The Web API hosts the dependency-free React UI and the layered .NET 10 application. Run one process for local development.
+The Web API hosts the production React bundle and the layered .NET 10 application. Run one process for local development.
 
 ## Quick path
 
@@ -36,7 +36,11 @@ Development seeding is separate and secret-gated. No credentials are stored in s
 
 ## Hosted UI workflows
 
-The hosted UI contains sign-in, recovery request, profile name/password maintenance, project creation/listing, participant-maintenance entry point, timeline workspace entry point, admin-user maintenance entry point, and artifact upload/download controls. All calls use the Web API and the bearer token.
+`dotnet/src/ProjectTimeline.UI.WebApi/ClientApp` is the React source project. Run `npm ci --prefix dotnet/src/ProjectTimeline.UI.WebApi/ClientApp` followed by `npm run build --prefix dotnet/src/ProjectTimeline.UI.WebApi/ClientApp` to reproduce the committed `wwwroot` assets. The Web API project also runs this build before a normal .NET build; `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi` serves the committed bundle without a separate frontend server. The hosted UI contains sign-in, recovery request/reset, profile name/password maintenance, administrator user CRUD/deactivation, project creation/listing, participant add/update/remove, timeline and entry CRUD, and artifact upload/list/download controls. All calls use the Web API and the bearer token.
+
+## AI/RAG and merge review foundation
+
+The business layer publishes provider-neutral `IRagIndexService`, `IRagQueryService`, and `ILifecycleAnalysisService` contracts plus request/read models. Their protected API routes deliberately return `501 Not Implemented` until a provider is selected; no live AI behavior is claimed. `IMergeReviewService` and its protected timeline routes persist review requests and support `Open`, `Approved`, `Rejected`, and `Closed` status transitions after the same project authorization checks as timeline writes.
 
 ## Verification
 

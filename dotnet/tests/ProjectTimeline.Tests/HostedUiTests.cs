@@ -8,17 +8,19 @@ public sealed class HostedUiTests
     public void Hosted_asset_contains_required_workflow_labels()
     {
         var root = FindRepositoryRoot(AppContext.BaseDirectory);
-        var script = File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "wwwroot", "app.js"));
-        Assert.Contains("Request password recovery", script);
-        Assert.Contains("Save profile", script);
-        Assert.Contains("Manage admin users", script);
-        Assert.Contains("Manage participants", script);
-        Assert.Contains("/api/admin/users", script);
-        Assert.Contains("/api/entries/${entry.id}/artifacts", script);
-        Assert.Contains("/api/projects/${project.id}/participants", script);
-        Assert.DoesNotContain("alert(", script);
-        Assert.Contains("Timeline workspace", script);
-        Assert.Contains("Artifact upload", script);
+        var source = File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src", "App.jsx"));
+        var html = File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "wwwroot", "index.html"));
+        Assert.Contains("from \"react\"", source);
+        Assert.Contains("createRoot", File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src", "main.jsx")));
+        Assert.Contains("Request password recovery", source);
+        Assert.Contains("Save profile", source);
+        Assert.Contains("/api/admin/users", source);
+        Assert.Contains("/api/entries/${entry.id}/artifacts", source);
+        Assert.Contains("/api/projects/${project.id}/participants", source);
+        Assert.Contains("Artifact upload", source);
+        Assert.DoesNotContain("app.js", html);
+        Assert.Contains("type=\"module\"", html);
+        Assert.Contains("assets/", html);
     }
 
     private static string FindRepositoryRoot(string start)
