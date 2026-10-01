@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ProjectTimeline.BusinessLogic\ProjectTimeline.BusinessLogic.csproj" />
     <ProjectReference Include="..\..\src\ProjectTimeline.UI.WebApi\ProjectTimeline.UI.WebApi.csproj" />
+    <ProjectReference Include="..\..\src\ProjectTimeline.Database\ProjectTimeline.Database.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
