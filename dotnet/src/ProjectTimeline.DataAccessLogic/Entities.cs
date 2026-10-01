@@ -1,0 +1,17 @@
+namespace ProjectTimeline.DataAccessLogic;
+
+public abstract class AuditedEntity
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public DateTime CreatedAtUtc { get; set; }
+    public DateTime UpdatedAtUtc { get; set; }
+}
+public sealed class User : AuditedEntity { public string Email { get; set; } = ""; public string DisplayName { get; set; } = ""; public string PasswordHash { get; set; } = ""; public bool IsActive { get; set; } = true; public ICollection<UserRole> Roles { get; set; } = []; public ICollection<ProjectParticipant> Participations { get; set; } = []; }
+public sealed class UserRole : AuditedEntity { public Guid UserId { get; set; } public User User { get; set; } = null!; public string RoleName { get; set; } = ""; }
+public sealed class Project : AuditedEntity { public string Code { get; set; } = ""; public string Name { get; set; } = ""; public string? Description { get; set; } public Guid OwnerId { get; set; } public User Owner { get; set; } = null!; public ICollection<ProjectParticipant> Participants { get; set; } = []; public ICollection<ProjectRole> Roles { get; set; } = []; public ICollection<Timeline> Timelines { get; set; } = []; }
+public sealed class ProjectParticipant : AuditedEntity { public Guid ProjectId { get; set; } public Project Project { get; set; } = null!; public Guid UserId { get; set; } public User User { get; set; } = null!; public string ProjectRoleName { get; set; } = "Contributor"; public bool IsInvited { get; set; } }
+public sealed class ProjectRole : AuditedEntity { public Guid ProjectId { get; set; } public Project Project { get; set; } = null!; public string Name { get; set; } = ""; }
+public sealed class Timeline : AuditedEntity { public Guid ProjectId { get; set; } public Project Project { get; set; } = null!; public string Code { get; set; } = ""; public string Name { get; set; } = ""; public ICollection<TimelineEntry> Entries { get; set; } = []; }
+public sealed class TimelineEntry : AuditedEntity { public Guid TimelineId { get; set; } public Timeline Timeline { get; set; } = null!; public int EntryNumber { get; set; } public string Title { get; set; } = ""; public string Content { get; set; } = ""; public string Status { get; set; } = "Draft"; public Guid AuthorId { get; set; } public User Author { get; set; } = null!; public ICollection<TimelineArtifact> Artifacts { get; set; } = []; }
+public sealed class TimelineArtifact : AuditedEntity { public Guid EntryId { get; set; } public TimelineEntry Entry { get; set; } = null!; public string FileName { get; set; } = ""; public string RelativePath { get; set; } = ""; public string ContentType { get; set; } = "application/octet-stream"; public long Length { get; set; } }
+public sealed class MergeRequest : AuditedEntity { public Guid TimelineId { get; set; } public Timeline Timeline { get; set; } = null!; public Guid AuthorId { get; set; } public User Author { get; set; } = null!; public string Summary { get; set; } = ""; public string Status { get; set; } = "Open"; }

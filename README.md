@@ -1,38 +1,33 @@
-# Project Memory Timeline
+# Project Timeline MVP
 
-A time-aware workspace for understanding how a project changes through conversations, meetings, documents, objectives, and specifications.
+This repository now includes a layered .NET 10 Project Timeline MVP. The Web API serves the static React UI, so one process is enough for local development.
 
-## The Problem
+## Quick path
 
-Project knowledge is spread across meeting transcripts, uploaded documents, and successive versions of objectives and specifications. Teams need a reliable way to recover context over time, identify inconsistencies between lifecycle snapshots, and see how decisions and requirements evolved.
+1. Install the .NET 10 SDK and PostgreSQL locally.
+2. Set the environment variables in `dotnet/.env.example` in your shell. **Do not commit the real password.**
+3. Run `dotnet restore dotnet/ProjectTimeline.sln` and `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi`.
+4. Open `http://localhost:5000` (or the URL printed by ASP.NET Core).
 
-## What It Does
+The development seed creates `x.arrieta@ibernova.com`; set `PROJECT_TIMELINE_ADMIN_PASSWORD` to choose its local password. If no password is supplied, the fallback is development-only and must be changed.
 
-The intended system lets a user hold conversations about a project or topic while incrementally adding meeting transcripts and other documents. Retrieval-augmented generation (RAG) makes the uploaded materials available as conversation context. Lifecycle snapshots provide points-in-time views that can detect inconsistencies, surface them for completion, and help trace how objectives and specifications change. This starter describes the product direction; it does not claim these capabilities are implemented yet.
+## Architecture
 
-## Setup
+| Project | Responsibility |
+|---|---|
+| `ProjectTimeline.Database` | Development migration/seed orchestration and deployment notes |
+| `ProjectTimeline.DataAccessLogic` | EF Core/Npgsql entities, DbContext, audit stamps, repository base |
+| `ProjectTimeline.BusinessLogic` | Validation, transactions, password hashing, project and entry use cases |
+| `ProjectTimeline.UI.WebApi` | ASP.NET Core API, JWT authentication, OData-style bounded read endpoint, static React UI |
 
-1. Install uv if you don't have it yet: https://docs.astral.sh/uv/getting-started/installation/
+## Database
 
-2. Clone this repository (or download the zip and extract it).
+The application calls `Database.MigrateAsync` at startup and then seeds roles `Administrator`, `Consultant`, `UserChief`, project roles `Creator`, `Reviewer`, `Contributor`, and the development administrator. The PostgreSQL password is read only from `ConnectionStrings__ProjectTimeline`; it is not in source control or logs.
 
-3. Create a `.env` file from the template and add your API key:
+## MVP boundaries
 
-       cp .env.example .env
+Artifact storage is designed around `BASE_PATH/ProjectCode/TimelineCode/EntryNumber/filename`; the API extension point should enforce filename normalization and traversal checks before enabling uploads. Review/merge requests are represented as a foundation only: no AI/RAG provider or guessed conflict-resolution algorithm is included.
 
-4. Install dependencies:
+## Verification
 
-       uv sync
-
-5. Start Jupyter:
-
-       uv run jupyter notebook
-
-## Notebooks
-
-- `notebooks/01-setup.ipynb` - smoke test that confirms your environment works
-- `notebooks/02-rag.ipynb` - a minimal RAG baseline you can adapt to your own data
-
-## Data
-
-Put your project data in the `data/` folder. See `notebooks/02-rag.ipynb` for how to load it.
+Run the commands listed in `odd/tasks/project-timeline-mvp.md`. The task document records exact observed results and the final commit identities.

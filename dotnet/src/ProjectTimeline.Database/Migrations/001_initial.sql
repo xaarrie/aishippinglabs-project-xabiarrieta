@@ -1,0 +1,2 @@
+-- Development reference migration. Runtime applies the EF model through Database.MigrateAsync.
+-- Generate provider-specific SQL with `dotnet ef migrations script` in an environment with the EF CLI installed.

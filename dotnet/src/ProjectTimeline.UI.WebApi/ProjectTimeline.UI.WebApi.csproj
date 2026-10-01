@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><RootNamespace>ProjectTimeline.UI.WebApi</RootNamespace><InvariantGlobalization>true</InvariantGlobalization></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ProjectTimeline.Database\ProjectTimeline.Database.csproj" />
+    <ProjectReference Include="..\ProjectTimeline.BusinessLogic\ProjectTimeline.BusinessLogic.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OData" Version="9.4.1" />
+  </ItemGroup>
+</Project>

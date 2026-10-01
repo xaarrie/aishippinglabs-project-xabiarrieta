@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><RootNamespace>ProjectTimeline.Database</RootNamespace></PropertyGroup>
+  <ItemGroup><ProjectReference Include="..\ProjectTimeline.DataAccessLogic\ProjectTimeline.DataAccessLogic.csproj" /></ItemGroup>
+</Project>
