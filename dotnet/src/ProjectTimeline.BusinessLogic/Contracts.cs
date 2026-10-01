@@ -20,3 +20,21 @@ public sealed record TimelineDto(Guid Id, Guid ProjectId, string Code, string Na
 public sealed record EntryDto(Guid Id, Guid TimelineId, int EntryNumber, string Title, string Content, string Status, Guid AuthorId, DateTime CreatedAtUtc, DateTime UpdatedAtUtc);
 public sealed record ArtifactDto(Guid Id, Guid EntryId, string FileName, string ContentType, long Length, DateTime CreatedAtUtc);
 public sealed record ParticipantDto(Guid Id, Guid ProjectId, Guid UserId, string Email, string DisplayName, string ProjectRoleName);
+
+// Provider-neutral contracts. Implementations may be added without coupling the business layer to an AI vendor.
+public sealed record RagIndexRequest(Guid ProjectId, Guid? TimelineId, string SourceVersion);
+public sealed record RagIndexResult(Guid ProjectId, Guid? TimelineId, string Status, DateTime? CompletedAtUtc);
+public sealed record RagQueryRequest(Guid ProjectId, string Query, int MaxResults = 10);
+public sealed record RagQueryResult(Guid ProjectId, string Query, IReadOnlyList<RagQueryHit> Hits, string Status);
+public sealed record RagQueryHit(string Source, string Excerpt, double Score);
+public sealed record LifecycleSnapshotRequest(Guid ProjectId, Guid TimelineId, string SnapshotVersion);
+public sealed record LifecycleSnapshotReadModel(Guid ProjectId, Guid TimelineId, string Status, DateTime? AnalyzedAtUtc, IReadOnlyList<string> Findings);
+public sealed record IncongruityAnalysisRequest(Guid ProjectId, Guid TimelineId, string SnapshotVersion);
+public sealed record IncongruityAnalysisReadModel(Guid ProjectId, Guid TimelineId, string Status, IReadOnlyList<string> Findings);
+public interface IRagIndexService { Task<RagIndexResult> IndexAsync(RagIndexRequest request, CancellationToken ct); }
+public interface IRagQueryService { Task<RagQueryResult> QueryAsync(RagQueryRequest request, CancellationToken ct); }
+public interface ILifecycleAnalysisService { Task<LifecycleSnapshotReadModel> AnalyzeSnapshotAsync(LifecycleSnapshotRequest request, CancellationToken ct); Task<IncongruityAnalysisReadModel> AnalyzeIncongruitiesAsync(IncongruityAnalysisRequest request, CancellationToken ct); }
+public sealed record MergeReviewRequest(Guid TimelineId, string Summary);
+public sealed record MergeReviewStatusRequest(string Status);
+public sealed record MergeReviewDto(Guid Id, Guid TimelineId, Guid AuthorId, string Summary, string Status, DateTime CreatedAtUtc, DateTime UpdatedAtUtc);
+public interface IMergeReviewService { Task<MergeReviewDto> CreateAsync(MergeReviewRequest request, Guid authorId, bool administrator, CancellationToken ct); Task<IReadOnlyList<MergeReviewDto>> ListAsync(Guid timelineId, Guid userId, bool administrator, CancellationToken ct); Task<MergeReviewDto?> UpdateStatusAsync(Guid id, string status, Guid userId, bool administrator, CancellationToken ct); }
