@@ -194,3 +194,41 @@ Final correction verification:
 - `git status --short`: passed with no output after the final correction commits.
 
 Final correction commit: `8a42376 fix(timeline): complete recovery and administrator access`.
+
+## Final bounded corrective work unit
+
+The remaining explicit requirements are reopened as two bounded tasks. All prior
+evidence above is preserved unchanged.
+
+- `PTM-H001` Replace the imperative hosted script with a real, reproducible React application.
+  - Acceptance: maintainable `ClientApp` source implements the existing authentication, profile, administrator, project/participant, timeline/entry, and artifact workflows; a committed production bundle is served by the Web API; the build command and hosted-entrypoint assertion are documented and tested.
+- `PTM-H002` Publish provider-neutral AI/RAG, lifecycle-analysis, and timeline merge-review contracts.
+  - Acceptance: business-layer request/read models and interfaces are explicit; API-visible routes expose the contracts without inventing provider behavior; merge-review routes enforce project/timeline authorization and are testable.
+
+## Final bounded correction status before implementation
+
+- [ ] `PTM-H001` Real hosted React runtime, reproducible build, committed production assets, and entrypoint assertion.
+- [ ] `PTM-H002` Provider-neutral RAG/lifecycle and authorized merge-review API foundation.
+
+## Final bounded correction status after implementation
+
+- [x] `PTM-H001` `ClientApp` is a real React/Vite source project with maintained modules, a locked dependency graph, a reproducible build, committed `wwwroot/assets`, and a hosted-entrypoint test asserting a module bundle rather than `app.js`. Existing login/recovery/reset, profile, administrator users, projects/participants, timelines/entries, and artifact upload/list/download workflows are wired to the Web API.
+- [x] `PTM-H002` Business-layer provider-neutral RAG indexing/query and lifecycle snapshot/incongruity contracts are published; protected API routes deliberately return `501 Not Implemented` pending a provider. `IMergeReviewService` persists merge-review requests/status and its timeline routes enforce centralized project authorization.
+
+## Final bounded correction verification
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed with Vite 7.1.7; production `index.html`, CSS, and JavaScript assets were emitted to committed `wwwroot`. `npm ci` is reproducible from the committed lock file. npm reported one audit warning; no credentials or tokens were involved.
+- `dotnet restore dotnet/ProjectTimeline.sln`: passed; all projects were current.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed, 0 warnings, 0 errors; the build target also rebuilt the React bundle.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed, 8 tests, 0 failures; hosted UI assertions verify React imports, `createRoot`, workflow source, and the generated module entrypoint.
+- `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build --configuration Release`: host remained running and listened on `http://localhost:5000`; initialization reported the expected unavailable PostgreSQL connection because no connection variable was supplied, and the probe was stopped after 8 seconds. No live PostgreSQL or browser testing is claimed.
+- `git diff --check main...HEAD`: passed with no output.
+- `git status --short`: recorded before commit; final status is recorded below.
+
+## Final bounded correction commits and limits
+
+- `PTM-H001` and `PTM-H002` are committed as coherent units with tests/docs alongside behavior.
+- `de2f903 feat(timeline): host maintainable React application`
+- `f48d53b feat(timeline): add provider-neutral review contracts`
+- `778f623 fix(timeline): authenticate artifact downloads`
+- Limits: no live PostgreSQL migration, authenticated browser session, or provider-backed AI/RAG execution was performed. The RAG routes intentionally expose contract shape and authorization only; they do not claim provider behavior.
