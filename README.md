@@ -1,14 +1,14 @@
-# Your Project Name
+# Project Memory Timeline
 
-A starter template for the AI Engineering Buildcamp capstone. Replace this README with a description of your own project.
+A time-aware workspace for understanding how a project changes through conversations, meetings, documents, objectives, and specifications.
 
 ## The Problem
 
-Describe the problem your project solves and who has it. One or two sentences.
+Project knowledge is spread across meeting transcripts, uploaded documents, and successive versions of objectives and specifications. Teams need a reliable way to recover context over time, identify inconsistencies between lifecycle snapshots, and see how decisions and requirements evolved.
 
 ## What It Does
 
-Describe what the AI system does and a typical interaction. What does the user provide? What does the system return?
+The intended system lets a user hold conversations about a project or topic while incrementally adding meeting transcripts and other documents. Retrieval-augmented generation (RAG) makes the uploaded materials available as conversation context. Lifecycle snapshots provide points-in-time views that can detect inconsistencies, surface them for completion, and help trace how objectives and specifications change. This starter describes the product direction; it does not claim these capabilities are implemented yet.
 
 ## Setup
 
