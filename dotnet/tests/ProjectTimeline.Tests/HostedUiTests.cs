@@ -34,6 +34,16 @@ public sealed class HostedUiTests
         Assert.Contains("aria-controls=\"app-navigation\"", source);
         Assert.Contains("aria-expanded={sidebarOpen}", source);
         Assert.Contains("aria-hidden={!sidebarOpen}", source);
+        Assert.Contains("aria-current={active(\"/projects\") ? \"page\" : undefined}", source);
+        Assert.Contains("className=\"overlay-dismiss\"", source);
+        Assert.Contains("role=\"toolbar\"", source);
+        Assert.Contains("className=\"status-bar\"", source);
+        Assert.Contains("--surface-app", File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src", "styles.css")));
+        Assert.Contains("var(--color-primary)", File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src", "styles.css")));
+        Assert.DoesNotContain("fonts.googleapis.com", source);
+        Assert.DoesNotContain("cdnjs.cloudflare.com", source);
+        Assert.DoesNotContain("use.fontawesome.com", source);
+        Assert.DoesNotContain("setup-fonts", source);
         Assert.Contains("@media (max-width: 700px)", File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src", "styles.css")));
         Assert.Contains("path === \"/profile\"", source);
         Assert.Contains("path === \"/users\"", source);

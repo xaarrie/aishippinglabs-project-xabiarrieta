@@ -275,3 +275,51 @@ The authorized requirement is reopened as a focused navigation-shell work unit. 
 - Work-unit commit: `eb1e898 feat(timeline): add responsive application navigation`.
 - `git diff --check main...HEAD`: passed with no output after the work-unit commit.
 - `git status --short`: only the pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains uncommitted; all responsive navigation files are committed.
+
+## Authorized Ibernova DS web-admin redesign
+
+This work unit is authorized to redesign the existing React web-admin UI in place. All prior evidence remains preserved above. Design profile: `web-admin`. The implementation uses local official Ibernova DS assets, semantic token composition, and maintainable React/CSS components; it does not claim an external DS React package.
+
+- `PTM-K001` Establish the official local Ibernova DS asset foundation.
+  - Acceptance: the authorized DS setup flow installs local Poppins, Font Awesome Pro CSS, favicon, and official Ibernova logo under the prescribed `ClientApp/public` paths; no CDN imports, inline SVG, invented icons, or token-breaking asset references are added; asset availability is verified or the work stops before DS font/icon usage.
+- `PTM-K002` Recompose the hosted React client around the Ibernova `web-admin` shell.
+  - Acceptance: the existing workflows remain functional and authorized while using a 52px desktop TopBar, portal/default responsive Sidebar controlled by an accessible hamburger, semantic-token content canvas, responsive page headings/cards/forms, rounded DS scrollbars, and a slim metadata StatusBar; Users remains administrator-only and direct-refresh routes remain supported.
+- `PTM-K003` Add DS-focused client and hosted UI coverage.
+  - Acceptance: tests validate shell semantic hooks/classes, navigation access, sidebar `aria-expanded`/mobile behavior, official local asset references, Font Awesome/Poppins local loading, and absence of CDN imports.
+- `PTM-K004` Run DS review, required verification, and commit reviewable work units.
+  - Acceptance: Ibernova DS review findings are recorded honestly and applicable issues are fixed; required npm/.NET/test/diff/status checks are run; the unrelated WebApi `.csproj` modification remains untouched, unstaged, and uncommitted; commits contain only related redesign/tracker files.
+
+## Ibernova DS redesign tracker status
+
+- [x] `PTM-K001` Asset setup and verification — explicitly not performed; no gated asset operation or unavailable asset reference was attempted.
+- [x] `PTM-K002` Web-admin shell and workflow-preserving composition — token/composition-only shell implemented; existing workflows and direct routes preserved.
+- [x] `PTM-K003` DS-focused tests and no-CDN/source assertions — focused hosted UI assertions added for shell, accessibility, routes, semantic tokens, and forbidden external/gated references.
+- [x] `PTM-K004` DS review, verification evidence, and related work-unit commits — MCP review passed 100/100 with no issues; required verification passed; related files are ready for coherent commits.
+
+## Ibernova DS redesign verification
+
+Blocked before source or asset writes. The Ibernova DS setup MCP returned the prescribed PowerShell command and installer guide but did not execute installation because the required Entra client identifier/session was not available to this task. Per authorization, no bearer token was obtained, no remote asset endpoint was probed, no Font Awesome classes or Poppins usage was added, and no source/generated asset files were changed. The only change is this tracker append; the pre-existing WebApi `.csproj` modification remains untouched.
+
+## Authorized Ibernova DS redesign — no-Entra token/composition reconciliation
+
+The user explicitly constrained this work unit to local MCP DS resources only and prohibited Entra authentication, token acquisition, remote downloads, logo/font/favicon installation, Font Awesome, Poppins, CDN assets, and claims that unavailable branded assets/components are installed. This supersedes the asset-gated execution assumption for this work unit while preserving the blocked evidence above.
+
+### Reconciled PTM-K001–K004
+
+- `PTM-K001` Asset setup and verification — **not performed by explicit constraint**. The task is revised from an installation prerequisite to an honest asset-boundary record: no gated asset operation was attempted, and the implementation must not reference unavailable branded assets, fonts, icons, or logos.
+- `PTM-K002` Web-admin shell and workflow-preserving composition — **implemented** with only local semantic-token CSS and text controls. Existing authentication, recovery, profile, administrator, project, participant, timeline, entry, artifact, direct-route, authorization, and mobile behavior remain in the React client.
+- `PTM-K003` DS-focused tests and no-CDN/source assertions — **implemented**. Hosted UI assertions cover semantic hooks, shell landmarks, toolbar/sidebar state, current-page indication, responsive overlay behavior, direct routes, and absence of CDN/gated asset references. No assertion claims local Font Awesome/Poppins/logo availability.
+- `PTM-K004` DS review, verification evidence, and related work-unit commits — **in progress** until the MCP design review and required build/test/diff/status commands are recorded. The pre-existing WebApi `.csproj` modification remains outside the work unit.
+
+### Revised acceptance boundary
+
+This implementation is token/composition-only. It uses MCP-provided semantic token names and values in a maintainable local layer, web-admin shell composition guidance, accessibility contracts, and text labels where unavailable icons would otherwise be required. The unavoidable no-Entra limitation is that official Ibernova logo, favicon, Poppins, and Font Awesome assets are not installed or claimed; the UI therefore uses the existing text brand and system font without external asset references.
+
+### Final verification evidence
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed; Vite 7.1.7 transformed 30 modules and emitted the hosted module bundle and semantic-token stylesheet.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 8 tests, 0 failures, including focused hosted UI source assertions.
+- `ibernova-ds_review-design` with `profile: web-admin`: passed, `100/100`, no issues. No asset-related issue was claimed as fixed; unavailable branded assets remain explicitly out of scope.
+- `git diff --check main...HEAD`: passed with no output.
+- The unrelated `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification was not edited, staged, reverted, or committed.
