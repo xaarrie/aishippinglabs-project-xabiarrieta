@@ -13,6 +13,10 @@ public sealed class HostedUiTests
         Assert.Contains("Save profile", script);
         Assert.Contains("Manage admin users", script);
         Assert.Contains("Manage participants", script);
+        Assert.Contains("/api/admin/users", script);
+        Assert.Contains("/api/entries/${entry.id}/artifacts", script);
+        Assert.Contains("/api/projects/${project.id}/participants", script);
+        Assert.DoesNotContain("alert(", script);
         Assert.Contains("Timeline workspace", script);
         Assert.Contains("Artifact upload", script);
     }
