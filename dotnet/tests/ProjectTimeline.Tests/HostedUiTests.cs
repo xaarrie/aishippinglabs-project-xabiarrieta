@@ -1,4 +1,5 @@
 using Xunit;
+using System.Text.RegularExpressions;
 
 namespace ProjectTimeline.Tests;
 
@@ -56,6 +57,14 @@ public sealed class HostedUiTests
         Assert.DoesNotContain("use.fontawesome.com", source);
         Assert.DoesNotContain("setup-fonts", source);
         Assert.Contains("--ui-size-breakpoint: 700px", styles);
+        Assert.Contains("--ui-transparent", styles);
+        Assert.Contains("--ui-grid-card", styles);
+        Assert.Contains("--ui-negative-one", styles);
+        Assert.DoesNotContain("minmax(", styles[styles.IndexOf("* {", StringComparison.Ordinal)..]);
+        var componentStyles = styles[styles.IndexOf("* {", StringComparison.Ordinal)..];
+        Assert.DoesNotMatch(
+            new Regex(@"\b(?:margin|padding|gap|width|height|min-width|min-height|max-width|max-height|top|right|bottom|left|inset|grid-template-columns|grid-template-rows|border(?:-radius)?|outline-offset|font-size|letter-spacing)\s*:\s*(?:#[0-9a-fA-F]{3,8}|rgba?\(|transparent\b|-?\d+(?:\.\d+)?(?:px|vh|vw|%|fr|em|rem)?\b)", RegexOptions.CultureInvariant),
+            componentStyles);
         Assert.Contains("path === \"/profile\"", source);
         Assert.Contains("path === \"/users\"", source);
         Assert.DoesNotContain("app.js", html);

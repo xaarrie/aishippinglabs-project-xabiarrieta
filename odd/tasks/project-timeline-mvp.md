@@ -345,3 +345,29 @@ The independent verification of the authorized web-admin redesign found two rema
 - `ibernova-ds_review-design` with profile `web-admin`: rerun after the correction; applicable shell, canvas, responsive navigation, accessibility, and token-composition feedback addressed. Final result recorded in the delivery response.
 - Required npm/.NET build and test, diff-check, and status commands were rerun after implementation; exact outcomes are recorded in the delivery response.
 - The pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` change was not touched, staged, reverted, or committed and remains separately attributed as dirty.
+
+## Final narrow semantic-token correction
+
+The independent audit identified one remaining strict local semantic-token gap. This correction is limited to the hosted React stylesheet and its focused assertions.
+
+- `PTM-M001` Remove direct component-level presentation literals from `ClientApp/src/styles.css`.
+  - Acceptance: outside the token declaration layer, component rules consume meaningful `--ui-*` aliases for colors, spacing, radii, dimensions, layout values, transparent/zero values, and grid minimums; visual behavior, responsive layout, routes, accessibility, and no-Entra/no-CDN constraints remain unchanged.
+- `PTM-M002` Extend focused assertions and record final verification.
+  - Acceptance: tests detect the remaining forbidden component-level semantic literals and verify alias usage; the web-admin DS review is rerun and reported honestly.
+
+## Final narrow semantic-token correction status
+
+- [x] `PTM-M001` Component-level presentation literals removed from the stylesheet; semantic `--ui-*` aliases now cover direct zero, transparent, dimensions, grid minimum, and layout values outside the token layer.
+- [x] `PTM-M002` Assertions, DS review, required verification, dirty attribution, and work-unit commit recorded.
+
+## Final narrow semantic-token correction verification
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed; Vite 7.1.7 transformed 30 modules and emitted the updated hosted bundle.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 8 tests, 0 failures, including strict hosted stylesheet assertions.
+- `ibernova-ds_review-design` with profile `web-admin`: passed, `100/100`, no issues.
+- `git diff --check main...HEAD`: passed with no output.
+- The pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted; it is separately attributed in the final status.
+- No remote access, Entra authentication, CDN assets, or unavailable branded assets were used.
+
+Final narrow semantic-token correction commit: recorded in the delivery response for this work unit.
