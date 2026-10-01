@@ -162,3 +162,35 @@ Final corrective verification:
 - `git status --short`: clean with no output.
 
 Known limitations: no live PostgreSQL server was available, so migration execution remains source/provider-registration verified only; the browser UI is dependency-free static JavaScript and was not driven through a live authenticated browser session.
+
+## Final verification findings before final correction
+
+The final verifier confirmed the prior migration and hosted-workflow corrections, but identified two remaining specification gaps. All earlier evidence above is preserved unchanged.
+
+- `PTM-G001` Implement a real local-MVP password recovery flow.
+  - Exact verifier finding: “`/api/auth/recovery` remains only an acknowledgement endpoint: it ignores the request and returns a generic message, with no expiring one-time recovery token/state, secure token persistence, configurable local outbox delivery, reset endpoint, or hosted request/reset journey.”
+  - Acceptance: the request endpoint creates expiring one-time state, persists only a secure token representation, delivers a recovery link/code through a documented configurable local outbox provider rather than source logging or a response body, and the reset endpoint validates and invalidates the token while storing a safe password hash. The hosted UI, configuration documentation, and tests cover expiry, one-time use, and reset without exposing secrets.
+- `PTM-G002` Give Administrator consistent descendant project access.
+  - Exact verifier finding: “Administrators can list all projects, but descendant checks (`CanReadProject`, `CanWriteProject`, `CanManageProject`) do not special-case the Administrator role, so an administrator who neither owns nor participates in a project is denied access to participants, timelines, entries, and artifacts.”
+  - Acceptance: centralized authorization predicates consistently allow Administrator access to project participants, timelines, entries, and artifacts while preserving owner and applicable participant behavior; tests cover an administrator accessing a project they neither own nor participate in.
+
+Final correction status before implementation:
+
+- [ ] `PTM-G001` Local password recovery token/outbox/reset flow, hosted journey, documentation, and tests.
+- [ ] `PTM-G002` Centralized Administrator descendant authorization and unrelated-project coverage.
+
+Final correction status after implementation:
+
+- [x] `PTM-G001` Recovery creates expiring one-time state, persists only a SHA-256 token representation, delivers through the configurable file outbox, resets PBKDF2 password hashes, and is covered by hosted UI, README, expiry, one-time-use, and reset tests without secret responses or logs.
+- [x] `PTM-G002` Centralized `ProjectAuthorization` applies Administrator access consistently to project participants, timelines, entries, and artifacts while preserving owner and participant rules; tests cover an unrelated project.
+
+Final correction verification:
+
+- `dotnet restore dotnet/ProjectTimeline.sln`: passed; all projects restored or were already current.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 8 tests, 0 failures.
+- `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build`: startup probe reached `http://localhost:5000`; the host remained available while initialization reported the expected unavailable PostgreSQL connection diagnostic because no connection variable was supplied; probe was stopped after 10 seconds. No live migration execution is claimed.
+- `git diff --check main...HEAD`: passed with no output before commit.
+- `git status --short`: pending only the final correction files before commit; final status is recorded after the commits below.
+
+Final correction commit: `8a42376 fix(timeline): complete recovery and administrator access`.
