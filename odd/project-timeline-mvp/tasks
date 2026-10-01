@@ -20,7 +20,7 @@ The previous verification only established compilation, two narrow tests, and st
 
 - `dotnet restore dotnet/ProjectTimeline.sln`: passed.
 - `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed, 0 warnings, 0 errors.
-- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed, 3 tests, 0 failures.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed, 4 tests, 0 failures.
 
 ## Remaining limitations
 

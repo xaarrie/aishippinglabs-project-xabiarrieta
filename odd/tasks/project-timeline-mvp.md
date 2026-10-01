@@ -114,7 +114,7 @@ Corrective evidence:
 
 - `dotnet restore dotnet/ProjectTimeline.sln`: passed.
 - `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed, 0 warnings, 0 errors.
-- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed, 3 tests, 0 failures.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed, 4 tests, 0 failures.
 
 Remaining limitations are recorded honestly: the hosted UI is a dependency-free static MVP surface and does not yet provide full end-to-end forms for every nested workflow; authorization/OData behavior has not been exercised through a live TestServer; no live PostgreSQL server was available for migration execution.
 
