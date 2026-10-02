@@ -66,6 +66,10 @@ public sealed class HostedUiTests
         Assert.Contains("new AbortController()", source);
         Assert.Contains("controller.abort()", source);
         Assert.Contains("signal: controller.signal", source);
+        Assert.DoesNotMatch(new Regex(@"useEffect\s*\(\s*load\s*,", RegexOptions.CultureInvariant), source);
+        Assert.Contains("useEffect(() => { load(); }", source);
+        Assert.Contains("class RouteErrorBoundary", source);
+        Assert.Contains("<RouteErrorBoundary>{content}</RouteErrorBoundary>", source);
         Assert.Contains("Unable to load this project.", source);
         Assert.Contains("function navigate(path,", source);
         Assert.Contains("function Link", source);

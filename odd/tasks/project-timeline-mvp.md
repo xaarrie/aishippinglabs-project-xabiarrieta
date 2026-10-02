@@ -565,3 +565,28 @@ The current feature branch is reopened for the authorized production SPA-navigat
 - The unrelated `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted. The generated hosted bundle is part of the related Web API serving boundary.
 - Limits: no live PostgreSQL database or authenticated browser session was used; no remote services, Entra, CDN, push, or PR were used.
 - Work-unit commit: `5ea5e8f fix(timeline): repair runtime SPA navigation`.
+
+## Confirmed runtime SPA-navigation failure correction
+
+The required browser reproduction was confirmed with a valid local administrator session before source edits:
+
+- `/projects` rendered successfully.
+- Clicking Profile or Users changed the URL, then the hosted React app crashed to a blank page.
+- Browser console reported `TypeError: v is not a function` in the hosted React bundle.
+- Root cause: several ClientApp components passed Promise-returning `load` functions directly to `useEffect(load, dependencies)`. React later treated the Promise as an effect cleanup during navigation/unmount and attempted to invoke it.
+
+The confirmed correction is reopened as a bounded runtime work unit:
+
+- `PTM-R004` Make every ClientApp effect cleanup-safe and transition-safe. Audit all effects so callbacks do not return Promises; preserve/refine AbortController cleanup for route-dependent fetches and prevent stale responses.
+- `PTM-R005` Add route-level error containment. Future component failures must render a safe route-level error state instead of blanking the entire SPA.
+- `PTM-R006` Add focused regression coverage and rebuild the hosted bundle. Static checks reject direct Promise-returning `useEffect(load, ...)` patterns, tests cover navigation lifecycle assumptions, and the generated production bundle is refreshed.
+
+## Confirmed runtime SPA-navigation correction status before implementation
+
+- [ ] `PTM-R004` Effect cleanup safety and stale-response protection.
+- [ ] `PTM-R005` Route-level error rendering/error boundaries.
+- [ ] `PTM-R006` Regression tests, hosted bundle rebuild, browser verification, and delivery evidence.
+
+## Confirmed runtime SPA-navigation correction evidence
+
+Prior evidence is preserved above. Browser verification, command results, dirty-file attribution, tracker mirror, and the related Conventional Commit will be appended after implementation.
