@@ -535,5 +535,5 @@ The current feature branch is reopened for the authorized single-page navigation
 - Short `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build --configuration Release` probe: host reached `http://localhost:5000` and remained available; initialization reported `The ConnectionString property has not been initialized` because no `ConnectionStrings__ProjectTimeline` value was supplied. The first probe encountered a stale local Debug host on port 5000; that process was stopped and the Release probe then succeeded. No live PostgreSQL execution or authenticated browser session is claimed.
 - `git diff --check main...HEAD`: passed with no output.
 - `git status --short`: related App.jsx, HostedUiTests.cs, tracker, hosted index, and generated JS are intended changes; the pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted.
-- Work-unit commit: recorded in the delivery response.
+- Work-unit commit: `da68a07 fix(timeline): repair SPA route transitions`.
 - Limits: no router library, remote assets, Entra, CDN, push, PR, or live PostgreSQL database was used.
