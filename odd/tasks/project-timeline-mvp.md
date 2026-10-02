@@ -503,3 +503,37 @@ The current feature branch is reopened for the authorized navigation correction.
 - `git status --short`: implementation, hosted tests, tracker/mirror are intended changes; the pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted.
 - Work-unit commits: `d229a3e fix(timeline): scope navigation to projects`; `e2e5485 build(timeline): refresh hosted client bundle`.
 - Limits: no authenticated browser session or live PostgreSQL execution was performed; direct-route support is source/test verified through the existing ASP.NET Core SPA fallback.
+
+## Authorized SPA routing repair
+
+The current feature branch is reopened for the authorized single-page navigation repair. All prior evidence remains preserved unchanged above. Mapper evidence is the current `ClientApp/src/App.jsx` implementation: `Link` already calls `preventDefault()` and a shared `navigate`, while `Shell` independently owns `path` state, installs its own `popstate` listener, parses routes inline, and loads project context without cancellation. The existing Web API SPA fallback and generated `wwwroot/assets` remain part of the delivery boundary. No router library or unrelated WebApi project-file change is authorized.
+
+- `PTM-Q001` Establish one canonical reactive location state and testable route resolver.
+  - Acceptance: exactly one location subscription and one `popstate` listener drive navigation; `Shell` receives canonical route/context instead of maintaining path state; all existing direct routes (recovery, project maintenance, project-scoped timelines, conversation/new/detail, and not-found) remain resolved; internal `Link` navigation prevents default browser reload; route resolver coverage and generated hosted route markers are asserted.
+- `PTM-Q002` Make project-scoped data loading transition-safe.
+  - Acceptance: route changes clear prior project context immediately; project/timeline/entry data-dependent screens expose explicit loading and error states; AbortController and/or request identity prevents aborted, slow, or stale responses from overwriting the current route; authorization and project/timeline consistency validation remain enforced.
+- `PTM-Q003` Verify and deliver the SPA routing repair as coherent work units.
+  - Acceptance: source assertions cover one location subscription, no duplicate Shell route state, navigation without reload, resolver coverage, stale-request protection, history navigation, and generated hosted asset alignment; required npm/.NET/startup/diff/status commands are recorded exactly; only related files are committed and the pre-existing WebApi `.csproj` modification remains untouched.
+
+## SPA routing repair status before implementation
+
+- [ ] `PTM-Q001` Canonical reactive location state and route resolver.
+- [ ] `PTM-Q002` Transition-safe project-scoped loading and explicit states.
+- [ ] `PTM-Q003` Tests, verification, tracker mirror, and coherent work-unit commits.
+
+## SPA routing repair implementation observation
+
+- [x] `PTM-Q001` Canonical location state and resolver implemented in `ClientApp/src/App.jsx`; `App` owns the sole `popstate` subscription and passes the resolved route/context to `Shell`, while `Link` continues to prevent default navigation.
+- [x] `PTM-Q002` Project context now clears on route transitions and reloads through an `AbortController`-guarded request with explicit loading and error states; stale and aborted responses cannot replace the current project.
+- [x] `PTM-Q003` Focused hosted assertions, generated asset alignment, required verification, tracker mirror, and coherent work-unit commit recorded below.
+
+## SPA routing repair verification and delivery
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed; Vite 7.1.7 transformed 30 modules and emitted `wwwroot/assets/index-BiWMhRjg.js` plus the aligned stylesheet.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 11 tests, 0 failures. Hosted assertions cover one `popstate` subscription, no duplicate Shell route state, prevented internal navigation, route resolver markers, AbortController stale-response protection, loading/error states, direct routes, and generated asset existence/bundle markers.
+- Short `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build --configuration Release` probe: host reached `http://localhost:5000` and remained available; initialization reported `The ConnectionString property has not been initialized` because no `ConnectionStrings__ProjectTimeline` value was supplied. The first probe encountered a stale local Debug host on port 5000; that process was stopped and the Release probe then succeeded. No live PostgreSQL execution or authenticated browser session is claimed.
+- `git diff --check main...HEAD`: passed with no output.
+- `git status --short`: related App.jsx, HostedUiTests.cs, tracker, hosted index, and generated JS are intended changes; the pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted.
+- Work-unit commit: recorded in the delivery response.
+- Limits: no router library, remote assets, Entra, CDN, push, PR, or live PostgreSQL database was used.

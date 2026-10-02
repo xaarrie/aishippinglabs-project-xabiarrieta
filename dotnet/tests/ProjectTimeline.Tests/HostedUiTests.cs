@@ -11,6 +11,7 @@ public sealed class HostedUiTests
         var root = FindRepositoryRoot(AppContext.BaseDirectory);
         var source = File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src", "App.jsx"));
         var html = File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "wwwroot", "index.html"));
+        var assetsRoot = Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "wwwroot");
         Assert.Contains("from \"react\"", source);
         Assert.Contains("createRoot", File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src", "main.jsx")));
         var login = source[source.IndexOf("function Login", StringComparison.Ordinal)..source.IndexOf("function RecoveryRequest", StringComparison.Ordinal)];
@@ -45,6 +46,16 @@ public sealed class HostedUiTests
         Assert.Contains("/api/projects/${project.id}/participants", source);
         Assert.Contains("Artifact upload", source);
         Assert.Contains("function Shell", source);
+        Assert.Contains("export function resolveRoute", source);
+        Assert.Contains("function useLocationState", source);
+        Assert.Single(Regex.Matches(source, "addEventListener\\(\\\"popstate\\\""));
+        Assert.DoesNotContain("function Shell({ user, path", source);
+        Assert.DoesNotContain("const [path, setPath]", source);
+        Assert.Contains("preventDefault()", source);
+        Assert.Contains("new AbortController()", source);
+        Assert.Contains("controller.abort()", source);
+        Assert.Contains("signal: controller.signal", source);
+        Assert.Contains("Unable to load this project.", source);
         Assert.Contains("function navigate(path)", source);
         Assert.Contains("function Link", source);
         Assert.Contains("addEventListener(\"popstate\"", source);
@@ -110,6 +121,20 @@ public sealed class HostedUiTests
         Assert.DoesNotContain("app.js", html);
         Assert.Contains("type=\"module\"", html);
         Assert.Contains("assets/", html);
+        var assetMatches = Regex.Matches(html, "(?:src|href)=\\\"([^\\\"]+assets/[^\\\"]+)\\\"");
+        Assert.NotEmpty(assetMatches);
+        foreach (Match assetMatch in assetMatches)
+        {
+            var relativeAsset = assetMatch.Groups[1].Value.TrimStart('.', '/', '\\').Replace('/', Path.DirectorySeparatorChar);
+            Assert.True(File.Exists(Path.Combine(assetsRoot, relativeAsset)), $"Hosted asset is missing: {relativeAsset}");
+        }
+        var jsAsset = assetMatches.Cast<Match>().Select(x => x.Groups[1].Value).FirstOrDefault(x => x.EndsWith(".js", StringComparison.Ordinal));
+        Assert.NotNull(jsAsset);
+        var bundlePath = jsAsset!.TrimStart('.', '/', '\\').Replace('/', Path.DirectorySeparatorChar);
+        var bundle = File.ReadAllText(Path.Combine(assetsRoot, bundlePath));
+        Assert.Contains("popstate", bundle);
+        Assert.Contains("recovery-request", bundle);
+        Assert.Contains("projects", bundle);
     }
 
     private static string FindRepositoryRoot(string start)
