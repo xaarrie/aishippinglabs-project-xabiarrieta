@@ -440,3 +440,13 @@ Backend work-unit verification: `dotnet build dotnet/ProjectTimeline.sln --confi
 - [x] `PTM-O001` Separate entry list/detail contracts and secure artifact behavior.
 - [x] `PTM-O002` Workspace conversation display and direct `/projects/:projectId/timelines/:timelineId/entries/new` plus `/projects/:projectId/timelines/:timelineId/entries/:entryId` routes implemented. Full content is confined to the detail screen; create-then-upload reports and retries partial upload failures.
 - [x] `PTM-O003` Provider-independent business and hosted UI assertions added; final required verification and work-unit evidence remain to be recorded below.
+
+## Project Timeline conversation/artifact final verification
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed; Vite 7.1.7 transformed 30 modules and emitted the hosted bundle.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 10 tests, 0 failures.
+- `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build --configuration Release`: host listened on `http://localhost:5000` during the 10-second probe. Initialization logged `The ConnectionString property has not been initialized` because no `ConnectionStrings__ProjectTimeline` value was supplied; no live PostgreSQL database, migration execution, or authenticated browser session is claimed. The command was terminated by the short probe timeout.
+- `git diff --check main...HEAD`: passed with no output.
+- Work-unit commits: `1bb8fae feat(timeline): separate entry contracts and secure artifacts`; `a6d88c0 feat(timeline): add conversation entry routes`.
+- The unrelated `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted.
