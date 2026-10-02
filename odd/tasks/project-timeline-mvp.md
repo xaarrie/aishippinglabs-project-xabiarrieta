@@ -476,3 +476,30 @@ The independent verification identified three remaining defects in the current t
 - Commit: `1f42cac fix(timeline): close conversation verification gaps`.
 - Dirty-file attribution: the only unrelated dirty file is the pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` change, containing the previously present `Microsoft.EntityFrameworkCore.Design` package reference. It was not touched, staged, reverted, or committed. Generated hosted assets are part of this correction because the Web API serves the production bundle.
 - Limits: provider-independent seams permit direct artifact copy-failure cleanup coverage and source-level verification of database-persistence cleanup; no live PostgreSQL persistence-failure execution was available. No remote services, push, PR, or external credentials were used.
+
+## Authorized project-scoped timeline navigation correction
+
+The current feature branch is reopened for the authorized navigation correction. All prior evidence remains preserved unchanged above. The change keeps the existing dependency-free React router, hosted SPA fallback, centralized API authorization, semantic DS-inspired styling, and no-Entra/no-CDN/no-remote-asset constraints.
+
+- `PTM-P001` Move timeline consultation and maintenance under the parent Project flow.
+  - Acceptance: Timelines is absent from global/sidebar navigation; the Projects consultation/grid gives every project a clear Timeline action/link; timeline routes are project-scoped (`/projects/:projectId/timelines`, `/projects/:projectId/timelines/new`, `/projects/:projectId/timelines/:timelineId/edit`) with direct-route refresh support; workspace/conversation entry routes remain usable.
+- `PTM-P002` Enforce project/timeline route context and preserve authorization.
+  - Acceptance: timeline list, create, edit, and consultation screens validate that the route project matches the timeline parent; cross-project navigation is rejected; existing API authorization remains enforced and no unrelated project data is exposed.
+- `PTM-P003` Update hosted UI coverage and verification evidence.
+  - Acceptance: static/hosted assertions cover absent sidebar timeline navigation, project consultation action, project-scoped routes, route-context authorization behavior, direct routes, semantic styling, and forbidden remote assets; required verification and dirty-file attribution are recorded.
+
+## Project-scoped timeline navigation correction status
+
+- [x] `PTM-P001` Project-scoped consultation and maintenance routes. Timelines was removed from the sidebar; Projects exposes a Timeline action; consultation/create/edit routes are nested below the project and workspace/entry routes remain available.
+- [x] `PTM-P002` Route/timeline parent consistency and authorization behavior. Timeline consultation/create/edit and entry-create screens compare route project context with the timeline parent before rendering or mutating; existing API authorization remains in place.
+- [x] `PTM-P003` Tests, verification, tracker mirror, and coherent work-unit commit. Hosted assertions cover the navigation and context boundary; required checks and dirty-file attribution are recorded below.
+
+## Project-scoped timeline navigation correction verification
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed; Vite 7.1.7 transformed 30 modules and emitted the hosted bundle.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 11 tests, 0 failures. The hosted assertions cover sidebar absence, project consultation action, project-scoped routes, route/timeline consistency, direct entry routes, semantic token styling, and no remote asset references.
+- `git diff --check main...HEAD`: passed with no output before commit.
+- `git status --short`: implementation, hosted tests, tracker/mirror are intended changes; the pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted.
+- Work-unit commit: recorded after the related files are committed.
+- Limits: no authenticated browser session or live PostgreSQL execution was performed; direct-route support is source/test verified through the existing ASP.NET Core SPA fallback.

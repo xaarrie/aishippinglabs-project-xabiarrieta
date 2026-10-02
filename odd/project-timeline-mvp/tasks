@@ -175,3 +175,30 @@ The remaining explicit requirements are reopened as two bounded tasks. All prior
 
 - Prior Release restore/build/test evidence passed with 8 tests and 0 failures; startup reached `http://localhost:5000` with the expected unavailable PostgreSQL diagnostic when no connection variable was supplied.
 - No live PostgreSQL migration, authenticated browser session, live TestServer authorization integration, or provider-backed AI/RAG execution was claimed.
+
+## Authorized project-scoped timeline navigation correction
+
+The current feature branch is reopened for the authorized navigation correction. Prior mirror evidence remains preserved. The implementation must retain the dependency-free React router, hosted SPA fallback, centralized API authorization, semantic DS-inspired styling, and no-Entra/no-CDN/no-remote-asset constraints.
+
+- `PTM-P001` Move timeline consultation and maintenance under the parent Project flow.
+  - Acceptance: remove Timelines from global/sidebar navigation; add a clear Timeline action/link to each project in the Projects consultation/grid; scope routes to `/projects/:projectId/timelines`, `/projects/:projectId/timelines/new`, and `/projects/:projectId/timelines/:timelineId/edit`; preserve direct refresh and project workspace/conversation entry routes.
+- `PTM-P002` Enforce project/timeline route context and preserve authorization.
+  - Acceptance: timeline list, create, edit, and consultation screens validate the route project against the timeline parent; reject cross-project navigation; retain existing API authorization and prevent unrelated project data exposure.
+- `PTM-P003` Update hosted UI coverage and verification evidence.
+  - Acceptance: assertions cover absent sidebar timeline navigation, project consultation action, project-scoped routes, route-context authorization behavior, direct routes, semantic styling, and forbidden remote assets; verification and dirty-file attribution are recorded.
+
+## Project-scoped timeline navigation correction status
+
+- [x] `PTM-P001` Project-scoped consultation and maintenance routes. Timelines was removed from the sidebar; Projects exposes a Timeline action; consultation/create/edit routes are nested below the project and workspace/entry routes remain available.
+- [x] `PTM-P002` Route/timeline parent consistency and authorization behavior. Timeline consultation/create/edit and entry-create screens compare route project context with the timeline parent before rendering or mutating; existing API authorization remains in place.
+- [x] `PTM-P003` Tests, verification, tracker mirror, and coherent work-unit commit. Hosted assertions cover the navigation and context boundary; required checks and dirty-file attribution are recorded below.
+
+## Project-scoped timeline navigation correction verification
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed; Vite 7.1.7 transformed 30 modules and emitted the hosted bundle.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 11 tests, 0 failures.
+- `git diff --check main...HEAD`: passed with no output before commit.
+- `git status --short`: implementation, hosted tests, tracker/mirror are intended changes; the pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted.
+- Work-unit commit: recorded after the related files are committed.
+- Limits: no authenticated browser session or live PostgreSQL execution was performed; direct-route support is source/test verified through the existing ASP.NET Core SPA fallback.

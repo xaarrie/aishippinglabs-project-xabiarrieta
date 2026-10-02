@@ -52,9 +52,16 @@ public sealed class HostedUiTests
         Assert.Contains("/users/${x.id}/edit", source);
         Assert.Contains("/projects/new", source);
         Assert.Contains("/projects/${x.id}/edit", source);
-        Assert.Contains("/timelines", source);
-        Assert.Contains("/timelines/new", source);
-        Assert.Contains("/timelines/${x.id}/edit", source);
+        Assert.Contains("href={`/projects/${x.id}/timelines`}", source);
+        Assert.Contains("const projectTimelines = path.match", source);
+        Assert.Contains("const timelineCreate = path.match", source);
+        Assert.Contains("const timelineEdit = path.match", source);
+        Assert.Contains("/projects/${projectId}/timelines/new", source);
+        Assert.Contains("/projects/${projectId}/timelines/${x.id}/edit", source);
+        Assert.DoesNotContain("<Link className={active(\"/timelines\")", source);
+        Assert.Contains("The timeline does not belong to this project.", source);
+        Assert.Contains("timeline.projectId !== project.id", source);
+        Assert.Contains("value.projectId === projectId", source);
         Assert.Contains("function DataTable", source);
         Assert.Contains("<table>", source);
         Assert.Contains("window.confirm", source);
@@ -98,7 +105,7 @@ public sealed class HostedUiTests
             componentStyles);
         Assert.Contains("path === \"/profile\"", source);
         Assert.Contains("path === \"/users\"", source);
-        Assert.Contains("path === \"/timelines\"", source);
+        Assert.DoesNotContain("path === \"/timelines\"", source);
         Assert.Contains("Page not found", source);
         Assert.DoesNotContain("app.js", html);
         Assert.Contains("type=\"module\"", html);
