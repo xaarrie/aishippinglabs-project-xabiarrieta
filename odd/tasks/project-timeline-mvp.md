@@ -371,3 +371,41 @@ The independent audit identified one remaining strict local semantic-token gap. 
 - No remote access, Entra authentication, CDN assets, or unavailable branded assets were used.
 
 Final narrow semantic-token correction commit: recorded in the delivery response for this work unit.
+
+## Authorized routing repair and maintenance-screen workflow
+
+The current feature branch is reopened for the authorized routing and maintenance-screen repair. Earlier evidence remains preserved unchanged above. The mapper evidence is the existing React client boundary (`ClientApp/src/App.jsx` and `api.js`) with a single lightweight `pushState` helper already present, plus the existing Web API SPA fallback. The route/delegation rationale is to centralize the existing dependency-free client router and shared data model rather than introduce React Router, while delegating refresh-safe record reads to narrowly scoped API endpoints that reuse current authorization predicates and CRUD services.
+
+- `PTM-N001` Centralize reactive SPA routing and shared authenticated data refresh.
+  - Acceptance: internal navigation uses one route source and `pushState`; direct routes and not-found behavior render without refresh; profile save updates shared local state instead of calling `location.reload()`; the Web API SPA fallback remains intact.
+- `PTM-N002` Add distinct authorized maintenance routes and responsive consultation grids.
+  - Acceptance: users (`/users`, `/users/new`, `/users/:id/edit`), projects (`/projects`, `/projects/new`, `/projects/:id/edit`), and timelines (`/timelines`, `/timelines/new`, `/timelines/:id/edit`) have separate list/create/edit screens; lists provide accessible responsive grids, create/edit/delete actions, confirmation, accurate user soft-deactivation disclosure, and role-filtered sidebar navigation; `/projects/:id` remains the workspace route.
+- `PTM-N003` Add refresh-safe authorized single-record and timeline-list API reads.
+  - Acceptance: authorized single-record GETs exist for users, projects, and timelines; `GET /api/timelines` filters by readable projects while administrators see all; password hashes remain excluded and existing CRUD authorization is reused.
+- `PTM-N004` Extend business/hosted UI coverage and record verification.
+  - Acceptance: supported authorization tests cover new reads/lists; hosted UI assertions cover routing, screens, grids, actions, and no full reload; required builds/tests/startup probe/diff/status results and limitations are recorded.
+
+## Routing and maintenance work status before implementation
+
+- [ ] `PTM-N001` Central reactive routing and shared data refresh.
+- [ ] `PTM-N002` Distinct user/project/timeline maintenance screens.
+- [ ] `PTM-N003` Refresh-safe authorized API reads.
+- [ ] `PTM-N004` Tests, verification, tracker mirror, and coherent work-unit commits.
+
+## Routing and maintenance work status after implementation
+
+- [x] `PTM-N001` Central reactive routing and shared data refresh. `navigate` and `Link` now drive the single `popstate` route source; direct routes render through the existing fallback; profile save updates the authenticated user state without `location.reload()`; unknown authenticated paths render a not-found screen.
+- [x] `PTM-N002` Distinct user/project/timeline maintenance screens. Separate consultation, create, and edit routes use accessible responsive `DataTable` grids, explicit actions, confirmation, soft-deactivation disclosure, administrator-only Users navigation, and the existing project workspace with participants, entries, and artifacts.
+- [x] `PTM-N003` Refresh-safe authorized API reads. Added administrator user GET, readable project GET, readable timeline GET, and authorization-filtered timeline list; hashes remain outside DTOs and existing authorization/CRUD endpoints are reused.
+- [x] `PTM-N004` Tests and verification. Hosted assertions cover route centralization, grids, actions, no full reload, role visibility, and direct route/not-found source behavior. One initial incremental test failed because Vite rotated the generated asset hash; the sequential Release build/test rerun passed.
+
+## Routing and maintenance verification
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed; Vite 7.1.7 transformed 30 modules and emitted the hosted bundle.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 8 tests, 0 failures after the sequential rebuild.
+- `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build --configuration Release`: host reached `http://localhost:5000`; initialization reported `The ConnectionString property has not been initialized` because no `ConnectionStrings__ProjectTimeline` value was supplied. The host remained available until the short probe timeout; no live PostgreSQL execution is claimed.
+- `git diff --check main...HEAD`: passed with no output before final commit.
+- Final status: the unrelated `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, and uncommitted; implementation, tracker, tests, and generated bundle changes are the intended work-unit files.
+
+Routing and maintenance work-unit commit: pending final commit.
