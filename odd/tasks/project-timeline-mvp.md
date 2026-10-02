@@ -450,3 +450,29 @@ Backend work-unit verification: `dotnet build dotnet/ProjectTimeline.sln --confi
 - `git diff --check main...HEAD`: passed with no output.
 - Work-unit commits: `1bb8fae feat(timeline): separate entry contracts and secure artifacts`; `a6d88c0 feat(timeline): add conversation entry routes`.
 - The unrelated `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted.
+
+## Independent verification findings — narrowly scoped correction
+
+The independent verification identified three remaining defects in the current timeline conversation/artifact implementation. The pre-existing evidence above is preserved unchanged.
+
+- `PTM-O004` Bound entry previews to at most 500 Unicode characters. The current mapper emits 500 runes of content plus an ellipsis, producing 501 Unicode characters for truncated content. If an ellipsis is used, the implementation must reserve one character for it (499 content runes plus the ellipsis) and remain rune-safe.
+- `PTM-O005` Pass a real project ID through entry-detail route/context. The current `EntryDetail` render path does not receive `projectId`, so its back link can become `/projects/undefined` for direct detail URLs. Validate route, project, and timeline consistency while preserving the existing API authorization checks.
+- `PTM-O006` Make artifact writes failure-atomic. A copy failure can leave a partial filesystem artifact because the generated storage path is not tracked and cleaned before `SaveAsync` returns. Track and remove the target path for copy failures as well as database persistence failures, and add provider-independent cleanup tests where the seams permit.
+
+### Narrow correction acceptance
+
+- `PTM-O004`: list previews are never longer than 500 Unicode runes, including any ellipsis; full detail content remains unchanged.
+- `PTM-O005`: direct entry-detail navigation has a real project back-link; route/project/timeline mismatches are rejected; authorization remains centralized and enforced.
+- `PTM-O006`: failed filesystem copies and failed artifact database persistence leave no target file; tests cover both cleanup paths as provider-independent seams allow.
+- Regression tests and hosted UI assertions cover all three findings. Required npm/.NET verification, startup probe, diff check, dirty-file attribution, commit identity, and Engram mirror are recorded below.
+
+## Narrow correction verification and delivery
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed; Vite 7.1.7 transformed 30 modules and emitted the hosted bundle.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release --no-build`: passed; 11 tests, 0 failures. This includes the 500-rune preview regression, rune-safe ellipsis boundary, copy-failure cleanup test, route/context assertions, consistency checks, and persistence-cleanup source assertion.
+- Short no-build API startup probe: passed host startup and reached `http://localhost:5000`; initialization logged `The ConnectionString property has not been initialized` because no `ConnectionStrings__ProjectTimeline` value was supplied. No live PostgreSQL execution or authenticated browser session is claimed; the probe was stopped after 8 seconds.
+- `git diff --check main...HEAD`: passed with no output after delivery commit.
+- Commit: `5c16b65 fix(timeline): close conversation verification gaps`.
+- Dirty-file attribution: the only unrelated dirty file is the pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` change, containing the previously present `Microsoft.EntityFrameworkCore.Design` package reference. It was not touched, staged, reverted, or committed. Generated hosted assets are part of this correction because the Web API serves the production bundle.
+- Limits: provider-independent seams permit direct artifact copy-failure cleanup coverage and source-level verification of database-persistence cleanup; no live PostgreSQL persistence-failure execution was available. No remote services, push, PR, or external credentials were used.

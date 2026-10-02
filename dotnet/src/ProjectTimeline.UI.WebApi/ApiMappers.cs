@@ -12,6 +12,10 @@ public static class ApiMappers
     public static EntryListDto ToListDto(TimelineEntry x) => new(x.Id, x.TimelineId, x.EntryNumber, x.Title, Preview(x.Content), x.Status, new AuthorDisplayDto(x.Author.Id, x.Author.DisplayName), x.Artifacts.Select(ToSummary).ToList(), x.CreatedAtUtc, x.UpdatedAtUtc);
     public static EntryDetailDto ToDetailDto(TimelineEntry x) => new(x.Id, x.TimelineId, x.EntryNumber, x.Title, x.Content, x.Status, new AuthorDisplayDto(x.Author.Id, x.Author.DisplayName), x.Artifacts.Select(ToSummary).ToList(), x.CreatedAtUtc, x.UpdatedAtUtc);
     public static ArtifactSummaryDto ToSummary(TimelineArtifact x) => new(x.Id, x.FileName, x.ContentType, x.Length, x.CreatedAtUtc);
-    private static string Preview(string content) => content.Length <= 500 ? content : string.Concat(content.EnumerateRunes().Take(500).Select(r => r.ToString())) + "…";
+    private static string Preview(string content)
+    {
+        var runes = content.EnumerateRunes().ToArray();
+        return runes.Length <= 500 ? content : string.Concat(runes.Take(499).Select(r => r.ToString())) + "…";
+    }
     public static ArtifactDto ToDto(TimelineArtifact x) => new(x.Id, x.EntryId, x.FileName, x.ContentType, x.Length, x.CreatedAtUtc);
 }

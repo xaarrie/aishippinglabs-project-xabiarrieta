@@ -18,11 +18,27 @@ public sealed class BusinessTests
         var entry = new TimelineEntry { TimelineId = Guid.NewGuid(), Author = author, Title = "Title", Content = string.Concat(Enumerable.Repeat("🙂", 501)), Status = "Draft" };
         var list = ApiMappers.ToListDto(entry);
         var detail = ApiMappers.ToDetailDto(entry);
-        Assert.Equal(501, list.Preview.EnumerateRunes().Count());
+        Assert.Equal(500, list.Preview.EnumerateRunes().Count());
+        Assert.Equal(499, list.Preview[..^1].EnumerateRunes().Count());
         Assert.EndsWith("…", list.Preview);
         Assert.Equal(entry.Content, detail.Content);
         Assert.Equal("Safe Author", list.Author.DisplayName);
         Assert.Empty(list.Artifacts);
+    }
+
+    [Fact]
+    public async Task Artifact_copy_failure_cleans_partial_target()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "timeline-artifacts-tests", Guid.NewGuid().ToString("N"));
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["ArtifactStorage:BasePath"] = root }).Build();
+        var storage = new ArtifactStorage(configuration);
+        await Assert.ThrowsAsync<IOException>(() => storage.SaveAsync("P1", "T1", 1, "broken.pdf", "application/pdf", 12, new ThrowingStream(Encoding.ASCII.GetBytes("%PDF-1.7xxxx")), default));
+        Assert.False(Directory.Exists(root) && Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).Any());
+    }
+
+    private sealed class ThrowingStream(byte[] bytes) : MemoryStream(bytes)
+    {
+        public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken) => throw new IOException("copy failed");
     }
 
     [Fact]

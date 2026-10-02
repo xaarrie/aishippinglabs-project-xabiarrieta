@@ -35,8 +35,20 @@ public sealed class ArtifactStorage(IConfiguration configuration)
         if (new[] { ".doc", ".xls" }.Contains(extension) && !bytes.AsSpan(0, read).StartsWith(new byte[] { 0xD0, 0xCF, 0x11, 0xE0 })) throw new ArgumentException("The Office binary signature is invalid.");
         if (new[] { ".docx", ".xlsx" }.Contains(extension) && !bytes.AsSpan(0, read).StartsWith(new byte[] { 0x50, 0x4B, 0x03, 0x04 })) throw new ArgumentException("The Office container signature is invalid.");
         var storageName = $"{Guid.NewGuid():N}{extension}";
-        var path = GetSafePath(projectCode, timelineCode, entryNumber, storageName); Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        await using var output = File.Create(path); await output.WriteAsync(bytes.AsMemory(0, read), ct); await content.CopyToAsync(output, ct); return storageName;
+        var path = GetSafePath(projectCode, timelineCode, entryNumber, storageName);
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            await using var output = File.Create(path);
+            await output.WriteAsync(bytes.AsMemory(0, read), ct);
+            await content.CopyToAsync(output, ct);
+            return storageName;
+        }
+        catch
+        {
+            if (File.Exists(path)) File.Delete(path);
+            throw;
+        }
     }
     public void Delete(string projectCode, string timelineCode, int entryNumber, string storageName) { var path = GetSafePath(projectCode, timelineCode, entryNumber, storageName); if (File.Exists(path)) File.Delete(path); }
 }

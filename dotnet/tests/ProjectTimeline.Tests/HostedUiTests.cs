@@ -27,6 +27,11 @@ public sealed class HostedUiTests
         Assert.Contains("/api/entries/${entryId}/artifacts", source);
         Assert.Contains("/api/entries/${id}", source);
         Assert.Contains("function EntryDetail", source);
+        Assert.Contains("projectId={entryDetail[1]}", source);
+        Assert.Contains("timelineId={entryDetail[2]}", source);
+        Assert.Contains("projectId=${projectId}&timelineId=${timelineId}", source);
+        Assert.Contains("The timeline does not belong to this project.", source);
+        Assert.DoesNotContain("/projects/undefined", source);
         Assert.Contains("function EntryCreate", source);
         Assert.Contains("function UploadForm", source);
         Assert.Contains("preview", source);
@@ -35,6 +40,7 @@ public sealed class HostedUiTests
         Assert.Contains("const entryDetail = path.match", source);
         Assert.Contains("accept=\".pdf,.doc,.docx,.xls,.xlsx,.md,.markdown\"", source);
         Assert.Contains("Select the file again to retry", source);
+        Assert.Contains("if (File.Exists(path)) File.Delete(path)", File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.BusinessLogic", "ArtifactStorage.cs")));
         Assert.DoesNotContain("defaultValue={entry.content}", source);
         Assert.Contains("/api/projects/${project.id}/participants", source);
         Assert.Contains("Artifact upload", source);
