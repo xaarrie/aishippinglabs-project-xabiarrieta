@@ -564,3 +564,4 @@ The current feature branch is reopened for the authorized production SPA-navigat
 - `git diff --check main...HEAD`: passed with no output before delivery commit.
 - The unrelated `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted. The generated hosted bundle is part of the related Web API serving boundary.
 - Limits: no live PostgreSQL database or authenticated browser session was used; no remote services, Entra, CDN, push, or PR were used.
+- Work-unit commit: `5ea5e8f fix(timeline): repair runtime SPA navigation`.
