@@ -57,13 +57,18 @@ public sealed class ProjectAuthorization(ProjectTimelineDbContext db)
 }
 public sealed class TimelineService(ProjectTimelineDbContext db)
 {
+    public static void ValidateEntry(string title, string content, string status)
+    {
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > 200 || string.IsNullOrWhiteSpace(content) || content.Trim().Length > 20000 || string.IsNullOrWhiteSpace(status) || status.Trim().Length > 30) throw new ArgumentException("Entry title, content, or status is invalid.");
+    }
     public async Task<TimelineEntry> AddEntryAsync(Guid timelineId, Guid authorId, string title, string content, CancellationToken ct)
     {
+        ValidateEntry(title, content, "Draft");
         await using var tx = db.Database.IsRelational() ? await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct) : null;
         var timeline = await db.Timelines.SingleOrDefaultAsync(x => x.Id == timelineId, ct) ?? throw new KeyNotFoundException("Timeline not found.");
         var number = (await db.TimelineEntries.Where(x => x.TimelineId == timelineId).MaxAsync(x => (int?)x.EntryNumber, ct) ?? 0) + 1;
         var entry = new TimelineEntry { TimelineId = timeline.Id, AuthorId = authorId, EntryNumber = number, Title = title.Trim(), Content = content.Trim() };
-        if (entry.Title.Length is < 1 or > 200 || entry.Content.Length > 20000) throw new ArgumentException("Entry title or content is invalid.");
+        ValidateEntry(entry.Title, entry.Content, entry.Status);
         db.TimelineEntries.Add(entry); await db.SaveChangesAsync(ct); if (tx is not null) await tx.CommitAsync(ct); return entry;
     }
     public async Task<bool> IsProjectOwnerAsync(Guid projectId, Guid userId, CancellationToken ct) => await db.Projects.AnyAsync(x => x.Id == projectId && x.OwnerId == userId, ct);

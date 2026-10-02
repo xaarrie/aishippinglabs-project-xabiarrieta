@@ -409,3 +409,28 @@ The current feature branch is reopened for the authorized routing and maintenanc
 - Final status: the unrelated `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, and uncommitted; implementation, tracker, tests, and generated bundle changes are the intended work-unit files.
 
 Routing and maintenance work-unit commit: `e76f3f8 feat(timeline): repair routing and maintenance screens`.
+
+## Authorized Project Timeline conversation and artifact workflow
+
+The current feature branch is reopened for the authorized conversation-and-artifact workflow. All prior evidence remains preserved unchanged above. Mapper evidence is the existing `TimelineEntry` entity and `EntryDto` mapping in `dotnet/src/ProjectTimeline.DataAccessLogic/Entities.cs` and `dotnet/src/ProjectTimeline.UI.WebApi/ApiMappers.cs`, the entry/artifact services and centralized `ProjectAuthorization` in `dotnet/src/ProjectTimeline.BusinessLogic/Services.cs`, and the dependency-free React client boundary in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp/src/App.jsx` and `api.js`. The route choice is to extend the existing single `pushState`/`popstate` router rather than add React Router, preserving the Web API SPA fallback and current authorization seam.
+
+- `PTM-O001` Add separate authorized entry list/detail contracts and secure artifact behavior.
+  - Acceptance: workspace/list responses expose only a maximum-500-Unicode-character preview, safe author display data, and artifact summaries; detail responses expose full content, creator display name, and safe artifact download metadata/IDs; list/detail/create/update/upload/download reuse centralized project authorization; authenticated identity supplies authors; creation/update validation is aligned; artifact policy validates allowed extensions/content types, non-empty/configured maximum size, traversal-safe names, lightweight signatures where feasible, deterministic collision-safe storage names, cleanup after persistence failure, and no filesystem paths.
+- `PTM-O002` Render timeline conversations and direct entry routes in the hosted React client.
+  - Acceptance: `/projects/:projectId` renders chronological conversation entries with title/metadata, author, 500-character preview, artifact links, and full-entry links; `/projects/:projectId/timelines/:timelineId/entries/new` and `/projects/:projectId/timelines/:timelineId/entries/:entryId` are direct SPA routes; detail displays full text, creator, artifact links, and secure upload controls; create then upload is two-step, partial upload failure is honest and retryable, and workspace does not inline-edit full content.
+- `PTM-O003` Add provider-independent business/API and hosted UI coverage.
+  - Acceptance: tests cover preview/detail separation, safe author/artifact data, direct routes, authorization where infrastructure allows, allowed/rejected/empty/oversized/traversal/duplicate artifacts, conversation display, detail links, and create/upload controls; no external services or remote assets are introduced.
+
+## Project Timeline conversation/artifact work status before implementation
+
+- [ ] `PTM-O001` Separate entry contracts and secure artifact behavior.
+- [ ] `PTM-O002` Conversation workspace and direct entry routes.
+- [ ] `PTM-O003` Tests, verification, tracker mirror, and coherent work-unit commits.
+
+## Project Timeline conversation/artifact work status after backend work unit
+
+- [x] `PTM-O001` Separate entry list/detail contracts, centralized authorization reuse, aligned entry validation, and configured secure artifact policy implemented. Artifact storage uses deterministic random unique names while preserving original display names; invalid types/signatures, empty/oversized files, traversal, and persistence cleanup are covered by provider-independent tests.
+- [ ] `PTM-O002` Conversation workspace and direct entry routes.
+- [ ] `PTM-O003` Tests, verification, tracker mirror, and coherent work-unit commits.
+
+Backend work-unit verification: `dotnet build dotnet/ProjectTimeline.sln --configuration Release` passed sequentially; `dotnet test dotnet/ProjectTimeline.sln --configuration Release` passed with 10 tests. The generated Vite asset was rebuilt as part of verification. The unrelated WebApi `.csproj` change remains outside this work unit.

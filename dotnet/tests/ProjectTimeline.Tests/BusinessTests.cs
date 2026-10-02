@@ -2,13 +2,46 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using ProjectTimeline.BusinessLogic;
 using ProjectTimeline.DataAccessLogic;
+using ProjectTimeline.UI.WebApi;
 using Xunit;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Text;
 
 namespace ProjectTimeline.Tests;
 public sealed class BusinessTests
 {
+    [Fact]
+    public void Entry_list_preview_is_unicode_bounded_and_detail_keeps_full_content()
+    {
+        var author = new User { Email = "author@example.test", DisplayName = "Safe Author", PasswordHash = "hash" };
+        var entry = new TimelineEntry { TimelineId = Guid.NewGuid(), Author = author, Title = "Title", Content = string.Concat(Enumerable.Repeat("🙂", 501)), Status = "Draft" };
+        var list = ApiMappers.ToListDto(entry);
+        var detail = ApiMappers.ToDetailDto(entry);
+        Assert.Equal(501, list.Preview.EnumerateRunes().Count());
+        Assert.EndsWith("…", list.Preview);
+        Assert.Equal(entry.Content, detail.Content);
+        Assert.Equal("Safe Author", list.Author.DisplayName);
+        Assert.Empty(list.Artifacts);
+    }
+
+    [Fact]
+    public async Task Artifact_policy_accepts_pdf_rejects_invalid_empty_oversized_and_uses_unique_storage_names()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "timeline-artifacts-tests", Guid.NewGuid().ToString("N"));
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["ArtifactStorage:BasePath"] = root, ["ArtifactStorage:MaxBytes"] = "16" }).Build();
+        var storage = new ArtifactStorage(configuration);
+        async Task<string> Save(string name, string type, byte[] bytes) => await storage.SaveAsync("P1", "T1", 1, name, type, bytes.Length, new MemoryStream(bytes), default);
+        var pdf = Encoding.ASCII.GetBytes("%PDF-1.7 test");
+        var first = await Save("report.pdf", "application/pdf", pdf);
+        var second = await Save("report.pdf", "application/pdf", pdf);
+        Assert.NotEqual(first, second);
+        await Assert.ThrowsAsync<ArgumentException>(() => Save("empty.pdf", "application/pdf", []));
+        await Assert.ThrowsAsync<ArgumentException>(() => Save("bad.exe", "application/octet-stream", [1, 2]));
+        await Assert.ThrowsAsync<ArgumentException>(() => Save("bad.pdf", "application/pdf", Encoding.ASCII.GetBytes("not pdf")));
+        await Assert.ThrowsAsync<ArgumentException>(() => Save("large.pdf", "application/pdf", Encoding.ASCII.GetBytes("%PDF-123456789012345")));
+        await Assert.ThrowsAsync<ArgumentException>(() => Save("..\\secret.pdf", "application/pdf", pdf));
+    }
     [Fact]
     public void Artifact_storage_rejects_traversal_and_normalizes_safe_names()
     {
