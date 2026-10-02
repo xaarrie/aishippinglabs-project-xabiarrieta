@@ -52,6 +52,8 @@ public sealed class HostedUiTests
         Assert.DoesNotContain("function Shell({ user, path", source);
         Assert.DoesNotContain("const [path, setPath]", source);
         Assert.Contains("preventDefault()", source);
+        Assert.Contains("history.pushState", source);
+        Assert.Contains("new PopStateEvent(\"popstate\")", source);
         Assert.Contains("new AbortController()", source);
         Assert.Contains("controller.abort()", source);
         Assert.Contains("signal: controller.signal", source);
