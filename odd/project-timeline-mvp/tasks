@@ -200,5 +200,5 @@ The current feature branch is reopened for the authorized navigation correction.
 - `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 11 tests, 0 failures.
 - `git diff --check main...HEAD`: passed with no output before commit.
 - `git status --short`: implementation, hosted tests, tracker/mirror are intended changes; the pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted.
-- Work-unit commit: recorded after the related files are committed.
+- Work-unit commits: `d229a3e fix(timeline): scope navigation to projects`; `e2e5485 build(timeline): refresh hosted client bundle`.
 - Limits: no authenticated browser session or live PostgreSQL execution was performed; direct-route support is source/test verified through the existing ASP.NET Core SPA fallback.
