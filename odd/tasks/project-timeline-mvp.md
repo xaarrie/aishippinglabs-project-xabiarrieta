@@ -434,3 +434,9 @@ The current feature branch is reopened for the authorized conversation-and-artif
 - [ ] `PTM-O003` Tests, verification, tracker mirror, and coherent work-unit commits.
 
 Backend work-unit verification: `dotnet build dotnet/ProjectTimeline.sln --configuration Release` passed sequentially; `dotnet test dotnet/ProjectTimeline.sln --configuration Release` passed with 10 tests. The generated Vite asset was rebuilt as part of verification. The unrelated WebApi `.csproj` change remains outside this work unit.
+
+## Project Timeline conversation/artifact work status after implementation
+
+- [x] `PTM-O001` Separate entry list/detail contracts and secure artifact behavior.
+- [x] `PTM-O002` Workspace conversation display and direct `/projects/:projectId/timelines/:timelineId/entries/new` plus `/projects/:projectId/timelines/:timelineId/entries/:entryId` routes implemented. Full content is confined to the detail screen; create-then-upload reports and retries partial upload failures.
+- [x] `PTM-O003` Provider-independent business and hosted UI assertions added; final required verification and work-unit evidence remain to be recorded below.
