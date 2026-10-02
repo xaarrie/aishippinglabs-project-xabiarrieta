@@ -590,3 +590,20 @@ The confirmed correction is reopened as a bounded runtime work unit:
 ## Confirmed runtime SPA-navigation correction evidence
 
 Prior evidence is preserved above. Browser verification, command results, dirty-file attribution, tracker mirror, and the related Conventional Commit will be appended after implementation.
+
+## Confirmed runtime SPA-navigation correction status after implementation
+
+- [x] `PTM-R004` All direct `useEffect(load, dependencies)` usages were replaced with cleanup-safe effect callbacks that invoke asynchronous work without returning its Promise. The existing route-dependent project loader retains `AbortController` cleanup and stale-response guards.
+- [x] `PTM-R005` Added `RouteErrorBoundary` around authenticated route content with a recoverable error view and a Projects navigation link.
+- [x] `PTM-R006` Added hosted static assertions rejecting direct Promise-returning effect patterns and asserting lifecycle cleanup/error-boundary markers; rebuilt the committed Vite bundle.
+
+## Confirmed runtime SPA-navigation correction verification and delivery
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed; Vite 7.1.7 transformed 30 modules and emitted `wwwroot/assets/index-Cqs2p9a2.js` plus the aligned stylesheet.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 11 tests, 0 failures, including direct-effect-pattern rejection, route-error-boundary assertions, and existing navigation lifecycle coverage.
+- `git diff --check main...HEAD`: passed with no output.
+- Work-unit commit: `af8c429 fix(timeline): prevent SPA effect cleanup crashes`.
+- Browser verification limitation: the authorized local browser session was present at `http://localhost:5000/users` and reproduced the prior `TypeError: v is not a function` against the stale bundle. After rebuilding and restarting the local host, the application could not restore the session because `/api/me` returned HTTP 500; host logs identified the unavailable `ConnectionStrings__ProjectTimeline` connection. Therefore the required authenticated click journey could not be completed in this environment, and no successful browser pass is claimed.
+- Dirty-file attribution: `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` remains pre-existing, unstaged, unmodified by this work, and uncommitted. `.playwright-mcp/` remains untracked and untouched. Only the related React source, hosted bundle/index, focused test, and tracker were committed.
+- Limits: no credentials were exposed or added; no remote services, Entra, CDN, push, PR, or live PostgreSQL execution was used.
