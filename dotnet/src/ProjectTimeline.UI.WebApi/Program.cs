@@ -36,7 +36,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<ProjectTimelineDbContext>();
-        var password = Environment.GetEnvironmentVariable("PROJECT_TIMELINE_ADMIN_PASSWORD");
+        var password = builder.Configuration["PROJECT_TIMELINE_ADMIN_PASSWORD"];
         await DatabaseSetup.MigrateAndSeedAsync(db, string.IsNullOrWhiteSpace(password) ? null : PasswordService.Hash(password));
     }
     catch (Exception ex)
