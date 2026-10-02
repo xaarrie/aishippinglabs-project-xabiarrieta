@@ -537,3 +537,30 @@ The current feature branch is reopened for the authorized single-page navigation
 - `git status --short`: related App.jsx, HostedUiTests.cs, tracker, hosted index, and generated JS are intended changes; the pre-existing `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted.
 - Work-unit commit: `da68a07 fix(timeline): repair SPA route transitions`.
 - Limits: no router library, remote assets, Entra, CDN, push, PR, or live PostgreSQL database was used.
+
+## Authorized runtime SPA-navigation correction
+
+The current feature branch is reopened for the authorized production SPA-navigation correction. All prior evidence remains preserved unchanged above. Confirmed production symptoms are that `resolveRoute("/")` resolves to `not-found` after session restoration, and client navigation uses `history.pushState` followed by a manually dispatched `PopStateEvent`. The correction keeps the dependency-free React router, hosted SPA fallback, existing direct routes, and unrelated WebApi project-file boundary unchanged.
+
+- `PTM-R001` Redirect the authenticated root route to Projects without a Not Found flash.
+  - Acceptance: `/` resolves to `/projects` for authenticated users after session restoration; while session identity is unresolved the UI renders a neutral loading state rather than Not Found; unauthenticated root access remains the login route; all existing direct routes and genuinely unknown-path not-found behavior remain intact.
+- `PTM-R002` Replace synthetic browser history signaling with one dedicated SPA navigation notification/store owner.
+  - Acceptance: internal navigation uses `pushState` and one reliable app-owned notification or equivalent canonical location-store mechanism; exactly one canonical location subscription/state owner handles internal navigation and browser back/forward; no manual `PopStateEvent` dispatch remains; header, sidebar, project/table actions, cancel/back links, login, session restoration, and history navigation render immediately without full reload.
+- `PTM-R003` Add focused executable/source coverage and deliver the hosted runtime bundle.
+  - Acceptance: tests assert root redirect/session-pending behavior, dedicated navigation event/store, `pushState`, back/forward handling, absence of manual `PopStateEvent` dispatch, preserved direct routes/not-found behavior, generated asset alignment, and Web API static serving; required verification and dirty-file attribution are recorded with only related files committed.
+
+## Runtime SPA-navigation correction status before implementation
+
+- [x] `PTM-R001` Authenticated root redirect and session-pending route behavior. The resolver maps `/` to the authenticated Projects route; session restoration renders `Restoring session...` until identity resolves and then replaces the root URL with `/projects` without a Not Found flash.
+- [x] `PTM-R002` Dedicated SPA navigation notification/store and history handling. `navigate` uses `pushState`/`replaceState` and dispatches the app-owned `project-timeline:navigation` event; the single `useLocationState` owner subscribes to that event and browser `popstate`, with no synthetic `PopStateEvent` dispatch.
+- [x] `PTM-R003` Focused coverage, hosted assets, verification, tracker mirror, and coherent work-unit commits. Hosted source assertions cover root/session-pending behavior, the dedicated event, push/replace state, listener cleanup, back/forward signaling, absence of manual PopStateEvent dispatch, preserved routes/not-found behavior, generated asset alignment, and hosted entrypoint serving.
+
+## Runtime SPA-navigation correction verification and delivery
+
+- `npm run build` in `dotnet/src/ProjectTimeline.UI.WebApi/ClientApp`: passed; Vite 7.1.7 transformed 30 modules and emitted `wwwroot/assets/index-tgGzhuLf.js` plus the aligned stylesheet.
+- `dotnet build dotnet/ProjectTimeline.sln --configuration Release`: passed; 0 warnings, 0 errors.
+- `dotnet test dotnet/ProjectTimeline.sln --configuration Release`: passed; 11 tests, 0 failures.
+- Short `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi --no-build --configuration Release` probe: passed; after stopping the stale repository Debug host that occupied port 5000, the Release host listened on `http://localhost:5000` and remained available. Initialization logged the expected `The ConnectionString property has not been initialized` diagnostic because no `ConnectionStrings__ProjectTimeline` value was supplied; no live PostgreSQL execution is claimed.
+- `git diff --check main...HEAD`: passed with no output before delivery commit.
+- The unrelated `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, unreverted, and uncommitted. The generated hosted bundle is part of the related Web API serving boundary.
+- Limits: no live PostgreSQL database or authenticated browser session was used; no remote services, Entra, CDN, push, or PR were used.
