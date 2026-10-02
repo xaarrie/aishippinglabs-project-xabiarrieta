@@ -408,4 +408,4 @@ The current feature branch is reopened for the authorized routing and maintenanc
 - `git diff --check main...HEAD`: passed with no output before final commit.
 - Final status: the unrelated `dotnet/src/ProjectTimeline.UI.WebApi/ProjectTimeline.UI.WebApi.csproj` modification remains untouched, unstaged, and uncommitted; implementation, tracker, tests, and generated bundle changes are the intended work-unit files.
 
-Routing and maintenance work-unit commit: pending final commit.
+Routing and maintenance work-unit commit: `e76f3f8 feat(timeline): repair routing and maintenance screens`.
