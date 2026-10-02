@@ -44,4 +44,4 @@ Checks run:
 - Playwright — authenticated Users and Projects grids rendered without console errors; project sort exposed `aria-sort="descending"`, user status filtering worked, and a no-match project search rendered the accessible empty state. The compact project row measured 61px.
 
 ## Next step
-Completed. Create a work-unit commit containing only this feature's files, then assess the committed candidate for native review if receipt-driven development is enabled.
+Completed in work-unit commit `c66217c` (`feat(ui): improve users and projects grids`). Receipt-driven development was globally disabled at closure, so no native review was started. Delivery remains under ordinary repository policy.
