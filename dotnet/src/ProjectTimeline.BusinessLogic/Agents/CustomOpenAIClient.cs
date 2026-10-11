@@ -8,11 +8,11 @@ using System.Text;
 
 namespace ProjectTimeline.BusinessLogic.Agents
 {
-    public class IbernovaOpenAIClient : ICustomChatClient, ICustomAgentClient
+    public class CustomOpenAIClient : ICustomChatClient, ICustomAgentClient
     {
         private readonly string openaikey;
 
-        public IbernovaOpenAIClient()
+        public CustomOpenAIClient()
         {
             openaikey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? "";
             if (string.IsNullOrWhiteSpace(openaikey))
@@ -21,6 +21,7 @@ namespace ProjectTimeline.BusinessLogic.Agents
 
         public AIAgent CreateAgent(string model, string agentName, string instructions, List<AITool> tools)
         {
+            
             var client = GetChatClient(model);
             var agent = client.AsAIAgent(
             name: agentName,
