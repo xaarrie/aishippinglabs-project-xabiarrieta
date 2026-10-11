@@ -19,4 +19,5 @@ public static class ApiMappers
         return runes.Length <= 500 ? content : string.Concat(runes.Take(499).Select(r => r.ToString())) + "…";
     }
     public static ArtifactDto ToDto(TimelineArtifact x) => new(x.Id, x.EntryId, x.FileName, x.ContentType, x.Length, x.CreatedAtUtc);
+    public static SnapshotDto ToDto(TimelineSnapshot x) => new(x.Id, x.TimelineId, x.SnapshotNumber, x.CapturedAtUtc, x.SummaryContent, x.Entries.OrderBy(y => y.Entry.EntryNumber).Select(y => y.EntryId).ToList(), x.CreatedAtUtc, x.UpdatedAtUtc);
 }

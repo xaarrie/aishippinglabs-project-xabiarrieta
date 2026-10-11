@@ -11,3 +11,4 @@ __pycache__/
 dotnet/**/bin/
 dotnet/**/obj/
 dotnet/src/ProjectTimeline.UI.WebApi/ClientApp/node_modules/
+**/launchSettings.json

@@ -37,6 +37,8 @@ public sealed class HostedUiTests
         Assert.Contains("function UploadForm", source);
         Assert.Contains("preview", source);
         Assert.Contains("/projects/${projectId}/timelines/${timeline.id}/entries/new", source);
+        Assert.Contains("go(`/projects/${projectId}/timelines/${timelineId}/entries/${id}`)", source);
+        Assert.DoesNotContain("go(`/projects/${projectId}/timelines/${timelineId}`)", source);
         Assert.Contains("const entryNew = path.match", source);
         Assert.Contains("const entryDetail = path.match", source);
         Assert.Contains("accept=\".pdf,.doc,.docx,.xls,.xlsx,.md,.markdown\"", source);

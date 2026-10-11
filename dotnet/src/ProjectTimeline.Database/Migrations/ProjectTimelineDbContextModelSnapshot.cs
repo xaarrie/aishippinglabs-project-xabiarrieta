@@ -321,6 +321,68 @@ namespace ProjectTimeline.Database.Migrations
                     b.ToTable("TimelineEntries");
                 });
 
+            modelBuilder.Entity("ProjectTimeline.DataAccessLogic.TimelineSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CapturedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("SnapshotNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SummaryContent")
+                        .IsRequired()
+                        .HasMaxLength(20000)
+                        .HasColumnType("character varying(20000)");
+
+                    b.Property<Guid>("TimelineId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TimelineId", "SnapshotNumber")
+                        .IsUnique();
+
+                    b.ToTable("TimelineSnapshots");
+                });
+
+            modelBuilder.Entity("ProjectTimeline.DataAccessLogic.TimelineSnapshotEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("EntryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SnapshotId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntryId");
+
+                    b.HasIndex("SnapshotId", "EntryId")
+                        .IsUnique();
+
+                    b.ToTable("TimelineSnapshotEntries");
+                });
+
             modelBuilder.Entity("ProjectTimeline.DataAccessLogic.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -508,6 +570,36 @@ namespace ProjectTimeline.Database.Migrations
                     b.Navigation("Timeline");
                 });
 
+            modelBuilder.Entity("ProjectTimeline.DataAccessLogic.TimelineSnapshot", b =>
+                {
+                    b.HasOne("ProjectTimeline.DataAccessLogic.Timeline", "Timeline")
+                        .WithMany("Snapshots")
+                        .HasForeignKey("TimelineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Timeline");
+                });
+
+            modelBuilder.Entity("ProjectTimeline.DataAccessLogic.TimelineSnapshotEntry", b =>
+                {
+                    b.HasOne("ProjectTimeline.DataAccessLogic.TimelineEntry", "Entry")
+                        .WithMany("SnapshotEntries")
+                        .HasForeignKey("EntryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProjectTimeline.DataAccessLogic.TimelineSnapshot", "Snapshot")
+                        .WithMany("Entries")
+                        .HasForeignKey("SnapshotId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Entry");
+
+                    b.Navigation("Snapshot");
+                });
+
             modelBuilder.Entity("ProjectTimeline.DataAccessLogic.User", b =>
                 {
                     b.HasOne("ProjectTimeline.DataAccessLogic.UserRole", "UserRole")
@@ -531,11 +623,20 @@ namespace ProjectTimeline.Database.Migrations
             modelBuilder.Entity("ProjectTimeline.DataAccessLogic.Timeline", b =>
                 {
                     b.Navigation("Entries");
+
+                    b.Navigation("Snapshots");
                 });
 
             modelBuilder.Entity("ProjectTimeline.DataAccessLogic.TimelineEntry", b =>
                 {
                     b.Navigation("Artifacts");
+
+                    b.Navigation("SnapshotEntries");
+                });
+
+            modelBuilder.Entity("ProjectTimeline.DataAccessLogic.TimelineSnapshot", b =>
+                {
+                    b.Navigation("Entries");
                 });
 
             modelBuilder.Entity("ProjectTimeline.DataAccessLogic.User", b =>

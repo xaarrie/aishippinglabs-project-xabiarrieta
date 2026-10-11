@@ -132,6 +132,23 @@ public sealed class ApiPersistenceTests
     }
 
     [Fact]
+    public void Timeline_snapshot_feature_uses_one_non_empty_migration()
+    {
+        var options = new DbContextOptionsBuilder<ProjectTimelineDbContext>()
+            .UseNpgsql("Host=localhost;Database=test;Username=test", o => o.MigrationsAssembly("ProjectTimeline.Database"))
+            .Options;
+        using var db = new ProjectTimelineDbContext(options);
+        var snapshotMigrations = db.Database.GetMigrations().Where(x => x.Contains("TimelineEntrySnapshots", StringComparison.Ordinal)).ToArray();
+
+        Assert.Equal(["20261011085524_TimelineEntrySnapshotsModel"], snapshotMigrations);
+        var migration = new TimelineEntrySnapshotsModel();
+        var up = typeof(TimelineEntrySnapshotsModel).GetMethod("Up", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        var builder = new MigrationBuilder("Npgsql.EntityFrameworkCore.PostgreSQL");
+        up.Invoke(migration, [builder]);
+        Assert.NotEmpty(builder.Operations);
+    }
+
+    [Fact]
     public void Primary_timeline_migration_is_forward_only_and_uses_set_null_fk()
     {
         var migration = new ProjectPrimaryTimeline();

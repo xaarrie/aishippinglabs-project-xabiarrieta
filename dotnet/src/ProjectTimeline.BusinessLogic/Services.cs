@@ -57,6 +57,7 @@ public sealed class ProjectAuthorization(ProjectTimelineDbContext db)
 }
 
 public sealed class AdminRequirement : Microsoft.AspNetCore.Authorization.IAuthorizationRequirement;
+public sealed class TimelineEntrySnapshotConflictException() : InvalidOperationException("Timeline entries that belong to a snapshot cannot be deleted.");
 public sealed class CurrentUserAdminHandler(ProjectTimelineDbContext db) : Microsoft.AspNetCore.Authorization.AuthorizationHandler<AdminRequirement>
 {
     protected override async Task HandleRequirementAsync(Microsoft.AspNetCore.Authorization.AuthorizationHandlerContext context, AdminRequirement requirement)
@@ -83,6 +84,26 @@ public sealed class TimelineService(ProjectTimelineDbContext db)
         db.TimelineEntries.Add(entry); await db.SaveChangesAsync(ct); if (tx is not null) await tx.CommitAsync(ct); return entry;
     }
     public async Task<bool> IsProjectOwnerAsync(Guid projectId, Guid userId, CancellationToken ct) => await db.Projects.AnyAsync(x => x.Id == projectId && x.OwnerId == userId, ct);
+    public async Task<TimelineSnapshot> CreateSnapshotAsync(Guid timelineId, string? summary, IReadOnlyList<Guid> entryIds, CancellationToken ct)
+    {
+        var timeline = await db.Timelines.SingleOrDefaultAsync(x => x.Id == timelineId, ct) ?? throw new KeyNotFoundException("Timeline not found.");
+        var ids = entryIds.Distinct().ToArray();
+        var entries = await db.TimelineEntries.Where(x => x.TimelineId == timelineId && ids.Contains(x.Id)).OrderBy(x => x.EntryNumber).ToListAsync(ct);
+        if (ids.Length == 0 || entries.Count != ids.Length) throw new ArgumentException("Snapshots require one or more entries from this timeline.");
+        var content = string.IsNullOrWhiteSpace(summary) ? string.Join("\n\n", entries.Select(x => $"Entry {x.EntryNumber}: {x.Title}\n{x.Content}")) : summary.Trim();
+        if (content.Length > 20000) throw new ArgumentException("Snapshot summary must be at most 20000 characters.");
+        var number = (await db.TimelineSnapshots.Where(x => x.TimelineId == timelineId).MaxAsync(x => (int?)x.SnapshotNumber, ct) ?? 0) + 1;
+        var snapshot = new TimelineSnapshot { TimelineId = timelineId, Timeline = timeline, SnapshotNumber = number, CapturedAtUtc = DateTime.UtcNow, SummaryContent = content };
+        snapshot.Entries = entries.Select(x => new TimelineSnapshotEntry { Snapshot = snapshot, Entry = x, EntryId = x.Id }).ToList();
+        db.TimelineSnapshots.Add(snapshot); await db.SaveChangesAsync(ct); return snapshot;
+    }
+    public async Task DeleteEntryAsync(Guid entryId, CancellationToken ct)
+    {
+        var entry = await db.TimelineEntries.SingleOrDefaultAsync(x => x.Id == entryId, ct) ?? throw new KeyNotFoundException("Entry not found.");
+        if (await db.TimelineSnapshotEntries.AnyAsync(x => x.EntryId == entryId, ct)) throw new TimelineEntrySnapshotConflictException();
+        db.TimelineEntries.Remove(entry);
+        await db.SaveChangesAsync(ct);
+    }
 }
 public sealed class ProjectService(ProjectTimelineDbContext db)
 {

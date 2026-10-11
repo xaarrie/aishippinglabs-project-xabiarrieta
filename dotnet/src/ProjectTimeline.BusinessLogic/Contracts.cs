@@ -11,6 +11,8 @@ public sealed record CreateTimelineRequest(string Code, string Name);
 public sealed record UpdateTimelineRequest(string Name);
 public sealed record CreateEntryRequest(string Title, string Content, string Status = "Draft");
 public sealed record UpdateEntryRequest(string Title, string Content, string Status, Guid? AuthorId = null);
+public sealed record CreateSnapshotRequest(string? SummaryContent, IReadOnlyList<Guid> EntryIds);
+public sealed record SnapshotDto(Guid Id, Guid TimelineId, int SnapshotNumber, DateTime CapturedAtUtc, string SummaryContent, IReadOnlyList<Guid> EntryIds, DateTime CreatedAtUtc, DateTime UpdatedAtUtc);
 public sealed record UpdateProfileRequest(string DisplayName, string? Password);
 public sealed record AddParticipantRequest(Guid UserId, string ProjectRoleName);
 public sealed record UpdateParticipantRequest(string ProjectRoleName);

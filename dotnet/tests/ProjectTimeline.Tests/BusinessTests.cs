@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using ProjectTimeline.BusinessLogic;
 using ProjectTimeline.DataAccessLogic;
 using ProjectTimeline.UI.WebApi;
+using ProjectTimeline.BusinessLogic.Agents;
 using Xunit;
 using System.Security.Claims;
 using System.Text.Json;
@@ -11,6 +12,23 @@ using System.Text;
 namespace ProjectTimeline.Tests;
 public sealed class BusinessTests
 {
+    [Fact]
+    public void OpenAI_client_requires_environment_api_key()
+    {
+        var original = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+        try
+        {
+            Environment.SetEnvironmentVariable("OPENAI_API_KEY", null);
+            var exception = Assert.Throws<InvalidOperationException>(() => new IbernovaOpenAIClient());
+            Assert.Contains("OPENAI_API_KEY", exception.Message);
+            Assert.DoesNotContain("sk-", exception.Message);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("OPENAI_API_KEY", original);
+        }
+    }
+
     [Fact]
     public void Entry_list_preview_is_unicode_bounded_and_detail_keeps_full_content()
     {
@@ -75,6 +93,46 @@ public sealed class BusinessTests
         await using var db = new ProjectTimelineDbContext(options); var user = new User { Email = "a@example.test", DisplayName = "A", PasswordHash = PasswordService.Hash("secret") }; db.Users.Add(user); var project = new Project { Code = "P1", Name = "Project", OwnerId = user.Id }; db.Projects.Add(project); var timeline = new Timeline { Code = "T1", Name = "Timeline", Project = project }; db.Timelines.Add(timeline); await db.SaveChangesAsync();
         var service = new TimelineService(db); var one = await service.AddEntryAsync(timeline.Id, user.Id, "One", "Content", default); var two = await service.AddEntryAsync(timeline.Id, user.Id, "Two", "Content", default);
         Assert.Equal(1, one.EntryNumber); Assert.Equal(2, two.EntryNumber); Assert.NotEqual(default, one.CreatedAtUtc); Assert.True(PasswordService.Verify("secret", user.PasswordHash)); Assert.False(PasswordService.Verify("bad", user.PasswordHash));
+    }
+
+    [Fact]
+    public async Task Snapshot_numbers_content_and_scoped_search_are_deterministic()
+    {
+        var options = new DbContextOptionsBuilder<ProjectTimelineDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+        await using var db = new ProjectTimelineDbContext(options);
+        var user = new User { Email = "snapshot@example.test", DisplayName = "Snapshot Author", PasswordHash = "hash" };
+        var project = new Project { Code = "PS", Name = "Snapshots", OwnerId = user.Id };
+        var timeline = new Timeline { ProjectId = project.Id, Project = project, Code = "TS", Name = "Timeline" };
+        db.Users.Add(user); db.Projects.Add(project); db.Timelines.Add(timeline); await db.SaveChangesAsync();
+        var service = new TimelineService(db);
+        var first = await service.AddEntryAsync(timeline.Id, user.Id, "First", "needle one", default);
+        var second = await service.AddEntryAsync(timeline.Id, user.Id, "Second", "needle two", default);
+        var snapshot = await service.CreateSnapshotAsync(timeline.Id, null, [second.Id, first.Id], default);
+        Assert.Equal(1, snapshot.SnapshotNumber);
+        Assert.Contains("Entry 1: First", snapshot.SummaryContent);
+        Assert.Equal([first.Id, second.Id], snapshot.Entries.OrderBy(x => x.Entry.EntryNumber).Select(x => x.EntryId).ToArray());
+        var search = await new SearchTools(db).search_entries("needle", timeline.Id);
+        Assert.Equal("needle one\nneedle two", search);
+        Assert.Null(await new SearchTools(db).fetch_entry(Guid.NewGuid(), timeline.Id));
+    }
+
+    [Fact]
+    public async Task Entry_deletion_returns_domain_conflict_when_entry_belongs_to_snapshot()
+    {
+        var options = new DbContextOptionsBuilder<ProjectTimelineDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+        await using var db = new ProjectTimelineDbContext(options);
+        var user = new User { Email = "delete-snapshot@example.test", DisplayName = "Snapshot Author", PasswordHash = "hash" };
+        var project = new Project { Code = "PD", Name = "Deletion", OwnerId = user.Id };
+        var timeline = new Timeline { ProjectId = project.Id, Project = project, Code = "TD", Name = "Timeline" };
+        db.Users.Add(user); db.Projects.Add(project); db.Timelines.Add(timeline); await db.SaveChangesAsync();
+        var service = new TimelineService(db);
+        var entry = await service.AddEntryAsync(timeline.Id, user.Id, "Protected", "Content", default);
+        await service.CreateSnapshotAsync(timeline.Id, null, [entry.Id], default);
+
+        var exception = await Assert.ThrowsAsync<TimelineEntrySnapshotConflictException>(() => service.DeleteEntryAsync(entry.Id, default));
+
+        Assert.Equal("Timeline entries that belong to a snapshot cannot be deleted.", exception.Message);
+        Assert.True(await db.TimelineEntries.AnyAsync(x => x.Id == entry.Id));
     }
 
     [Fact]

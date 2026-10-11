@@ -10,7 +10,14 @@ namespace ProjectTimeline.BusinessLogic.Agents
 {
     public class IbernovaOpenAIClient : ICustomChatClient, ICustomAgentClient
     {
-        private string openaikey = "";
+        private readonly string openaikey;
+
+        public IbernovaOpenAIClient()
+        {
+            openaikey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? "";
+            if (string.IsNullOrWhiteSpace(openaikey))
+                throw new InvalidOperationException("OPENAI_API_KEY environment variable is required.");
+        }
 
         public AIAgent CreateAgent(string model, string agentName, string instructions, List<AITool> tools)
         {
