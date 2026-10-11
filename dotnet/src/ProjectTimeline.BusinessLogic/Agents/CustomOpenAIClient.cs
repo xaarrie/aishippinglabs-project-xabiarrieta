@@ -10,7 +10,7 @@ namespace ProjectTimeline.BusinessLogic.Agents
 {
     public class IbernovaOpenAIClient : ICustomChatClient, ICustomAgentClient
     {
-        private string openaikey = "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";
+        private string openaikey = "";
 
         public AIAgent CreateAgent(string model, string agentName, string instructions, List<AITool> tools)
         {
