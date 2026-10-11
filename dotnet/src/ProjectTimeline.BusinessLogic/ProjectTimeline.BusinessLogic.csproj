@@ -2,4 +2,9 @@
   <PropertyGroup><RootNamespace>ProjectTimeline.BusinessLogic</RootNamespace></PropertyGroup>
   <ItemGroup><ProjectReference Include="..\ProjectTimeline.DataAccessLogic\ProjectTimeline.DataAccessLogic.csproj" /></ItemGroup>
   <ItemGroup><FrameworkReference Include="Microsoft.AspNetCore.App" /></ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Agents.AI" Version="1.24.0" />
+    <PackageReference Include="Microsoft.Agents.AI.Harness" Version="1.24.0" />
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.24.0" />
+  </ItemGroup>
 </Project>

@@ -93,6 +93,14 @@ public sealed class HostedUiTests
          Assert.Contains("className=\"empty-state\"", source);
          Assert.Contains("aria-sort", source);
          Assert.Contains("Search by email, name, or role", source);
+         Assert.Contains("/api/admin/roles", source);
+         Assert.Contains("function RoleSelect", source);
+         Assert.Contains("name=\"IDUserRole\"", source);
+         Assert.DoesNotContain("Roles (comma-separated)", source);
+         Assert.Contains("Project owner", source);
+         Assert.Contains("Only Administrators can reassign ownership", source);
+         Assert.Contains("ownerDisplayName", source);
+         Assert.Contains("AuthorDisplayName", File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.BusinessLogic", "Contracts.cs")));
          Assert.Contains("Rows per page", source);
          Assert.Contains("function StatusBadge", source);
          Assert.Contains("function RoleBadge", source);
@@ -106,7 +114,7 @@ public sealed class HostedUiTests
         Assert.Contains("onSaved({ ...user, ...updated })", source);
         Assert.DoesNotContain("location.reload", source);
         Assert.DoesNotContain("<a href=\"/", source);
-        Assert.Contains("user.roles.includes(\"Administrator\")", source);
+         Assert.Contains("(user.roleCode || user.roleName) === \"Admin\"", source);
         Assert.Contains("aria-controls=\"app-navigation\"", source);
         Assert.Contains("aria-expanded={sidebarOpen}", source);
         Assert.Contains("aria-hidden={!sidebarOpen}", source);

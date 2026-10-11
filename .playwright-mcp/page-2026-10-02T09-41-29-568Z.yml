@@ -1,0 +1,34 @@
+- generic [ref=f3e3]:
+  - banner [ref=f3e4]:
+    - button "Hide navigation" [expanded] [ref=f3e5] [cursor=pointer]: Menu
+    - link "Project Timeline" [ref=f3e6] [cursor=pointer]:
+      - /url: /projects
+    - generic [ref=f3e7]: x.arrieta@ibernova.com
+    - button "Sign out" [ref=f3e8] [cursor=pointer]
+  - generic [ref=f3e9]:
+    - complementary "Application navigation" [ref=f3e10]:
+      - navigation "Primary" [ref=f3e11]:
+        - link "Projects" [ref=f3e12] [cursor=pointer]:
+          - /url: /projects
+        - link "Profile" [ref=f3e13] [cursor=pointer]:
+          - /url: /profile
+        - link "Users" [ref=f3e14] [cursor=pointer]:
+          - /url: /users
+    - main "Project Timeline workspace" [ref=f3e15]:
+      - generic [ref=f3e16]:
+        - generic [ref=f3e17]:
+          - generic [ref=f3e18]:
+            - paragraph [ref=f3e19]: Workspace
+            - heading "Projects" [level=1] [ref=f3e20]
+            - paragraph [ref=f3e21]: Consult projects and open a workspace.
+          - button "Create project" [ref=f3e23] [cursor=pointer]
+        - region "Project register" [ref=f3e24]:
+          - toolbar "Project register controls" [ref=f3e25]:
+            - generic [ref=f3e26]:
+              - text: Search
+              - searchbox "Search" [ref=f3e27]
+          - status [ref=f3e28]: No records are available.
+  - contentinfo "Application status" [ref=f3e29]:
+    - generic [ref=f3e30]: Project Timeline
+    - generic [ref=f3e31]: Local workspace
+    - generic [ref=f3e32]: x.arrieta@ibernova.com

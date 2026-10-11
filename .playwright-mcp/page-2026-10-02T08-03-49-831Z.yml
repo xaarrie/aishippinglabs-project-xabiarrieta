@@ -1,0 +1,49 @@
+- generic [ref=f1e17]:
+  - banner [ref=f1e18]:
+    - button "Hide navigation" [expanded] [ref=f1e19] [cursor=pointer]: Menu
+    - link "Project Timeline" [ref=f1e20] [cursor=pointer]:
+      - /url: /projects
+    - generic [ref=f1e21]: x.arrieta@ibernova.com
+    - button "Sign out" [ref=f1e22] [cursor=pointer]
+  - generic [ref=f1e23]:
+    - complementary "Application navigation" [ref=f1e24]:
+      - navigation "Primary" [ref=f1e25]:
+        - link "Projects" [ref=f1e26] [cursor=pointer]:
+          - /url: /projects
+        - link "Profile" [ref=f1e27] [cursor=pointer]:
+          - /url: /profile
+        - link "Users" [ref=f1e28] [cursor=pointer]:
+          - /url: /users
+    - main "Project Timeline workspace" [ref=f1e29]:
+      - generic [ref=f1e30]:
+        - generic [ref=f1e31]:
+          - generic [ref=f1e32]:
+            - paragraph [ref=f1e33]: Workspace
+            - heading "Projects" [level=1] [ref=f1e34]
+            - paragraph [ref=f1e35]: Consult projects and open a workspace.
+          - button "Create project" [ref=f1e37] [cursor=pointer]
+        - region "Project register" [ref=f1e38]:
+          - table [ref=f1e39]:
+            - caption [ref=f1e40]: Project register
+            - rowgroup [ref=f1e41]:
+              - row [ref=f1e42]:
+                - columnheader "Code" [ref=f1e43]
+                - columnheader "Name" [ref=f1e44]
+                - columnheader "Description" [ref=f1e45]
+                - columnheader "Actions" [ref=f1e46]
+            - rowgroup [ref=f1e47]:
+              - row [ref=f1e48]:
+                - cell "001" [ref=f1e49]
+                - cell "ProjectTimelineApplication" [ref=f1e50]
+                - cell "This is the project to develop current application" [ref=f1e51]
+                - cell [ref=f1e52]:
+                  - generic [ref=f1e53]:
+                    - button "Open workspace" [ref=f1e54] [cursor=pointer]
+                    - link "Timeline" [ref=f1e55] [cursor=pointer]:
+                      - /url: /projects/8d3559af-77d8-476d-b763-5f085889861d/timelines
+                    - button "Edit" [ref=f1e56] [cursor=pointer]
+                    - button "Delete" [ref=f1e57] [cursor=pointer]
+  - contentinfo "Application status" [ref=f1e58]:
+    - generic [ref=f1e59]: Project Timeline
+    - generic [ref=f1e60]: Local workspace
+    - generic [ref=f1e61]: x.arrieta@ibernova.com

@@ -1,9 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup><RootNamespace>ProjectTimeline.UI.WebApi</RootNamespace><InvariantGlobalization>true</InvariantGlobalization></PropertyGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><RootNamespace>ProjectTimeline.UI.WebApi</RootNamespace><InvariantGlobalization>true</InvariantGlobalization>  <UserSecretsId>5a72656d-d094-4840-8507-00612447bf7a</UserSecretsId>
+  </PropertyGroup>
   <Target Name="BuildClientApp" BeforeTargets="BeforeBuild" Condition="'$(DesignTimeBuild)' != 'true'">
     <Exec Command="npm run build --prefix ClientApp" />
   </Target>
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <ProjectReference Include="..\ProjectTimeline.Database\ProjectTimeline.Database.csproj" />
     <ProjectReference Include="..\ProjectTimeline.BusinessLogic\ProjectTimeline.BusinessLogic.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />

@@ -1,0 +1,49 @@
+﻿using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
+using OpenAI;
+using OpenAI.Chat;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ProjectTimeline.BusinessLogic.Agents
+{
+    public class IbernovaOpenAIClient : ICustomChatClient, ICustomAgentClient
+    {
+        private string openaikey = "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";
+
+        public AIAgent CreateAgent(string model, string agentName, string instructions, List<AITool> tools)
+        {
+            var client = GetChatClient(model);
+            var agent = client.AsAIAgent(
+            name: agentName,
+            instructions: instructions,
+            tools: tools);
+            return agent;
+        }
+
+        public AIAgent CreateHarnessAgent(string model, string agentName, string instructions, List<AITool> tools)
+        {
+            var client = new OpenAIClient(openaikey);
+            return client.GetChatClient(model).AsIChatClient().AsHarnessAgent(
+                new HarnessAgentOptions
+                {
+                    Name = agentName,
+                    HarnessInstructions = "Use tools deliberately and report verified results.",
+                    ChatOptions = new ChatOptions
+                    {
+                        Instructions = instructions,
+                        Tools = tools
+                    },
+                  
+                }
+                );
+        }
+
+        public IChatClient GetChatClient(string model)
+        {
+            var client = new OpenAIClient(openaikey);
+            return client.GetChatClient(model).AsIChatClient();
+        }
+    }
+}

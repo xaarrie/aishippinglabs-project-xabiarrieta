@@ -55,6 +55,16 @@ public sealed class ProjectAuthorization(ProjectTimelineDbContext db)
     public Task<bool> CanManageAsync(Guid projectId, Guid userId, bool administrator, CancellationToken ct = default) => db.Projects.AnyAsync(x => x.Id == projectId && (administrator || x.OwnerId == userId), ct);
     private Task<bool> AccessAsync(Guid projectId, Guid userId, bool administrator, string[]? roles, CancellationToken ct) => db.Projects.AnyAsync(x => x.Id == projectId && (administrator || x.OwnerId == userId || x.Participants.Any(y => y.UserId == userId && (roles == null || roles.Contains(y.ProjectRoleName)))), ct);
 }
+
+public sealed class AdminRequirement : Microsoft.AspNetCore.Authorization.IAuthorizationRequirement;
+public sealed class CurrentUserAdminHandler(ProjectTimelineDbContext db) : Microsoft.AspNetCore.Authorization.AuthorizationHandler<AdminRequirement>
+{
+    protected override async Task HandleRequirementAsync(Microsoft.AspNetCore.Authorization.AuthorizationHandlerContext context, AdminRequirement requirement)
+    {
+        var value = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (Guid.TryParse(value, out var userId) && await db.Users.AnyAsync(x => x.Id == userId && x.IsActive && x.UserRole.RoleName == "Admin")) context.Succeed(requirement);
+    }
+}
 public sealed class TimelineService(ProjectTimelineDbContext db)
 {
     public static void ValidateEntry(string title, string content, string status)
@@ -65,9 +75,10 @@ public sealed class TimelineService(ProjectTimelineDbContext db)
     {
         ValidateEntry(title, content, "Draft");
         await using var tx = db.Database.IsRelational() ? await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct) : null;
-        var timeline = await db.Timelines.SingleOrDefaultAsync(x => x.Id == timelineId, ct) ?? throw new KeyNotFoundException("Timeline not found.");
+        var timeline = await db.Timelines.Include(x => x.Project).SingleOrDefaultAsync(x => x.Id == timelineId, ct) ?? throw new KeyNotFoundException("Timeline not found.");
+        var author = await db.Users.SingleOrDefaultAsync(x => x.Id == authorId && x.IsActive, ct) ?? throw new KeyNotFoundException("Author not found.");
         var number = (await db.TimelineEntries.Where(x => x.TimelineId == timelineId).MaxAsync(x => (int?)x.EntryNumber, ct) ?? 0) + 1;
-        var entry = new TimelineEntry { TimelineId = timeline.Id, AuthorId = authorId, EntryNumber = number, Title = title.Trim(), Content = content.Trim() };
+        var entry = new TimelineEntry { TimelineId = timeline.Id, Timeline = timeline, AuthorId = author.Id, Author = author, EntryNumber = number, Title = title.Trim(), Content = content.Trim() };
         ValidateEntry(entry.Title, entry.Content, entry.Status);
         db.TimelineEntries.Add(entry); await db.SaveChangesAsync(ct); if (tx is not null) await tx.CommitAsync(ct); return entry;
     }
@@ -75,5 +86,6 @@ public sealed class TimelineService(ProjectTimelineDbContext db)
 }
 public sealed class ProjectService(ProjectTimelineDbContext db)
 {
-    public async Task<Project> CreateAsync(Guid ownerId, string code, string name, string? description, CancellationToken ct) { if (!await db.Users.AnyAsync(x => x.Id == ownerId, ct)) throw new KeyNotFoundException("Owner not found."); var p = new Project { OwnerId = ownerId, Code = code.Trim().ToUpperInvariant(), Name = name.Trim(), Description = description?.Trim() }; p.Participants.Add(new ProjectParticipant { UserId = ownerId, ProjectRoleName = "Creator" }); foreach (var role in new[] { "Creator", "Reviewer", "Contributor" }) p.Roles.Add(new ProjectRole { Name = role }); db.Projects.Add(p); await db.SaveChangesAsync(ct); return p; }
+    public static bool CanRemoveParticipant(Project project, ProjectParticipant participant) => participant.UserId != project.OwnerId;
+    public async Task<Project> CreateAsync(Guid ownerId, string code, string name, string? description, CancellationToken ct) { var owner = await db.Users.SingleOrDefaultAsync(x => x.Id == ownerId && x.IsActive, ct) ?? throw new KeyNotFoundException("Owner not found."); var p = new Project { OwnerId = ownerId, Owner = owner, Code = code.Trim().ToUpperInvariant(), Name = name.Trim(), Description = description?.Trim() }; p.Participants.Add(new ProjectParticipant { UserId = ownerId, User = owner, ProjectRoleName = "Creator" }); foreach (var role in new[] { "Creator", "Reviewer", "Contributor" }) p.Roles.Add(new ProjectRole { Name = role }); db.Projects.Add(p); await db.SaveChangesAsync(ct); return p; }
 }

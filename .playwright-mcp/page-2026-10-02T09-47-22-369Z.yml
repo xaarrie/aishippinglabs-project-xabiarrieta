@@ -1,0 +1,41 @@
+- generic [ref=f5e3]:
+  - banner [ref=f5e4]:
+    - button "Hide navigation" [expanded] [ref=f5e5] [cursor=pointer]: Menu
+    - link "Project Timeline" [ref=f5e6] [cursor=pointer]:
+      - /url: /projects
+    - generic [ref=f5e7]: x.arrieta@ibernova.com
+    - button "Sign out" [ref=f5e8] [cursor=pointer]
+  - generic [ref=f5e9]:
+    - complementary "Application navigation" [ref=f5e10]:
+      - navigation "Primary" [ref=f5e11]:
+        - link "Projects" [ref=f5e12] [cursor=pointer]:
+          - /url: /projects
+        - link "Profile" [ref=f5e13] [cursor=pointer]:
+          - /url: /profile
+        - link "Users" [ref=f5e14] [cursor=pointer]:
+          - /url: /users
+    - main "Project Timeline workspace" [ref=f5e15]:
+      - generic [ref=f5e16]:
+        - generic [ref=f5e17]:
+          - generic [ref=f5e18]:
+            - paragraph [ref=f5e19]: Administration
+            - heading "Users" [level=1] [ref=f5e20]
+            - paragraph [ref=f5e21]: Consult and maintain user access.
+          - button "Create user" [ref=f5e23] [cursor=pointer]
+        - region "User register" [ref=f5e24]:
+          - toolbar "User register controls" [ref=f5e25]:
+            - generic [ref=f5e26]:
+              - text: Search
+              - searchbox "Search" [ref=f5e27]
+            - generic [ref=f5e28]:
+              - text: Status
+              - combobox "Status" [ref=f5e29]:
+                - option "All statuses" [selected]
+                - option "Active"
+                - option "Inactive"
+          - status [ref=f5e30]: No records are available.
+        - paragraph [ref=f5e31]: "Delete is a soft deactivation: the user record and history are retained."
+  - contentinfo "Application status" [ref=f5e32]:
+    - generic [ref=f5e33]: Project Timeline
+    - generic [ref=f5e34]: Local workspace
+    - generic [ref=f5e35]: x.arrieta@ibernova.com

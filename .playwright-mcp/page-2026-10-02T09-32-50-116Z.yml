@@ -1,0 +1,52 @@
+- generic [ref=e17]:
+  - banner [ref=e18]:
+    - button "Show navigation" [ref=e62] [cursor=pointer]: Menu
+    - link "Project Timeline" [ref=e20] [cursor=pointer]:
+      - /url: /projects
+    - generic [ref=e21]: x.arrieta@ibernova.com
+    - button "Sign out" [ref=e22] [cursor=pointer]
+  - generic [ref=e23]:
+    - complementary [aria-hidden] [ref=e63]:
+      - navigation [ref=e64]:
+        - link [ref=e65] [cursor=pointer]:
+          - /url: /projects
+          - text: Projects
+        - link [ref=e66] [cursor=pointer]:
+          - /url: /profile
+          - text: Profile
+        - link [active] [ref=e67] [cursor=pointer]:
+          - /url: /users
+          - text: Users
+    - main "Project Timeline workspace" [ref=e29]:
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - paragraph [ref=e71]: Administration
+            - heading "Users" [level=1] [ref=e72]
+            - paragraph [ref=e73]: Consult and maintain user access.
+          - button "Create user" [ref=e75] [cursor=pointer]
+        - region "User register" [ref=e76]:
+          - table [ref=e77]:
+            - caption [ref=e78]: User register
+            - rowgroup [ref=e79]:
+              - row [ref=e80]:
+                - columnheader "Email" [ref=e81]
+                - columnheader "Display name" [ref=e82]
+                - columnheader "Status" [ref=e83]
+                - columnheader "Roles" [ref=e84]
+                - columnheader "Actions" [ref=e85]
+            - rowgroup [ref=e86]:
+              - row [ref=e87]:
+                - cell "x.arrieta@ibernova.com" [ref=e88]
+                - cell "Development Administrator" [ref=e89]
+                - cell "Active" [ref=e90]
+                - cell "Administrator, Consultant, UserChief" [ref=e91]
+                - cell [ref=e92]:
+                  - generic [ref=e93]:
+                    - button "Edit" [ref=e94] [cursor=pointer]
+                    - button "Delete" [ref=e95] [cursor=pointer]
+        - paragraph [ref=e96]: "Delete is a soft deactivation: the user record and history are retained."
+  - contentinfo "Application status" [ref=e58]:
+    - generic [ref=e59]: Project Timeline
+    - generic [ref=e60]: Local workspace
+    - generic [ref=e61]: x.arrieta@ibernova.com

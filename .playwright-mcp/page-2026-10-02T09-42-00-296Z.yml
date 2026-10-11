@@ -1,0 +1,69 @@
+- generic [ref=f3e3]:
+  - banner [ref=f3e4]:
+    - button "Hide navigation" [expanded] [ref=f3e5] [cursor=pointer]: Menu
+    - link "Project Timeline" [ref=f3e6] [cursor=pointer]:
+      - /url: /projects
+    - generic [ref=f3e7]: x.arrieta@ibernova.com
+    - button "Sign out" [ref=f3e8] [cursor=pointer]
+  - generic [ref=f3e9]:
+    - complementary "Application navigation" [ref=f3e10]:
+      - navigation "Primary" [ref=f3e11]:
+        - link "Projects" [ref=f3e12] [cursor=pointer]:
+          - /url: /projects
+        - link "Profile" [ref=f3e13] [cursor=pointer]:
+          - /url: /profile
+        - link "Users" [ref=f3e14] [cursor=pointer]:
+          - /url: /users
+    - main "Project Timeline workspace" [ref=f3e15]:
+      - generic [ref=f3e16]:
+        - generic [ref=f3e17]:
+          - generic [ref=f3e18]:
+            - paragraph [ref=f3e19]: Workspace
+            - heading "Projects" [level=1] [ref=f3e20]
+            - paragraph [ref=f3e21]: Consult projects and open a workspace.
+          - button "Create project" [ref=f3e23] [cursor=pointer]
+        - region "Project register" [ref=f3e24]:
+          - toolbar "Project register controls" [ref=f3e25]:
+            - generic [ref=f3e26]:
+              - text: Search
+              - searchbox "Search" [ref=f3e27]
+          - region "Project register" [ref=f3e33]:
+            - table [ref=f3e34]:
+              - caption [ref=f3e35]: Project register
+              - rowgroup [ref=f3e36]:
+                - row [ref=f3e37]:
+                  - columnheader [ref=f3e38]:
+                    - button "Code" [active] [ref=f3e39] [cursor=pointer]: Code ↓
+                  - columnheader [ref=f3e40]:
+                    - button "Name" [ref=f3e41] [cursor=pointer]: Name ↕
+                  - columnheader [ref=f3e42]:
+                    - button "Description" [ref=f3e43] [cursor=pointer]: Description ↕
+                  - columnheader "Actions" [ref=f3e44]
+              - rowgroup [ref=f3e45]:
+                - row [ref=f3e46]:
+                  - cell "001" [ref=f3e47]
+                  - cell "ProjectTimelineApplication" [ref=f3e48]
+                  - cell "This is the project to develop current application" [ref=f3e49]
+                  - cell [ref=f3e51]:
+                    - generic [ref=f3e52]:
+                      - button "Open workspace" [ref=f3e53] [cursor=pointer]
+                      - link "Timeline" [ref=f3e54] [cursor=pointer]:
+                        - /url: /projects/8d3559af-77d8-476d-b763-5f085889861d/timelines
+                      - button "Edit" [ref=f3e55] [cursor=pointer]
+                      - button "Delete" [ref=f3e56] [cursor=pointer]
+          - generic [ref=f3e57]:
+            - status [ref=f3e58]: Showing 1 of 1 records
+            - generic [ref=f3e59]:
+              - text: Rows per page
+              - combobox "Rows per page" [ref=f3e60]:
+                - option "5"
+                - option "10" [selected]
+                - option "25"
+            - generic "Project register pagination" [ref=f3e61]:
+              - button "Previous" [disabled] [ref=f3e62] [cursor=pointer]
+              - generic [ref=f3e63]: Page 1 of 1
+              - button "Next" [disabled] [ref=f3e64] [cursor=pointer]
+  - contentinfo "Application status" [ref=f3e29]:
+    - generic [ref=f3e30]: Project Timeline
+    - generic [ref=f3e31]: Local workspace
+    - generic [ref=f3e32]: x.arrieta@ibernova.com

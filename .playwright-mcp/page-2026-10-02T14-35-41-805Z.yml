@@ -1,0 +1,79 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - button "Hide navigation" [expanded] [ref=f1e5] [cursor=pointer]: Menu
+    - link "Project Timeline" [ref=f1e6] [cursor=pointer]:
+      - /url: /projects
+    - generic [ref=f1e7]: x.arrieta@ibernova.com
+    - button "Sign out" [ref=f1e8] [cursor=pointer]
+  - generic [ref=f1e9]:
+    - complementary "Application navigation" [ref=f1e10]:
+      - navigation "Primary" [ref=f1e11]:
+        - link "Projects" [ref=f1e12] [cursor=pointer]:
+          - /url: /projects
+        - link "Profile" [ref=f1e13] [cursor=pointer]:
+          - /url: /profile
+        - link "Users" [ref=f1e14] [cursor=pointer]:
+          - /url: /users
+    - main "Project Timeline workspace" [ref=f1e15]:
+      - generic [ref=f1e16]:
+        - generic [ref=f1e17]:
+          - generic [ref=f1e18]:
+            - paragraph [ref=f1e19]: Administration
+            - heading "Users" [level=1] [ref=f1e20]
+            - paragraph [ref=f1e21]: Consult and maintain user access.
+          - button "Create user" [ref=f1e23] [cursor=pointer]
+        - region "User register" [ref=f1e24]:
+          - toolbar "User register controls" [ref=f1e25]:
+            - generic [ref=f1e26]:
+              - text: Search
+              - searchbox "Search" [ref=f1e27]
+            - generic [ref=f1e28]:
+              - text: Status
+              - combobox "Status" [ref=f1e29]:
+                - option "All statuses" [selected]
+                - option "Active"
+                - option "Inactive"
+          - region "User register" [ref=f1e30]:
+            - table [ref=f1e31]:
+              - caption [ref=f1e32]: User register
+              - rowgroup [ref=f1e33]:
+                - row [ref=f1e34]:
+                  - columnheader [ref=f1e35]:
+                    - button "Email" [ref=f1e36] [cursor=pointer]: Email ↑
+                  - columnheader [ref=f1e37]:
+                    - button "Display name" [ref=f1e38] [cursor=pointer]: Display name ↕
+                  - columnheader [ref=f1e39]:
+                    - button "Status" [ref=f1e40] [cursor=pointer]: Status ↕
+                  - columnheader [ref=f1e41]:
+                    - button "Roles" [ref=f1e42] [cursor=pointer]: Roles ↕
+                  - columnheader "Actions" [ref=f1e43]
+              - rowgroup [ref=f1e44]:
+                - row [ref=f1e45]:
+                  - cell "x.arrieta@ibernova.com" [ref=f1e46]
+                  - cell "Development Administrator" [ref=f1e47]
+                  - cell [ref=f1e48]:
+                    - generic [ref=f1e49]:
+                      - generic [aria-hidden] [ref=f1e50]: ●
+                      - text: Active
+                  - cell "Admin" [ref=f1e51]
+                  - cell [ref=f1e53]:
+                    - generic [ref=f1e54]:
+                      - button "Edit" [ref=f1e55] [cursor=pointer]
+                      - button "Delete" [ref=f1e56] [cursor=pointer]
+          - generic [ref=f1e57]:
+            - status [ref=f1e58]: Showing 1 of 1 records
+            - generic [ref=f1e59]:
+              - text: Rows per page
+              - combobox "Rows per page" [ref=f1e60]:
+                - option "5"
+                - option "10" [selected]
+                - option "25"
+            - generic "User register pagination" [ref=f1e61]:
+              - button "Previous" [disabled] [ref=f1e62] [cursor=pointer]
+              - generic [ref=f1e63]: Page 1 of 1
+              - button "Next" [disabled] [ref=f1e64] [cursor=pointer]
+        - paragraph [ref=f1e65]: "Delete is a soft deactivation: the user record and history are retained."
+  - contentinfo "Application status" [ref=f1e66]:
+    - generic [ref=f1e67]: Project Timeline
+    - generic [ref=f1e68]: Local workspace
+    - generic [ref=f1e69]: x.arrieta@ibernova.com

@@ -1,0 +1,13 @@
+- main [ref=e16]:
+  - generic [ref=e17]:
+    - paragraph [ref=e18]: Account access
+    - heading "Request password recovery" [level=1] [ref=e19]
+    - form "Request password recovery" [ref=e20]:
+      - generic [ref=e21]:
+        - text: Email
+        - textbox "Email" [ref=e22]
+      - toolbar "Recovery actions" [ref=e23]:
+        - button "Request recovery" [ref=e24] [cursor=pointer]
+    - status
+    - link "Back to sign in" [ref=e25] [cursor=pointer]:
+      - /url: /

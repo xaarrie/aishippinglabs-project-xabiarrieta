@@ -1,6 +1,6 @@
 # PostgreSQL migration
 
-`202610010001_InitialCreate.cs` is an executable EF Core migration source. Apply it with:
+`202610010001_InitialCreate.cs`, `202610020001_NormalizeUserRoleCatalog.cs`, and `202610020002_ProjectPrimaryTimeline.cs` are executable EF Core migration sources. Apply them with:
 
 ```powershell
 dotnet ef database update --project dotnet/src/ProjectTimeline.Database --startup-project dotnet/src/ProjectTimeline.UI.WebApi --connection "$env:ConnectionStrings__ProjectTimeline"

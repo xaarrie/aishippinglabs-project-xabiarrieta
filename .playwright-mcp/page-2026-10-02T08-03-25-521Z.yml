@@ -1,0 +1,17 @@
+- main [ref=f1e3]:
+  - generic [ref=f1e4]:
+    - paragraph [ref=f1e5]: Project Timeline
+    - heading "Sign in" [level=1] [ref=f1e6]
+    - paragraph [ref=f1e7]: Access your projects, timelines, and review work.
+    - form "Sign in" [ref=f1e8]:
+      - generic [ref=f1e9]:
+        - text: Email
+        - textbox "Email" [ref=f1e10]: x.arrieta@ibermatica.com
+      - generic [ref=f1e11]:
+        - text: Password
+        - textbox "Password" [ref=f1e12]: admin
+      - toolbar "Sign in actions" [ref=f1e13]:
+        - button "Sign in" [active] [ref=f1e14] [cursor=pointer]
+    - link "Forgot your password?" [ref=f1e15] [cursor=pointer]:
+      - /url: /recovery-request
+    - alert [ref=f1e16]: Request failed (401)

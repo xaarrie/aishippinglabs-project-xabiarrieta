@@ -1,0 +1,59 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - button "Show navigation" [ref=e68] [cursor=pointer]: Menu
+    - link "Project Timeline" [ref=e6] [cursor=pointer]:
+      - /url: /projects
+    - generic [ref=e7]: x.arrieta@ibernova.com
+    - button "Sign out" [ref=e8] [cursor=pointer]
+  - generic [ref=e9]:
+    - complementary [aria-hidden] [ref=e69]:
+      - navigation [ref=e70]:
+        - link [ref=e71] [cursor=pointer]:
+          - /url: /projects
+          - text: Projects
+        - link [ref=e72] [cursor=pointer]:
+          - /url: /profile
+          - text: Profile
+        - link [ref=e73] [cursor=pointer]:
+          - /url: /users
+          - text: Users
+    - main "Project Timeline workspace" [ref=e15]:
+      - generic [ref=e74]:
+        - generic [ref=e76]:
+          - paragraph [ref=e77]: Workspace
+          - heading "Edit project" [level=1] [ref=e78]
+          - paragraph [ref=e79]: Update project details while keeping its identifier stable.
+        - form "Edit 001" [ref=e80]:
+          - group "Project identity" [ref=e81]:
+            - generic [ref=e83]:
+              - paragraph [ref=e84]:
+                - generic [ref=e85]: Project code
+                - strong [ref=e86]: "001"
+                - generic [ref=e87]: Immutable project identifier
+              - generic [ref=e88]:
+                - text: Project name
+                - textbox "Project name" [ref=e89]: ProjectTimelineApplication
+              - generic [ref=e90]:
+                - text: Project owner
+                - combobox "Project owner" [ref=e91]:
+                  - option "Select an owner" [selected]
+                  - option "Development Administrator (x.arrieta@ibernova.com)"
+              - status [ref=e92]
+              - generic [ref=e93]:
+                - text: Primary timeline
+                - combobox "Primary timeline" [ref=e94]:
+                  - option "No primary timeline" [selected]
+                  - 'option "MAIN: Main timeline for the project"'
+              - status [ref=e95]
+          - group "Project description" [ref=e96]:
+            - generic [ref=e98]:
+              - text: Description
+              - textbox "Description" [ref=e99]: This is the project to develop current application
+          - toolbar "Edit project actions" [ref=e100]:
+            - button "Save project" [ref=e101] [cursor=pointer]
+            - link "Cancel" [ref=e102] [cursor=pointer]:
+              - /url: /projects
+  - contentinfo "Application status" [ref=e29]:
+    - generic [ref=e30]: Project Timeline
+    - generic [ref=e31]: Local workspace
+    - generic [ref=e32]: x.arrieta@ibernova.com

@@ -1,0 +1,16 @@
+- main [ref=f10e3]:
+  - generic [ref=f10e4]:
+    - paragraph [ref=f10e5]: Project Timeline
+    - heading "Sign in" [level=1] [ref=f10e6]
+    - paragraph [ref=f10e7]: Access your projects, timelines, and review work.
+    - form "Sign in" [ref=f10e8]:
+      - generic [ref=f10e9]:
+        - text: Email
+        - textbox "Email" [ref=f10e10]
+      - generic [ref=f10e11]:
+        - text: Password
+        - textbox "Password" [ref=f10e12]
+      - toolbar "Sign in actions" [ref=f10e13]:
+        - button "Sign in" [ref=f10e14] [cursor=pointer]
+    - link "Forgot your password?" [ref=f10e15] [cursor=pointer]:
+      - /url: /recovery-request

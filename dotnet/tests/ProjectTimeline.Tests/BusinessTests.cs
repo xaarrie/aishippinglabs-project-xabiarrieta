@@ -105,4 +105,27 @@ public sealed class BusinessTests
         Assert.True(await authorization.CanWriteAsync(project.Id, admin.Id, administrator: true));
         Assert.True(await authorization.CanManageAsync(project.Id, admin.Id, administrator: true));
     }
+
+    [Fact]
+    public async Task Current_database_role_authorizes_admin_even_when_token_claim_is_stale()
+    {
+        var options = new DbContextOptionsBuilder<ProjectTimelineDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+        await using var db = new ProjectTimelineDbContext(options);
+        var role = new UserRole { RoleName = "Admin" };
+        var user = new User { Email = "admin@example.test", DisplayName = "Admin", PasswordHash = "hash", IDUserRole = role.Id, UserRole = role };
+        db.UserRoles.Add(role); db.Users.Add(user); await db.SaveChangesAsync();
+        var claims = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), new Claim(ClaimTypes.Role, "Administrator")]));
+        var context = new Microsoft.AspNetCore.Authorization.AuthorizationHandlerContext([new AdminRequirement()], claims, null);
+        await new CurrentUserAdminHandler(db).HandleAsync(context);
+        Assert.True(context.HasSucceeded);
+    }
+
+    [Fact]
+    public void Current_project_owner_cannot_be_removed_but_other_collaborators_can()
+    {
+        var owner = new User { DisplayName = "Owner" };
+        var project = new Project { OwnerId = owner.Id, Owner = owner };
+        Assert.False(ProjectService.CanRemoveParticipant(project, new ProjectParticipant { UserId = owner.Id }));
+        Assert.True(ProjectService.CanRemoveParticipant(project, new ProjectParticipant { UserId = Guid.NewGuid() }));
+    }
 }

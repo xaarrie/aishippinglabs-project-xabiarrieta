@@ -1,0 +1,7 @@
+[   23063ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:5000/api/projects:0
+[   50306ms] [ERROR] Failed to load resource: the server responded with a status of 403 (Forbidden) @ http://127.0.0.1:5000/api/projects/0e6047b4-385d-4d7c-bbcf-4926e7c8fc70:0
+[   50426ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:5000/users/0e6047b4-385d-4d7c-bbcf-4926e7c8fc70/edit:0
+[   74959ms] [ERROR] Failed to load resource: the server responded with a status of 403 (Forbidden) @ http://127.0.0.1:5000/api/projects/0e6047b4-385d-4d7c-bbcf-4926e7c8fc70:0
+[   75073ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:5000/users/0e6047b4-385d-4d7c-bbcf-4926e7c8fc70/edit:0
+[   98695ms] [ERROR] Failed to load resource: the server responded with a status of 403 (Forbidden) @ http://127.0.0.1:5000/api/projects/0e6047b4-385d-4d7c-bbcf-4926e7c8fc70:0
+[   98812ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://127.0.0.1:5000/users/0e6047b4-385d-4d7c-bbcf-4926e7c8fc70/edit:0

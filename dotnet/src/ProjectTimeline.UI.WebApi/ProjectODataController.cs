@@ -16,7 +16,7 @@ public sealed class ProjectsController(ProjectTimelineDbContext db) : ODataContr
     public IQueryable<ProjectDto> Get()
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var query = User.IsInRole("Administrator") ? db.Projects.AsNoTracking() : db.Projects.AsNoTracking().Where(x => x.OwnerId == userId || x.Participants.Any(y => y.UserId == userId));
-        return query.Select(x => new ProjectDto(x.Id, x.Code, x.Name, x.Description, x.OwnerId, x.CreatedAtUtc, x.UpdatedAtUtc));
+        var query = User.IsInRole("Admin") ? db.Projects.AsNoTracking() : db.Projects.AsNoTracking().Where(x => x.OwnerId == userId || x.Participants.Any(y => y.UserId == userId));
+        return query.Select(x => new ProjectDto(x.Id, x.Code, x.Name, x.Description, x.OwnerId, x.Owner.DisplayName, x.PrimaryTimelineId, x.CreatedAtUtc, x.UpdatedAtUtc));
     }
 }
