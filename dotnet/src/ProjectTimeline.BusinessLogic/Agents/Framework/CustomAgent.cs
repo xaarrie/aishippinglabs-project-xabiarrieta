@@ -2,7 +2,7 @@
 using Microsoft.Extensions.AI;
 using OpenAI;
 
-namespace ProjectTimeline.BusinessLogic.Agents
+namespace ProjectTimeline.BusinessLogic.Agents.Framework
 {
     public interface IConversationStorage
     {

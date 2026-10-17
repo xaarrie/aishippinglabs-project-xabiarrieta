@@ -1,14 +1,15 @@
-﻿using Microsoft.Extensions.AI;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using ProjectTimeline.DataAccessLogic;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
-using ProjectTimeline.DataAccessLogic;
 
-namespace ProjectTimeline.BusinessLogic.Agents
+namespace ProjectTimeline.BusinessLogic.Agents.Tools
 {
     public class GetAITools
     {
@@ -40,9 +41,18 @@ namespace ProjectTimeline.BusinessLogic.Agents
     public class SearchEntries(ProjectTimelineDbContext db, Guid timelineId)
     {
         [Description("Method that searches in the entries about related text")]
-        public async Task<List<string>> search_entries(string text)
+        public async Task<List<string>> search_entries(
+            [Description("Text to search in the entries. Max text length is 200 characters")]
+            string text)
         {
-            var bounded = (text ?? "").Trim(); if (bounded.Length is 0 or > 200) return new List<string>();
+
+
+            Console.WriteLine($"TOOL: BuscarEntradas ejecutada: {text}");
+
+            
+            var bounded = (text ?? "").Trim(); 
+            if (bounded.Length is 0 or > 200) 
+                return new List<string>();
             var query = db.TimelineEntries.AsNoTracking().Where(x => x.TimelineId == timelineId);
             if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true)
                 query = query.Where(x => EF.Functions.ToTsVector("simple", x.Content).Matches(EF.Functions.PlainToTsQuery("simple", bounded)));

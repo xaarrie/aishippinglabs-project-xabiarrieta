@@ -14,6 +14,7 @@ using ProjectTimeline.DataAccessLogic;
 using ProjectTimeline.Database;
 using ProjectTimeline.UI.WebApi;
 using ProjectTimeline.BusinessLogic.Agents;
+using ProjectTimeline.BusinessLogic.Agents.Tools;
 
 var builder = WebApplication.CreateBuilder(args);
 var connection = builder.Configuration.GetConnectionString("ProjectTimeline") ?? "Host=localhost;Database=projecttimeline;Username=postgres";

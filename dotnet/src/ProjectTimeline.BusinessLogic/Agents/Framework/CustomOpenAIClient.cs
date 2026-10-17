@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ProjectTimeline.BusinessLogic.Agents
+namespace ProjectTimeline.BusinessLogic.Agents.Framework
 {
     public class CustomOpenAIClient : ICustomChatClient, ICustomAgentClient
     {

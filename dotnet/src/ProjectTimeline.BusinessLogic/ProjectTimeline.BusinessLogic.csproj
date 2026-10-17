@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><RootNamespace>ProjectTimeline.BusinessLogic</RootNamespace></PropertyGroup>
   <ItemGroup><ProjectReference Include="..\ProjectTimeline.DataAccessLogic\ProjectTimeline.DataAccessLogic.csproj" /></ItemGroup>
   <ItemGroup><FrameworkReference Include="Microsoft.AspNetCore.App" /></ItemGroup>

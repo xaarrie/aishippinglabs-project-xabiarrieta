@@ -1,6 +1,8 @@
 ﻿using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using OpenAI.Chat;
+using ProjectTimeline.BusinessLogic.Agents.Framework;
+using ProjectTimeline.BusinessLogic.Agents.Tools;
 using ProjectTimeline.DataAccessLogic;
 using System;
 using System.Collections.Generic;
