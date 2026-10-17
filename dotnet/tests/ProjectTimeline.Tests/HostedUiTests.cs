@@ -42,7 +42,7 @@ public sealed class HostedUiTests
         Assert.Contains("const entryNew = path.match", source);
         Assert.Contains("const entryDetail = path.match", source);
         Assert.Contains("accept=\".pdf,.doc,.docx,.xls,.xlsx,.md,.markdown\"", source);
-        Assert.Contains("Select the file again to retry", source);
+        Assert.Contains("A failed upload keeps the selected file", source);
         Assert.Contains("if (File.Exists(path)) File.Delete(path)", File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.BusinessLogic", "ArtifactStorage.cs")));
         Assert.DoesNotContain("defaultValue={entry.content}", source);
         Assert.Contains("/api/projects/${project.id}/participants", source);
@@ -69,7 +69,7 @@ public sealed class HostedUiTests
         Assert.Contains("controller.abort()", source);
         Assert.Contains("signal: controller.signal", source);
         Assert.DoesNotMatch(new Regex(@"useEffect\s*\(\s*load\s*,", RegexOptions.CultureInvariant), source);
-        Assert.Contains("useEffect(() => { load(); }", source);
+        Assert.Contains("function useResource(path, initial)", source);
         Assert.Contains("class RouteErrorBoundary", source);
         Assert.Contains("<RouteErrorBoundary>{content}</RouteErrorBoundary>", source);
         Assert.Contains("Unable to load this project.", source);
@@ -88,7 +88,7 @@ public sealed class HostedUiTests
         Assert.Contains("/projects/${projectId}/timelines/${x.id}/edit", source);
         Assert.DoesNotContain("<Link className={active(\"/timelines\")", source);
         Assert.Contains("The timeline does not belong to this project.", source);
-        Assert.Contains("timeline.projectId !== project.id", source);
+        Assert.Contains("timeline.data.projectId !== project.data.id", source);
         Assert.Contains("value.projectId === projectId", source);
          Assert.Contains("function DataTable", source);
          Assert.Contains("sorted.length ?", source);
@@ -124,7 +124,7 @@ public sealed class HostedUiTests
         Assert.Contains("menuButtonRef", source);
         Assert.Contains("navigationRef", source);
         Assert.Contains("event.key === \"Escape\"", source);
-        Assert.Contains("requestAnimationFrame", source);
+        Assert.Contains("target.focus({ preventScroll: true })", source);
         Assert.Contains("onClick={closeSidebar}", source);
         Assert.Contains("aria-current={active(\"/projects\") ? \"page\" : undefined}", source);
         Assert.Contains("className=\"overlay-dismiss\"", source);
@@ -144,13 +144,21 @@ public sealed class HostedUiTests
         Assert.Contains("--ui-size-breakpoint: 700px", styles);
         Assert.Contains("--ui-transparent", styles);
          Assert.Contains("--ui-grid-card", styles);
-         Assert.Contains("-webkit-line-clamp: 2", styles);
-         Assert.Contains("flex-wrap: nowrap", styles);
+         Assert.Contains("-webkit-line-clamp: var(--ui-line-clamp)", styles);
+         Assert.Contains("--ui-line-clamp: 2", styles);
+         Assert.Contains("flex-wrap: wrap", styles);
+         Assert.DoesNotContain("flex-wrap: nowrap", styles);
         Assert.Contains("--ui-negative-one", styles);
-        Assert.DoesNotContain("minmax(", styles[styles.IndexOf("* {", StringComparison.Ordinal)..]);
+        Assert.Contains("--ui-track-fluid: minmax(0, 1fr)", styles);
+        Assert.Contains("grid-template-rows: var(--ui-size-topbar) var(--ui-track-fluid) var(--ui-size-status)", styles);
+        Assert.DoesNotContain("@media (max-width: var(", styles);
+        Assert.Contains("@media (max-width: 700px)", styles);
+        Assert.DoesNotContain("grid-template-columns: var(--ui-flex-one)", styles);
         var componentStyles = styles[styles.IndexOf("* {", StringComparison.Ordinal)..];
+        // Media conditions require literals; declarations inside their rules still require tokens.
+        componentStyles = Regex.Replace(componentStyles, @"@media[^{]*\{", "{", RegexOptions.CultureInvariant);
         Assert.DoesNotMatch(
-            new Regex(@"\b(?:margin|padding|gap|width|height|min-width|min-height|max-width|max-height|top|right|bottom|left|inset|grid-template-columns|grid-template-rows|border(?:-radius)?|outline-offset|font-size|letter-spacing)\s*:\s*(?:#[0-9a-fA-F]{3,8}|rgba?\(|transparent\b|-?\d+(?:\.\d+)?(?:px|vh|vw|%|fr|em|rem)?\b)", RegexOptions.CultureInvariant),
+            new Regex(@"\b(?:margin|padding|gap|width|height|min-width|min-height|max-width|max-height|top|right|bottom|left|inset|grid-template-columns|grid-template-rows|border(?:-radius)?|outline-offset|font-size|letter-spacing|line-height|font-weight|color|background(?:-color)?|border-color|outline|opacity|z-index|flex(?:-shrink)?|-webkit-line-clamp)\s*:\s*(?:#[0-9a-fA-F]{3,8}|rgba?\(|transparent\b|-?\d+(?:\.\d+)?(?:px|vh|vw|%|fr|em|rem)?\b)", RegexOptions.CultureInvariant),
             componentStyles);
         Assert.Contains("path === \"/profile\"", source);
         Assert.Contains("path === \"/users\"", source);
@@ -173,6 +181,184 @@ public sealed class HostedUiTests
         Assert.Contains("popstate", bundle);
         Assert.Contains("recovery-request", bundle);
         Assert.Contains("projects", bundle);
+    }
+
+    [Fact]
+    public void Shell_navigation_guards_hidden_and_modal_focus_lifecycle()
+    {
+        var root = FindRepositoryRoot(AppContext.BaseDirectory);
+        var source = File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src", "App.jsx"));
+        Assert.Contains("hidden={!sidebarOpen}", source);
+        Assert.Contains("role={drawerOpen ? \"dialog\" : undefined}", source);
+        Assert.Contains("aria-modal={drawerOpen ? true : undefined}", source);
+        Assert.Contains("query.addEventListener(\"change\", update)", source);
+        Assert.Contains("query.removeEventListener(\"change\", update)", source);
+        Assert.Contains("element.inert = true", source);
+        Assert.Contains("element.inert = inert", source);
+        Assert.Contains("element.style.setProperty(property, value, priority)", source);
+        Assert.Contains("event.key === \"Tab\"", source);
+        Assert.Contains("document.removeEventListener(\"focusin\", onFocusIn)", source);
+        Assert.Contains("document.removeEventListener(\"keydown\", onKeyDown, true)", source);
+    }
+
+    [Fact]
+    public void Shared_primitives_keep_field_feedback_and_semantic_control_contracts()
+    {
+        var root = FindRepositoryRoot(AppContext.BaseDirectory);
+        var client = Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src");
+        var source = File.ReadAllText(Path.Combine(client, "App.jsx"));
+        var styles = File.ReadAllText(Path.Combine(client, "styles.css"));
+        var fields = source[source.IndexOf("function FieldFeedback", StringComparison.Ordinal)..source.IndexOf("function ErrorMessage", StringComparison.Ordinal)];
+        Assert.Contains("className=\"field\"", fields);
+        Assert.Contains("{hint &&", fields);
+        Assert.Contains("{error &&", fields);
+        Assert.Contains("htmlFor={id}", fields);
+        Assert.Contains("`${id}-hint`", fields);
+        Assert.Contains("`${id}-error`", fields);
+        Assert.Contains("aria-labelledby={props[\"aria-labelledby\"] || `${id}-label`}", fields);
+        Assert.Contains("aria-describedby={fieldDescription", fields);
+        Assert.Contains("aria-invalid={error ? true", fields);
+        Assert.Contains("<input {...props}", fields);
+        Assert.Contains("<select {...props}", fields);
+        Assert.DoesNotContain("return <><SelectField", fields);
+        Assert.Contains("headingLevel = 1", source);
+        Assert.Contains("<Heading id={titleId}>{title}</Heading>", source);
+        Assert.Contains("if (disabled) { event.preventDefault(); return; }", source);
+        Assert.Contains("button.danger, a.danger", styles);
+        Assert.Contains("button:disabled", styles);
+        Assert.Contains("a[aria-disabled=\"true\"]", styles);
+        Assert.Contains("--ui-size-control: 44px", styles);
+        Assert.Contains("--ui-size-choice: 20px", styles);
+        Assert.Contains("--ui-line-height-body", styles);
+        Assert.Contains("field-sizing: content", styles);
+        Assert.Contains("resize: vertical", styles);
+        Assert.Contains(".form-grid > * { min-width: var(--ui-zero)", styles);
+    }
+
+    [Fact]
+    public void Register_and_account_states_preserve_explicit_loading_retry_and_submission_boundaries()
+    {
+        var root = FindRepositoryRoot(AppContext.BaseDirectory);
+        var source = File.ReadAllText(Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src", "App.jsx"));
+        var table = source[source.IndexOf("function DataTable", StringComparison.Ordinal)..source.IndexOf("function LoadFeedback", StringComparison.Ordinal)];
+        Assert.Contains("loading = false", table);
+        Assert.Contains("aria-busy={loading}", table);
+        Assert.Contains("!loading && !error", table);
+        Assert.Contains("No matching records", table);
+        Assert.Contains("Clear filters", table);
+        Assert.Contains("emptyAction", table);
+        Assert.Contains("hasData={rows.length > 0}", table);
+        var managed = source[source.IndexOf("function ManagedForm", StringComparison.Ordinal)..source.IndexOf("function Login", StringComparison.Ordinal)];
+        Assert.Contains("if (locked.current) return", managed);
+        Assert.Contains("locked.current = true", managed);
+        Assert.Contains("finally { locked.current = false; }", managed);
+        Assert.Contains("disabled={state.pending}", managed);
+        Assert.Contains("aria-busy={state.pending}", managed);
+        Assert.Contains("your entered values are retained", managed);
+        Assert.Contains("Profile saved.", source);
+        Assert.Contains("kind === \"user-edit\" ? { id: match[1] }", source);
+        Assert.Contains("Available records are still shown below.", source);
+        Assert.Contains("Read full description", source);
+        Assert.Contains("className=\"danger\" disabled={action.pending}", source);
+    }
+
+    [Fact]
+    public void Register_actions_use_native_disclosure_and_restore_focus_without_full_width_growth()
+    {
+        var root = FindRepositoryRoot(AppContext.BaseDirectory);
+        var client = Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src");
+        var source = File.ReadAllText(Path.Combine(client, "App.jsx"));
+        var styles = File.ReadAllText(Path.Combine(client, "styles.css"));
+        var actions = source[source.IndexOf("function RecordActions", StringComparison.Ordinal)..source.IndexOf("function StatusBadge", StringComparison.Ordinal)];
+        Assert.Contains("<details className=\"record-more\"", actions);
+        Assert.Contains("<summary aria-label={`More actions for ${label}`}>", actions);
+        Assert.Contains("event.key === \"Escape\"", actions);
+        Assert.Contains("event.currentTarget.open = false", actions);
+        Assert.Contains("querySelector(\"summary\").focus()", actions);
+        Assert.Contains("ariaLabel={`Delete project ${x.code}`}", source);
+        Assert.Contains("ariaLabel={`Delete user ${x.email}`}", source);
+        Assert.Contains("flex: var(--ui-flex-fixed)", styles);
+        Assert.DoesNotContain(".record-actions > .primary { flex-basis: var(--ui-full)", styles);
+        Assert.Contains(".record-secondary-actions .danger:enabled", styles);
+        Assert.Contains("Read full description for project", source);
+    }
+
+    [Fact]
+    public void Workspace_composition_keeps_safe_content_explicit_requests_and_review_source_boundaries()
+    {
+        var root = FindRepositoryRoot(AppContext.BaseDirectory);
+        var client = Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src");
+        var source = File.ReadAllText(Path.Combine(client, "App.jsx"));
+        var styles = File.ReadAllText(Path.Combine(client, "styles.css"));
+        var workspace = source[source.IndexOf("function TimelineEdit", StringComparison.Ordinal)..source.IndexOf("function NotFound", StringComparison.Ordinal)];
+        Assert.Contains("headingLevel={2} title=\"Project timelines\"", workspace);
+        Assert.Contains("headingLevel={3}", workspace);
+        Assert.Contains("headingLevel={4} title=\"Timeline entries\"", workspace);
+        Assert.Contains("white-space: pre-wrap", styles);
+        Assert.DoesNotContain("dangerouslySetInnerHTML", workspace);
+        Assert.DoesNotContain("onBlur=", workspace);
+        Assert.Contains("ariaLabel=\"Create timeline\"", workspace);
+        Assert.Contains("ariaLabel=\"Create timeline entry\"", workspace);
+        Assert.Contains("aria-busy={action.pending}", workspace);
+        Assert.Contains("if (saveLock.current) return", workspace);
+        Assert.Contains("body.append(\"file\", file)", workspace);
+        Assert.Contains("entryIds: selected", workspace);
+        Assert.Contains("<legend>Select entries</legend>", workspace);
+        Assert.Contains("onRetry={reload}", workspace);
+        Assert.Contains("hasData={!!entries.length}", workspace);
+        Assert.Contains("dirty={dirty} onActiveChange={setReviewActive}", workspace);
+        Assert.Contains("onSave={draft => save(applyReviewDraft(editor, draft))}", workspace);
+        Assert.Contains("hasEntryWriteAccess(user, project, participants)", workspace);
+        Assert.Contains("controller.signal.aborted", workspace);
+        Assert.Contains("record-actions", source);
+        Assert.Contains("grid-template-columns: var(--ui-grid-workspace)", styles);
+    }
+
+    [Fact]
+    public void Review_presentation_uses_shared_tokens_and_preserves_explicit_evidence_and_save_boundaries()
+    {
+        var root = FindRepositoryRoot(AppContext.BaseDirectory);
+        var client = Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src");
+        var source = File.ReadAllText(Path.Combine(client, "EntryReview.jsx"));
+        var styles = File.ReadAllText(Path.Combine(client, "EntryReview.css"));
+        var tokens = File.ReadAllText(Path.Combine(client, "styles.css"));
+        Assert.Single(Regex.Matches(source, "<h2\\b"));
+        Assert.Contains(">Review</h2>", source);
+        Assert.Contains("<h3>Questions and answers</h3>", source);
+        Assert.Contains("<h3>Editable generated entry preview</h3>", source);
+        Assert.Contains("className=\"review-options\"", source);
+        Assert.Contains("question.suggestedOptions.map", source);
+        Assert.Contains("htmlFor={`${prefix}-previous-${index}`}", source);
+        Assert.Contains("id={`${prefix}-previous-${index}`}", source);
+        Assert.Contains("aria-describedby={[", source);
+        Assert.Contains("side === 'source' ? <del", source);
+        Assert.Contains("<ins key={index}>{part.text}</ins>", source);
+        Assert.DoesNotContain("dangerouslySetInnerHTML", source);
+        Assert.DoesNotContain("<form", source);
+        Assert.Contains("tabIndex={0} aria-label={label}", source);
+        Assert.Contains("Original saved source", source);
+        Assert.Contains("Current generated proposal", source);
+        Assert.Contains("Estimated coverage (0–1)", source);
+        Assert.Contains("inventoried facts", source);
+        Assert.Contains("even when estimated coverage is 1", source);
+        Assert.Contains("Literal quote matches do not verify semantic truth", source);
+        Assert.Contains("{fact.evidenceWarning}", source);
+        Assert.Contains("data.unsupportedAdditions", source);
+        Assert.Contains("className=\"secondary\" onClick={onAudit}", source);
+        Assert.Contains("className=\"primary\" disabled={busy || !canWrite", source);
+        Assert.Contains("className=\"secondary\" disabled={requests.current.saving} onClick={discard}", source);
+        Assert.Contains("var(--ui-focus)", styles);
+        Assert.Contains("var(--ui-diff-delete-ink)", styles);
+        Assert.Contains("var(--ui-diff-insert-surface)", styles);
+        Assert.Contains("--ui-diff-delete-ink: var(--ui-error)", tokens);
+        Assert.Contains("--ui-diff-insert-ink: var(--ui-success)", tokens);
+        Assert.Contains("@media (max-width: 700px)", styles);
+        Assert.Contains("overflow: auto", styles);
+        Assert.Contains("white-space: pre-wrap", styles);
+        Assert.Contains("overflow-wrap: anywhere", styles);
+        Assert.Contains("text-decoration: line-through", styles);
+        Assert.Contains("text-decoration: underline", styles);
+        Assert.DoesNotMatch(new Regex(@"#[0-9a-fA-F]{3,8}|rgba?\("), styles);
     }
 
     private static string FindRepositoryRoot(string start)

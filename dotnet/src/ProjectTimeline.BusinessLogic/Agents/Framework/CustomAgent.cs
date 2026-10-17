@@ -1,6 +1,8 @@
 ﻿using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using OpenAI;
+using ProjectTimeline.BusinessLogic.Agents.Models;
+using System.Diagnostics.Tracing;
 
 namespace ProjectTimeline.BusinessLogic.Agents.Framework
 {
@@ -24,6 +26,7 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
         void Init(string agentName, string model, string instructions, List<AITool> tools);
         Task<AgentResponse> RunAsync(string message);
         Task<AgentResponse<T>> RunAsync<T>(string message) where T : class;
+        public event EventHandler<FunctionCallEventArgs>? FunctionCalled;
     }
     
     

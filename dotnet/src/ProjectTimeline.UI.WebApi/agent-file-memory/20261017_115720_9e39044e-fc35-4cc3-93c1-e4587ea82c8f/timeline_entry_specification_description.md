@@ -1,0 +1,1 @@
+﻿Documentation of the specifications for Timeline Entry implementation and Search functionalities.

@@ -27,6 +27,8 @@ builder.Services.AddScoped<RecoveryService>();
 builder.Services.AddScoped<ProjectAuthorization>();
 builder.Services.AddScoped<IAuthorizationHandler, CurrentUserAdminHandler>();
 builder.Services.AddScoped<IMergeReviewService, MergeReviewService>();
+builder.Services.AddScoped<IEntryReviewService, EntryReviewService>();
+builder.Services.AddScoped<IEntryReviewAuditService, EntryReviewAuditService>();
 builder.Services.AddSingleton<IRecoveryOutbox, FileRecoveryOutbox>();
 builder.Services.AddSingleton<ArtifactStorage>();
 builder.Services.AddControllers().AddOData(o => o.AddRouteComponents("odata", GetEdmModel()).Select().Filter().OrderBy().Count().SetMaxTop(100));
@@ -134,6 +136,7 @@ app.MapPatch("/api/merge-reviews/{id:guid}", async (Guid id, MergeReviewStatusRe
 app.MapPost("/api/projects/{id:guid}/rag/index", (Guid id, RagIndexRequest request, ClaimsPrincipal p, ProjectAuthorization authorization, CancellationToken ct) => RagNotImplementedAsync(id, request, p, authorization, ct)).RequireAuthorization();
 app.MapPost("/api/projects/{id:guid}/rag/query", (Guid id, RagQueryRequest request, ClaimsPrincipal p, ProjectAuthorization authorization, CancellationToken ct) => RagNotImplementedAsync(id, request, p, authorization, ct)).RequireAuthorization();
 app.MapPost("/api/projects/{id:guid}/lifecycle-analysis", (Guid id, LifecycleSnapshotRequest request, ClaimsPrincipal p, ProjectAuthorization authorization, CancellationToken ct) => RagNotImplementedAsync(id, request, p, authorization, ct)).RequireAuthorization();
+app.MapEntryReview();
 app.MapFallbackToFile("index.html");
 app.Run();
 

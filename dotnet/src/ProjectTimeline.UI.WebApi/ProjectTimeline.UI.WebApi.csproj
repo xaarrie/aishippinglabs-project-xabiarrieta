@@ -12,6 +12,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- Patch the vulnerable PKCS dependency used by EF Core design tooling. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.21" PrivateAssets="all" />
     <ProjectReference Include="..\ProjectTimeline.Database\ProjectTimeline.Database.csproj" />
     <ProjectReference Include="..\ProjectTimeline.BusinessLogic\ProjectTimeline.BusinessLogic.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />

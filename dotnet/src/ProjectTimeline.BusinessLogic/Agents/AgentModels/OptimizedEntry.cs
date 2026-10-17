@@ -18,7 +18,7 @@ namespace ProjectTimeline.BusinessLogic.Agents.AgentModels
     Status Status,
         [property: Description("Open questions for the user, ordered by impact (blocking first). Empty if none.")]
     List<Question> Questions,
-        [property: Description("The optimized, reorganized version of the new entry.")]
+        [property: Description("The reorganized new entry, preserving every substantive source detail and user clarification, not a compressed summary. Do not promote prior-context facts to new entry claims.")]
     OptimizedEntry Entry,
         [property: Description("Proposed changes to the project digest.")]
     List<DigestChange> DigestChanges,
@@ -41,28 +41,62 @@ namespace ProjectTimeline.BusinessLogic.Agents.AgentModels
 
     public record OptimizedEntry(
         string Title,
-        [property: Description("Concise background needed to understand the tasks.")]
+        [property: Description("Readable background preserving relevant source context, including names, dates, conditions and uncertainty. Brevity must not remove facts; use AdditionalDetails for uncategorized details.")]
     string Context,
         List<TaskItem> Tasks,
         List<Decision> Decisions,
         [property: Description("Assumptions that are not confirmed facts.")]
     List<string> Assumptions,
-        List<string> Risks);
+        List<string> Risks)
+    {
+        [Description("Explicit source objectives, with full descriptions, specifics and success criteria. Empty when none are stated; do not invent goals.")]
+        public List<EntryObjective> Objectives { get; init; } = [];
+
+        [Description("All relevant source details not represented elsewhere, including uncategorized facts and original uncertain wording. Preserve names, dates, units, conditions and negative constraints; never discard a fact for lack of a category.")]
+        public List<string> AdditionalDetails { get; init; } = [];
+    }
+
+    public record EntryObjective(
+        string Title,
+        [property: Description("Full source objective and purpose, preserving scope, conditions and rationale without invented specifics.")]
+        string Description)
+    {
+        [Description("Source specifics including names, dates, quantities with units, constraints and original uncertain wording.")]
+        public List<string> Details { get; init; } = [];
+
+        [Description("All stated success criteria, with exact thresholds, units and conditions. Empty if unspecified.")]
+        public List<string> AcceptanceCriteria { get; init; } = [];
+
+        [Description("Ids of unanswered questions affecting this objective.")]
+        public List<string> PendingQuestionIds { get; init; } = [];
+    }
 
     public record TaskItem(
         [property: Description("Existing task id, or null if the task is new.")]
     string? Id,
         string Title,
+        [property: Description("Full task meaning and rationale, not just a title or summary. Retain substantive specifics in this description or the detail fields.")]
         string Description,
         string? Owner,
         string? Status,
-        [property: Description("Target date in ISO 8601 (yyyy-MM-dd), or null.")]
+        [property: Description("Explicit, confirmed target date in ISO 8601 (yyyy-MM-dd), or null. Preserve tentative, relative or conditional date wording in Details and reference clarification questions; never invent a date.")]
     string? TargetDate,
         [property: Description("Ids of tasks this one depends on.")]
     List<string> Dependencies,
+        [property: Description("All stated acceptance criteria with thresholds, units, conditions and exclusions, without compression or invention.")]
         List<string> AcceptanceCriteria,
         [property: Description("Ids of unanswered questions that affect this task.")]
-    List<string> PendingQuestionIds);
+    List<string> PendingQuestionIds)
+    {
+        [Description("All substantive task specifics not captured elsewhere: named people, dates, instructions, rationale and original uncertain wording. Empty if none.")]
+        public List<string> Details { get; init; } = [];
+
+        [Description("All stated limits, preconditions, exceptions and negative constraints. Preserve exact conditions and prohibitions; do not infer new ones.")]
+        public List<string> Constraints { get; init; } = [];
+
+        [Description("Source numeric amounts with their units, qualifiers and what they measure (for example cable length per sensor). Do not normalize away meaning or invent quantities.")]
+        public List<string> Quantities { get; init; } = [];
+    }
 
     public record Decision(
         string Description,

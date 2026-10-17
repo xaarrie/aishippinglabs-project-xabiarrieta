@@ -3,6 +3,7 @@ using Microsoft.Extensions.AI;
 using OpenAI.Chat;
 using ProjectTimeline.BusinessLogic.Agents.Framework;
 using ProjectTimeline.BusinessLogic.Agents.Tools;
+using ProjectTimeline.BusinessLogic.Agents.Tracking;
 using ProjectTimeline.DataAccessLogic;
 using System;
 using System.Collections.Generic;
@@ -15,13 +16,19 @@ namespace ProjectTimeline.BusinessLogic.Agents
         ICustomAgent agent;
         ICustomAgentClient provider;
         ProjectTimelineDbContext db;
-        public SearchEntriesAgent(ProjectTimelineDbContext db, Guid timelineId)
+        IFunctionCallTracker? callTracker;
+        public SearchEntriesAgent(ProjectTimelineDbContext db, Guid timelineId, IFunctionCallTracker? callTracker = null)
         {
+            this.callTracker = callTracker;
             this.db = db;
             provider = new CustomOpenAIClient();
             agent = new LocalCustomAgent(
                 provider
                 );
+            if(this.callTracker != null)
+            {
+                agent.FunctionCalled += this.callTracker.FunctionCallReceiver;
+            }
             SearchEntries sentries = new SearchEntries(db, timelineId);
             string instructions = @$"
             You are a document assistant to try to help searching throught entries of a conversation.
@@ -33,6 +40,12 @@ namespace ProjectTimeline.BusinessLogic.Agents
             var tools = new GetAITools().GetTools(sentries).ToList();
             agent.Init("searchEntries", "gpt-4o-mini", instructions, tools);
         }
+
+        private void Agent_FunctionCalled(object? sender, Models.FunctionCallEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<AgentResponse> RunAsync(string message)
         {
             return await agent.RunAsync(message);

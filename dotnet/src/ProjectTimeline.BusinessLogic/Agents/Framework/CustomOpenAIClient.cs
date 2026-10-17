@@ -41,8 +41,11 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
                     ChatOptions = new ChatOptions
                     {
                         Instructions = instructions,
-                        Tools = tools
+                        Tools = tools,
+                       
                     },
+                    DisableWebSearch = true,
+                    
                   
                 }
                 );

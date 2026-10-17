@@ -8,6 +8,8 @@ using Xunit;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text;
+using ProjectTimeline.BusinessLogic.Agents.Framework;
+using ProjectTimeline.BusinessLogic.Agents.Tools;
 
 namespace ProjectTimeline.Tests;
 public sealed class BusinessTests
@@ -19,7 +21,7 @@ public sealed class BusinessTests
         try
         {
             Environment.SetEnvironmentVariable("OPENAI_API_KEY", null);
-            var exception = Assert.Throws<InvalidOperationException>(() => new IbernovaOpenAIClient());
+            var exception = Assert.Throws<InvalidOperationException>(() => new CustomOpenAIClient());
             Assert.Contains("OPENAI_API_KEY", exception.Message);
             Assert.DoesNotContain("sk-", exception.Message);
         }
@@ -107,13 +109,18 @@ public sealed class BusinessTests
         var service = new TimelineService(db);
         var first = await service.AddEntryAsync(timeline.Id, user.Id, "First", "needle one", default);
         var second = await service.AddEntryAsync(timeline.Id, user.Id, "Second", "needle two", default);
+        var otherTimeline = new Timeline { ProjectId = project.Id, Project = project, Code = "OTHER", Name = "Other timeline" };
+        db.Timelines.Add(otherTimeline);
+        await db.SaveChangesAsync();
+        await service.AddEntryAsync(otherTimeline.Id, user.Id, "Other", "needle outside", default);
         var snapshot = await service.CreateSnapshotAsync(timeline.Id, null, [second.Id, first.Id], default);
         Assert.Equal(1, snapshot.SnapshotNumber);
         Assert.Contains("Entry 1: First", snapshot.SummaryContent);
         Assert.Equal([first.Id, second.Id], snapshot.Entries.OrderBy(x => x.Entry.EntryNumber).Select(x => x.EntryId).ToArray());
-        var search = await new SearchTools(db).search_entries("needle", timeline.Id);
-        Assert.Equal("needle one\nneedle two", search);
-        Assert.Null(await new SearchTools(db).fetch_entry(Guid.NewGuid(), timeline.Id));
+        var search = new SearchEntries(db, timeline.Id);
+        Assert.Equal(new[] { "needle one", "needle two" }, await search.search_entries("needle"));
+        Assert.Empty(await search.search_entries("no matching content"));
+        Assert.Empty(await search.search_entries("outside"));
     }
 
     [Fact]
