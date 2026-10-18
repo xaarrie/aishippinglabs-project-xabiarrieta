@@ -141,7 +141,9 @@ public sealed class EntryReviewDetailTests
     {
         await using var db = CreateDb();
         var fake = new CapturingAgent();
-        _ = new OptimizeEntryAgent(db, Guid.NewGuid(), Guid.NewGuid(), fake);
+        var entry = await PersistAnchor(db, "Prompt fixture", "Synthetic persisted context.");
+        var optimizer = new OptimizeEntryAgent(db, entry.TimelineId, entry.Id, fake);
+        await Assert.ThrowsAsync<NotSupportedException>(() => optimizer.RunAsync("Prompt inspection only"));
 
         foreach (var rule in new[] {
             "Reorganization is not summarization", "names, dates, quantities, units", "negative constraints",
@@ -152,7 +154,7 @@ public sealed class EntryReviewDetailTests
         })
             Assert.Contains(rule, fake.Instructions);
         Assert.Equal("optimizeEntry", fake.Name);
-        Assert.Equal(2, fake.Tools.Count);
+        Assert.Empty(fake.Tools);
     }
 
     [Fact]
@@ -160,23 +162,39 @@ public sealed class EntryReviewDetailTests
     {
         await using var db = CreateDb();
         var fake = new CapturingAgent();
-        var agent = new OptimizeEntryAgent(db, Guid.NewGuid(), Guid.NewGuid(), fake);
         var result = JsonSerializer.Deserialize<EntryReviewResult>(RichResult, JsonOptions)!;
         const string original = "Marta: do not drill; 2 sensors, 4.5 m each. Perhaps Friday.\nBadge B-17 stays with Leire.";
+        var entry = await PersistAnchor(db, "Original title", original);
+        var agent = new OptimizeEntryAgent(db, entry.TimelineId, entry.Id, fake);
         var message = JsonSerializer.Serialize(new {
-            current_entry_id = Guid.NewGuid(), new_entry = new { Title = "Original title", Content = original },
+            current_entry_id = entry.Id, new_entry = new { Title = "Original title", Content = original },
             previous_result = result, user_answers = new Dictionary<string, string> { ["Q1"] = "Still tentative; not confirmed." }
         }, JsonOptions);
 
-        // The fake captures the actual RunAsync boundary; no provider or context tool is invoked.
+        // Actual C# context reads precede the fake consumer boundary; no provider/model is invoked.
         await Assert.ThrowsAsync<NotSupportedException>(() => agent.RunAsync(message));
         Assert.Equal(typeof(EntryReviewResult), fake.ResponseType);
+        Assert.Empty(fake.Tools);
         using var captured = JsonDocument.Parse(fake.Message!);
-        Assert.Equal(original, captured.RootElement.GetProperty("new_entry").GetProperty("content").GetString());
-        Assert.Equal("Still tentative; not confirmed.", captured.RootElement.GetProperty("user_answers").GetProperty("Q1").GetString());
+        Assert.Equal(message, captured.RootElement.GetProperty("original_message").GetString());
+        var persisted = Assert.Single(captured.RootElement.GetProperty("review_context").GetProperty("entries").EnumerateArray());
+        Assert.Equal(entry.Id, persisted.GetProperty("entry_id").GetGuid());
+        Assert.Equal(original, persisted.GetProperty("content").GetString());
+        using var originalMessage = JsonDocument.Parse(captured.RootElement.GetProperty("original_message").GetString()!);
+        Assert.Equal(original, originalMessage.RootElement.GetProperty("new_entry").GetProperty("content").GetString());
+        Assert.Equal("Still tentative; not confirmed.", originalMessage.RootElement.GetProperty("user_answers").GetProperty("Q1").GetString());
         using var expected = JsonDocument.Parse(RichResult);
-        Assert.True(JsonElement.DeepEquals(expected.RootElement, captured.RootElement.GetProperty("previous_result")));
+        Assert.True(JsonElement.DeepEquals(expected.RootElement, originalMessage.RootElement.GetProperty("previous_result")));
         Assert.Empty(db.ChangeTracker.Entries());
+    }
+
+    private static async Task<TimelineEntry> PersistAnchor(ProjectTimelineDbContext db, string title, string content)
+    {
+        var entry = new TimelineEntry { TimelineId = Guid.NewGuid(), EntryNumber = 1, Title = title, Content = content };
+        db.TimelineEntries.Add(entry);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        return entry;
     }
 
     private static ProjectTimelineDbContext CreateDb() => new(

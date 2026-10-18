@@ -5,6 +5,7 @@ using ProjectTimeline.BusinessLogic.Agents;
 using ProjectTimeline.BusinessLogic.Agents.Framework;
 using ProjectTimeline.BusinessLogic.Agents.Models;
 using ProjectTimeline.BusinessLogic.Agents.Tools;
+using ProjectTimeline.BusinessLogic.Agents.Tracking;
 using ProjectTimeline.DataAccessLogic;
 using System.Text.Json;
 using Xunit;
@@ -106,30 +107,35 @@ public sealed class OptimizationAgentToolsTests
     }
 
     [Fact]
-    public async Task Agent_registers_only_two_anchored_AI_functions_without_calling_a_provider()
+    public async Task Agent_loads_persisted_anchored_context_in_CSharp_and_exposes_no_history_functions()
     {
         await using var db = CreateDb();
         var timeline = Guid.NewGuid();
         var current = Entry(db, timeline, 1);
         var future = Entry(db, timeline, 2);
         await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
         var fake = new RecordingAgent();
+        var tracker = new FunctionCallTracker();
+        var optimizer = new OptimizeEntryAgent(db, timeline, current.Id, fake, tracker);
+        Assert.Equal(0, fake.InitCalls);
+        const string original = "Persisted-anchor wiring only, not model output.";
 
-        _ = new OptimizeEntryAgent(db, timeline, current.Id, fake);
+        await Assert.ThrowsAsync<NotSupportedException>(() => optimizer.RunAsync(original));
 
-        var functions = fake.Tools.Cast<AIFunction>().ToArray();
-        Assert.Equal(["fetch_entry", "get_entry_ids"], functions.Select(x => x.Name).Order().ToArray());
-        var ids = Assert.Single(functions, x => x.Name == "get_entry_ids");
-        var fetch = Assert.Single(functions, x => x.Name == "fetch_entry");
-        Assert.Empty(ids.JsonSchema.GetProperty("properties").EnumerateObject());
-        Assert.Equal(["entryId"], fetch.JsonSchema.GetProperty("properties").EnumerateObject().Select(x => x.Name).ToArray());
-        var idsResult = Assert.IsType<JsonElement>(await ids.InvokeAsync());
-        Assert.Equal([current.Id], idsResult.EnumerateArray().Select(id => id.GetGuid()).ToArray());
-        var contentResult = Assert.IsType<JsonElement>(await fetch.InvokeAsync(new AIFunctionArguments { ["entryId"] = current.Id }));
-        Assert.Equal(current.Content, contentResult.GetString());
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-            await fetch.InvokeAsync(new AIFunctionArguments { ["entryId"] = future.Id }));
-        Assert.Contains("get_entry_ids", fake.Instructions);
+        Assert.Equal(1, fake.InitCalls);
+        Assert.Empty(fake.Tools);
+        Assert.Equal(["get_entry_ids", "fetch_entry"], tracker.Tools.Select(call => call.Name));
+        Assert.Equal([current.Id], Assert.IsAssignableFrom<IEnumerable<Guid>>(tracker.Tools[0].Result));
+        Assert.Equal(current.Content, Assert.IsType<string>(tracker.Tools[1].Result));
+        Assert.All(tracker.Tools, call => { Assert.Null(call.ID); Assert.True(call.Executed); Assert.Null(call.Exception); });
+        using var document = JsonDocument.Parse(fake.Message!);
+        Assert.Equal(original, document.RootElement.GetProperty("original_message").GetString());
+        var entry = Assert.Single(document.RootElement.GetProperty("review_context").GetProperty("entries").EnumerateArray());
+        Assert.Equal(current.Id, entry.GetProperty("entry_id").GetGuid());
+        Assert.NotEqual(future.Id, entry.GetProperty("entry_id").GetGuid());
+        Assert.Equal(current.Content, entry.GetProperty("content").GetString());
+        Assert.Empty(db.ChangeTracker.Entries());
     }
 
     private static ProjectTimelineDbContext CreateDb() => new(
@@ -159,6 +165,8 @@ public sealed class OptimizationAgentToolsTests
     {
         public List<AITool> Tools { get; private set; } = [];
         public string Instructions { get; private set; } = "";
+        public string? Message { get; private set; }
+        public int InitCalls { get; private set; }
 
         public event EventHandler<FunctionCallEventArgs>? FunctionCalled
         {
@@ -168,10 +176,15 @@ public sealed class OptimizationAgentToolsTests
 
         public void Init(string agentName, string model, string instructions, List<AITool> tools)
         {
+            InitCalls++;
             Tools = tools;
             Instructions = instructions;
         }
         public Task<AgentResponse> RunAsync(string message) => throw new NotSupportedException();
-        public Task<AgentResponse<T>> RunAsync<T>(string message) where T : class => throw new NotSupportedException();
+        public Task<AgentResponse<T>> RunAsync<T>(string message) where T : class
+        {
+            Message = message;
+            throw new NotSupportedException();
+        }
     }
 }

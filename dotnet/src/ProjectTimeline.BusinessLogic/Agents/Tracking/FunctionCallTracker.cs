@@ -10,29 +10,32 @@ namespace ProjectTimeline.BusinessLogic.Agents.Tracking
         List<FunctionCall> Tools { get; }
         void FunctionCallReceiver(object? sender, FunctionCallEventArgs functionCall);
     }
-    public class FunctionCallTracker
+    public class FunctionCallTracker : IFunctionCallTracker
     {
+        private readonly object sync = new();
+
         public FunctionCallTracker() {
             Tools = new List<FunctionCall>();
         }
         public List<FunctionCall> Tools { get; private set; }
         public void FunctionCallReceiver(object? sender, FunctionCallEventArgs functionCall)
         {
-            var existingFunction = Tools.FirstOrDefault(d => d.ID == functionCall?.Function?.ID);
-            if (existingFunction != null)
+            if (functionCall?.Function is not { } incoming)
+                return;
+            lock (sync)
             {
-                if (true == functionCall?.Function?.Executed)
+                // A direct invocation has no SDK ID: merge its own progress object only,
+                // never two unidentified calls or unrelated calls with the same function name.
+                var existingFunction = Tools.FirstOrDefault(d => ReferenceEquals(d, incoming)
+                    || (!string.IsNullOrEmpty(incoming.ID) && d.ID == incoming.ID));
+                if (existingFunction is null)
+                    Tools.Add(incoming);
+                // A later SDK terminal-result event must not erase immediate failed-call evidence.
+                else if (incoming.Executed && (existingFunction.Exception is null || incoming.Exception is not null))
                 {
-                    existingFunction.Executed = functionCall.Function.Executed;
-                    existingFunction.Exception = functionCall.Function.Exception;
-                    existingFunction.Result = functionCall.Function.Result;
-                }
-            }
-            else
-            {
-                if (functionCall != null && functionCall.Function != null)
-                {
-                    Tools.Add(functionCall.Function);
+                    existingFunction.Executed = true;
+                    existingFunction.Exception = incoming.Exception;
+                    existingFunction.Result = incoming.Result;
                 }
             }
         }

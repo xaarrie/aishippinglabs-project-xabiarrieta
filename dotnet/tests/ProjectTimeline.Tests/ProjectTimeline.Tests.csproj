@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject></PropertyGroup>
+  <PropertyGroup><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject><UserSecretsId>ProjectTimeline.Tests-e1899e37-47c2-4d29-9aca-d7e656777469</UserSecretsId></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\ProjectTimeline.BusinessLogic\ProjectTimeline.BusinessLogic.csproj" />
     <ProjectReference Include="..\..\src\ProjectTimeline.UI.WebApi\ProjectTimeline.UI.WebApi.csproj" />
