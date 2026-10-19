@@ -149,7 +149,7 @@ public sealed class LiveModelCoverageTests
             var expectedCases = name switch
             {
                 "SearchEntriesLiveModelTests" => 3,
-                "TimelineFactExtractionLiveModelTests" => 6,
+                "TimelineFactExtractionLiveModelTests" => 7,
                 "TimelineFactOptimizationLiveModelTests" => 1,
                 "TimelineFactSemanticVerifierLiveModelTests" => 6,
                 _ => throw new InvalidOperationException("Missing expected case count.")

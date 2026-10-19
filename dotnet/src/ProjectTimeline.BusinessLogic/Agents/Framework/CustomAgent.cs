@@ -21,6 +21,11 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
         AIAgent CreateHarnessAgent(string model, string agentName, string instructions, List<AITool> tools);
 
     }
+    public interface IJudgeAgent
+    {
+        void Init(string agentName, string model, string instructions);
+        Task<AgentResponse<JudgeFeedback>> RunAsync(string prevAgentOutput, string criteria, List<FunctionCall> functions);
+    }
     public interface ICustomAgent
     {
         void Init(string agentName, string model, string instructions, List<AITool> tools);
