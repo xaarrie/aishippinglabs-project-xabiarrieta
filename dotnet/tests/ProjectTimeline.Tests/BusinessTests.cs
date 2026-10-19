@@ -117,10 +117,21 @@ public sealed class BusinessTests
         Assert.Equal(1, snapshot.SnapshotNumber);
         Assert.Contains("Entry 1: First", snapshot.SummaryContent);
         Assert.Equal([first.Id, second.Id], snapshot.Entries.OrderBy(x => x.Entry.EntryNumber).Select(x => x.EntryId).ToArray());
-        var search = new SearchEntries(db, timeline.Id);
-        Assert.Equal(new[] { "needle one", "needle two" }, await search.search_entries("needle"));
-        Assert.Empty(await search.search_entries("no matching content"));
-        Assert.Empty(await search.search_entries("outside"));
+        var search = new SearchEntries(db, new(project.Id, timeline.Id), user.Id, false);
+        // Raw source matches must never substitute for accepted facts.
+        Assert.Empty((await search.search_entries("needle")).Facts);
+        var scope = new TimelineFactScope(project.Id, timeline.Id, first.Id);
+        var facts = new TimelineFactService(db);
+        var revision = await db.Timelines.Where(x => x.Id == timeline.Id).Select(x => x.FactRevision).SingleAsync();
+        var proposal = await facts.PrepareAsync(scope, user.Id, false, revision,
+            new([new("needle one", "needle", "Topic", "needle one")], [], []));
+        await facts.AcceptAsync(scope, proposal.Id, user.Id, false);
+        var hit = Assert.Single((await search.search_entries("needle")).Facts);
+        Assert.Equal(first.Id, hit.EntryId);
+        Assert.Equal(proposal.Id, hit.CreationReviewId);
+        Assert.Equal("needle one", hit.SourceQuote);
+        Assert.Empty((await search.search_entries("no matching content")).Facts);
+        Assert.Empty((await search.search_entries("outside")).Facts);
     }
 
     [Fact]

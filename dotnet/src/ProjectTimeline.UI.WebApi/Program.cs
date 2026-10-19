@@ -21,7 +21,8 @@ var connection = builder.Configuration.GetConnectionString("ProjectTimeline") ??
 var jwtKey = builder.Configuration["Authentication:SigningKey"] ?? throw new InvalidOperationException("Authentication:SigningKey must be configured for local startup.");
 builder.Services.AddDbContext<ProjectTimelineDbContext>(o => o.UseNpgsql(connection, npgsql => npgsql.MigrationsAssembly("ProjectTimeline.Database")));
 builder.Services.AddScoped<TimelineService>();
-builder.Services.AddScoped<SearchTools>();
+builder.Services.AddTimelineFacts(builder.Configuration);
+builder.Services.AddScoped<TimelineFactInformationApplication>(sp => new(sp.GetRequiredService<ProjectTimelineDbContext>()));
 builder.Services.AddScoped<ProjectService>();
 builder.Services.AddScoped<RecoveryService>();
 builder.Services.AddScoped<ProjectAuthorization>();
@@ -36,6 +37,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization(o => o.AddPolicy("Admin", p => p.RequireAuthenticatedUser().AddRequirements(new AdminRequirement())));
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 var app = builder.Build();
+app.UseTimelineFactBodyBounds();
 app.UseCors(); app.UseDefaultFiles(); app.UseStaticFiles(); app.UseRouting(); app.UseAuthentication();
 app.Use(async (context, next) =>
 {
@@ -60,9 +62,11 @@ using (var scope = app.Services.CreateScope())
         var password = builder.Configuration["PROJECT_TIMELINE_ADMIN_PASSWORD"];
         await DatabaseSetup.MigrateAndSeedAsync(db, string.IsNullOrWhiteSpace(password) ? null : PasswordService.Hash(password));
     }
-    catch (Exception ex)
+    catch
     {
-        app.Logger.LogError(ex, "Database initialization did not complete. Set PROJECT_TIMELINE_ADMIN_PASSWORD only for first development initialization and verify ConnectionStrings__ProjectTimeline.");
+        // Do not log connection/provider details or serve a fact flow over an incomplete schema.
+        app.Logger.LogCritical("Database initialization failed. Deployment pending: verify schema and official pgvector installation before startup.");
+        throw new InvalidOperationException("Database initialization failed; schema deployment is required before serving requests.");
     }
 }
 
@@ -107,23 +111,9 @@ app.MapDelete("/api/timelines/{id:guid}", async (Guid id, ClaimsPrincipal p, Pro
 app.MapGet("/api/timelines/{id:guid}/entries", async (Guid id, ClaimsPrincipal p, ProjectTimelineDbContext db, ProjectAuthorization authorization) => { var project = await db.Timelines.Where(x => x.Id == id).Select(x => x.ProjectId).SingleOrDefaultAsync(); if (project == Guid.Empty || !await authorization.CanReadAsync(project, UserId(p), IsAdmin(p))) return Results.Forbid(); var entries = await db.TimelineEntries.AsNoTracking().Include(x => x.Author).Include(x => x.Artifacts).Where(x => x.TimelineId == id).OrderBy(x => x.EntryNumber).ToListAsync(); return Results.Ok(entries.Select(ApiMappers.ToListDto)); }).RequireAuthorization();
   app.MapGet("/api/entries/{id:guid}", async (Guid id, Guid? projectId, Guid? timelineId, ClaimsPrincipal p, ProjectTimelineDbContext db, ProjectAuthorization authorization) => { var entry = await db.TimelineEntries.AsNoTracking().Include(x => x.Timeline).Include(x => x.Author).Include(x => x.Artifacts).SingleOrDefaultAsync(x => x.Id == id); if (entry is null) return Results.NotFound(); if ((timelineId.HasValue && timelineId.Value != entry.TimelineId) || (projectId.HasValue && projectId.Value != entry.Timeline.ProjectId)) return Results.NotFound(); if (!await authorization.CanReadAsync(entry.Timeline.ProjectId, UserId(p), IsAdmin(p))) return Results.Forbid(); return Results.Ok(ApiMappers.ToDetailDto(entry)); }).RequireAuthorization();
 app.MapPost("/api/timelines/{id:guid}/entries", async (Guid id, CreateEntryRequest r, ClaimsPrincipal p, TimelineService service, ProjectTimelineDbContext db, ProjectAuthorization authorization, CancellationToken ct) => { var project = await db.Timelines.Where(x => x.Id == id).Select(x => x.ProjectId).SingleOrDefaultAsync(ct); if (project == Guid.Empty || !await authorization.CanWriteAsync(project, UserId(p), IsAdmin(p), ct)) return Results.Forbid(); try { var x = await service.AddEntryAsync(id, UserId(p), r.Title, r.Content, ct); return Results.Created($"/api/entries/{x.Id}", ApiMappers.ToDto(x)); } catch (Exception e) when (e is ArgumentException or KeyNotFoundException) { return Results.BadRequest(new { error = e.Message }); } }).RequireAuthorization();
- app.MapPut("/api/entries/{id:guid}", async (Guid id, UpdateEntryRequest r, ClaimsPrincipal p, ProjectTimelineDbContext db, ProjectAuthorization authorization) => { if (r.AuthorId.HasValue && !IsAdmin(p)) return Results.Forbid(); var x = await db.TimelineEntries.Include(e => e.Timeline).Include(e => e.Author).SingleOrDefaultAsync(e => e.Id == id); if (x is null) return Results.NotFound(); if (!await authorization.CanWriteAsync(x.Timeline.ProjectId, UserId(p), IsAdmin(p))) return Results.Forbid(); try { TimelineService.ValidateEntry(r.Title, r.Content, r.Status); if (r.AuthorId.HasValue) { var author = await db.Users.SingleOrDefaultAsync(u => u.Id == r.AuthorId.Value && u.IsActive); if (author is null) return Results.BadRequest(new { error = "The selected entry author is invalid." }); x.AuthorId = author.Id; x.Author = author; } x.Title = r.Title.Trim(); x.Content = r.Content.Trim(); x.Status = r.Status.Trim(); await db.SaveChangesAsync(); return Results.Ok(ApiMappers.ToDto(x)); } catch (ArgumentException e) { return Results.BadRequest(new { error = e.Message }); } }).RequireAuthorization();
+ app.MapPut("/api/entries/{id:guid}", async (Guid id, UpdateEntryRequest r, ClaimsPrincipal p, ProjectTimelineDbContext db, ProjectAuthorization authorization) => { if (r.AuthorId.HasValue && !IsAdmin(p)) return Results.Forbid(); var x = await db.TimelineEntries.Include(e => e.Timeline).Include(e => e.Author).SingleOrDefaultAsync(e => e.Id == id); if (x is null) return Results.NotFound(); if (!await authorization.CanWriteAsync(x.Timeline.ProjectId, UserId(p), IsAdmin(p))) return Results.Forbid(); try { TimelineService.ValidateEntry(r.Title, r.Content, r.Status); if (r.AuthorId.HasValue) { var author = await db.Users.SingleOrDefaultAsync(u => u.Id == r.AuthorId.Value && u.IsActive); if (author is null) return Results.BadRequest(new { error = "The selected entry author is invalid." }); x.AuthorId = author.Id; x.Author = author; } x.Title = r.Title.Trim(); x.Content = r.Content.Trim(); x.Status = r.Status.Trim(); await db.SaveChangesAsync(); return Results.Ok(ApiMappers.ToDto(x)); } catch (TimelineFactConflictException) { return Results.Conflict(new { error = "Original source is locked by fact evidence. Preserve it and use fact review for corrections." }); } catch (ArgumentException e) { return Results.BadRequest(new { error = e.Message }); } }).RequireAuthorization();
  app.MapDelete("/api/entries/{id:guid}", async (Guid id, ClaimsPrincipal p, ProjectTimelineDbContext db, TimelineService service, ProjectAuthorization authorization, CancellationToken ct) => { var x = await db.TimelineEntries.Include(e => e.Timeline).SingleOrDefaultAsync(e => e.Id == id, ct); if (x is null) return Results.NotFound(); if (!await authorization.CanWriteAsync(x.Timeline.ProjectId, UserId(p), IsAdmin(p), ct)) return Results.Forbid(); try { await service.DeleteEntryAsync(id, ct); return Results.NoContent(); } catch (TimelineEntrySnapshotConflictException e) { return Results.Conflict(new { error = e.Message }); } }).RequireAuthorization();
-app.MapGet("/api/timelines/{id:guid}/entry-search", async (Guid id, string text, ClaimsPrincipal p, ProjectTimelineDbContext db, SearchTools search, ProjectAuthorization authorization, CancellationToken ct) => { 
-var project = await db.Timelines.Where(x => x.Id == id).Select(x => x.ProjectId).SingleOrDefaultAsync(ct); 
-if (project == Guid.Empty) 
-    return Results.NotFound(); 
-if (!await authorization.CanReadAsync(project, UserId(p), IsAdmin(p), ct)) 
-    return Results.Forbid();
- SearchEntriesAgent agent = new SearchEntriesAgent(db, id);
-var response = await agent.RunAsync(text);
-    return Results.Ok(new
-    {
-
-        content = response.Text
-    });
-
-}).RequireAuthorization();
+app.MapTimelineFactInformation();
 app.MapGet("/api/timelines/{id:guid}/snapshots", async (Guid id, ClaimsPrincipal p, ProjectTimelineDbContext db, ProjectAuthorization authorization, CancellationToken ct) => { var project = await db.Timelines.Where(x => x.Id == id).Select(x => x.ProjectId).SingleOrDefaultAsync(ct); if (project == Guid.Empty) return Results.NotFound(); if (!await authorization.CanReadAsync(project, UserId(p), IsAdmin(p), ct)) return Results.Forbid(); var snapshots = await db.TimelineSnapshots.AsNoTracking().Include(x => x.Entries).ThenInclude(x => x.Entry).Where(x => x.TimelineId == id).OrderByDescending(x => x.SnapshotNumber).ToListAsync(ct); return Results.Ok(snapshots.Select(ApiMappers.ToDto)); }).RequireAuthorization();
 app.MapPost("/api/timelines/{id:guid}/snapshots", async (Guid id, CreateSnapshotRequest r, ClaimsPrincipal p, TimelineService service, ProjectTimelineDbContext db, ProjectAuthorization authorization, CancellationToken ct) => { var project = await db.Timelines.Where(x => x.Id == id).Select(x => x.ProjectId).SingleOrDefaultAsync(ct); if (project == Guid.Empty) return Results.NotFound(); if (!await authorization.CanWriteAsync(project, UserId(p), IsAdmin(p), ct)) return Results.Forbid(); try { var snapshot = await service.CreateSnapshotAsync(id, r.SummaryContent, r.EntryIds, ct); await db.Entry(snapshot).Collection(x => x.Entries).Query().Include(x => x.Entry).LoadAsync(ct); return Results.Created($"/api/timelines/{id}/snapshots/{snapshot.Id}", ApiMappers.ToDto(snapshot)); } catch (ArgumentException e) { return Results.BadRequest(new { error = e.Message }); } }).RequireAuthorization();
 app.MapPost("/api/entries/{id:guid}/artifacts", async (Guid id, IFormFile? file, ClaimsPrincipal p, ProjectTimelineDbContext db, ArtifactStorage storage, ProjectAuthorization authorization, CancellationToken ct) => { var e = await db.TimelineEntries.Include(x => x.Timeline).ThenInclude(x => x.Project).SingleOrDefaultAsync(x => x.Id == id, ct); if (e is null) return Results.NotFound(); if (!await authorization.CanWriteAsync(e.Timeline.ProjectId, UserId(p), IsAdmin(p), ct)) return Results.Forbid(); if (file is null) return Results.BadRequest(new { error = "A non-empty artifact file is required." }); string? storageName = null; try { await using var input = file.OpenReadStream(); storageName = await storage.SaveAsync(e.Timeline.Project.Code, e.Timeline.Code, e.EntryNumber, file.FileName, file.ContentType, file.Length, input, ct); var a = new TimelineArtifact { EntryId = id, FileName = Path.GetFileName(file.FileName), RelativePath = storageName, ContentType = file.ContentType.Split(';', 2)[0].Trim().ToLowerInvariant(), Length = file.Length }; db.TimelineArtifacts.Add(a); await db.SaveChangesAsync(ct); return Results.Ok(ApiMappers.ToSummary(a)); } catch (ArgumentException ex) { if (storageName is not null) storage.Delete(e.Timeline.Project.Code, e.Timeline.Code, e.EntryNumber, storageName); return Results.BadRequest(new { error = ex.Message }); } catch { if (storageName is not null) storage.Delete(e.Timeline.Project.Code, e.Timeline.Code, e.EntryNumber, storageName); throw; } }).RequireAuthorization();
@@ -136,7 +126,8 @@ app.MapPatch("/api/merge-reviews/{id:guid}", async (Guid id, MergeReviewStatusRe
 app.MapPost("/api/projects/{id:guid}/rag/index", (Guid id, RagIndexRequest request, ClaimsPrincipal p, ProjectAuthorization authorization, CancellationToken ct) => RagNotImplementedAsync(id, request, p, authorization, ct)).RequireAuthorization();
 app.MapPost("/api/projects/{id:guid}/rag/query", (Guid id, RagQueryRequest request, ClaimsPrincipal p, ProjectAuthorization authorization, CancellationToken ct) => RagNotImplementedAsync(id, request, p, authorization, ct)).RequireAuthorization();
 app.MapPost("/api/projects/{id:guid}/lifecycle-analysis", (Guid id, LifecycleSnapshotRequest request, ClaimsPrincipal p, ProjectAuthorization authorization, CancellationToken ct) => RagNotImplementedAsync(id, request, p, authorization, ct)).RequireAuthorization();
-app.MapEntryReview();
+app.MapTimelineFacts();
+app.MapEntryReview(); // Compatibility-only; main UI uses persisted fact proposals.
 app.MapFallbackToFile("index.html");
 app.Run();
 

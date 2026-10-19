@@ -1,0 +1,1 @@
+﻿Documenting implementation steps and functionality of timeline entries and associated classes.

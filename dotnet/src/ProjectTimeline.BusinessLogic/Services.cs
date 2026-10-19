@@ -81,7 +81,9 @@ public sealed class TimelineService(ProjectTimelineDbContext db)
         var number = (await db.TimelineEntries.Where(x => x.TimelineId == timelineId).MaxAsync(x => (int?)x.EntryNumber, ct) ?? 0) + 1;
         var entry = new TimelineEntry { TimelineId = timeline.Id, Timeline = timeline, AuthorId = author.Id, Author = author, EntryNumber = number, Title = title.Trim(), Content = content.Trim() };
         ValidateEntry(entry.Title, entry.Content, entry.Status);
-        db.TimelineEntries.Add(entry); await db.SaveChangesAsync(ct); if (tx is not null) await tx.CommitAsync(ct); return entry;
+        db.TimelineEntries.Add(entry);
+        db.TimelineFactJobs.Add(TimelineFactProcessing.NewExtractionJob(entry));
+        await db.SaveChangesAsync(ct); if (tx is not null) await tx.CommitAsync(ct); return entry;
     }
     public async Task<bool> IsProjectOwnerAsync(Guid projectId, Guid userId, CancellationToken ct) => await db.Projects.AnyAsync(x => x.Id == projectId && x.OwnerId == userId, ct);
     public async Task<TimelineSnapshot> CreateSnapshotAsync(Guid timelineId, string? summary, IReadOnlyList<Guid> entryIds, CancellationToken ct)
@@ -101,6 +103,10 @@ public sealed class TimelineService(ProjectTimelineDbContext db)
     {
         var entry = await db.TimelineEntries.SingleOrDefaultAsync(x => x.Id == entryId, ct) ?? throw new KeyNotFoundException("Entry not found.");
         if (await db.TimelineSnapshotEntries.AnyAsync(x => x.EntryId == entryId, ct)) throw new TimelineEntrySnapshotConflictException();
+        if (await db.TimelineFacts.AnyAsync(x => x.EntryId == entryId, ct)
+            || await db.TimelineFactProposals.AnyAsync(x => x.EntryId == entryId, ct)
+            || await db.TimelineFactJobs.AnyAsync(x => x.EntryId == entryId, ct))
+            throw new TimelineFactConflictException("Entry source is protected by fact evidence or processing state.");
         db.TimelineEntries.Remove(entry);
         await db.SaveChangesAsync(ct);
     }

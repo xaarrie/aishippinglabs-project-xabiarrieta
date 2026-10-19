@@ -1,0 +1,6 @@
+<Project>
+  <!-- Keep legacy outputs out of compilation when relocating all intermediate outputs. -->
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/bin/**;**/obj/**;**/artifacts/**</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>

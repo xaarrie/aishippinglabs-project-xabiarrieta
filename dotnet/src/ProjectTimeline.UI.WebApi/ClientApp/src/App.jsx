@@ -1,7 +1,9 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { api, clearToken, download, setToken } from "./api.js";
-import EntryReview from "./EntryReview.jsx";
-import { applyReviewDraft, hasEntryWriteAccess } from "./entryReview.js";
+import FactReview from "./FactReview.jsx";
+import TimelineSearchResults from "./TimelineSearchResults.jsx";
+import { createSearchRequestFence, searchTimelineFacts } from "./timelineSearch.js";
+import { hasEntryWriteAccess } from "./entryReview.js";
 
 const formValues = event => Object.fromEntries(new FormData(event.currentTarget));
 const currentPath = () => location.pathname.replace(/\/$/, "") || "/";
@@ -458,7 +460,7 @@ function EntryEdit({ id, projectId, timelineId, go, user }) {
     {!canWrite && <p className="request-feedback" role="status">Read-only access. Editing and Review are unavailable.</p>}
     <Form className="managed-form" aria-busy={saving} ariaLabel="Edit timeline entry" onSubmit={async () => {
       if (!canWrite || saving || reviewActive) return;
-      try { await save(editor); } catch (e) { setError(e.message); }
+      try { await save(editor); } catch (e) { setError(e.status === 409 ? "Original source is locked by saved evidence. Keep it unchanged and use fact review for corrections." : e.message); }
     }}>
       <fieldset disabled={!canWrite || saving || reviewActive}><legend>Entry details</legend>
         <label htmlFor="edit-entry-title">Title<input id="edit-entry-title" name="title" value={editor.title} onChange={event => setEditor({ ...editor, title: event.target.value })} required /></label>
@@ -468,7 +470,7 @@ function EntryEdit({ id, projectId, timelineId, go, user }) {
       <ActionBar label="Edit entry actions"><button className="primary" disabled={!canWrite || saving || reviewActive}>{saving ? "Saving..." : "Save entry"}</button><Link className="secondary" aria-disabled={saving || reviewActive} href={`/projects/${projectId}`}>Cancel</Link></ActionBar>
     </Form>
     {saving && <p className="request-feedback" role="status">Saving entry...</p>}
-    <EntryReview entryId={id} canWrite={canWrite && !saving} dirty={dirty} onActiveChange={setReviewActive} onSave={draft => save(applyReviewDraft(editor, draft))} />
+    <FactReview key={id} entry={entry} canWrite={canWrite && !saving} dirty={dirty} onActiveChange={setReviewActive} />
     {error && <p className="request-feedback request-error" role="alert">{error} Your editor draft is retained.</p>}
   </FormPage>;
 }
@@ -491,21 +493,31 @@ function SnapshotMaintenance({ timelineId, entries, entriesLoading, entriesError
     {!loading && !error && !snapshots.length && <p className="muted">No snapshots yet.</p>}
   </section>;
 }
-function TimelineSearch({ timeline }) {
+function TimelineSearch({ timeline, projectId }) {
   const [query, setQuery] = useState(""); const [answer, setAnswer] = useState(null);
-  const action = useWorkspaceAction(); const request = useRef(null);
-  useEffect(() => () => request.current?.abort(), [timeline.id]);
-  return <section className="timeline-search"><h4>Search entry contents</h4><form aria-label="Search entry contents" aria-busy={action.pending} onSubmit={event => {
-    event.preventDefault(); if (!query.trim()) return;
+  const action = useWorkspaceAction(); const [fence] = useState(createSearchRequestFence); const hintId = useId();
+  useLayoutEffect(() => { setAnswer(null); return () => fence.cancel(); }, [timeline.id, projectId, fence]);
+  const visibleAnswer = answer?.timelineId === timeline.id && answer?.projectId === projectId ? answer : null;
+  return <section className="timeline-search"><h4>Search accepted facts</h4><form aria-label="Search accepted facts" aria-busy={action.pending} onSubmit={event => {
+    event.preventDefault(); if (action.pending) return;
+    setAnswer(null);
+    const question = query;
     action.run(async () => {
-      const controller = new AbortController(); request.current = controller;
-      const result = await api(`/api/timelines/${timeline.id}/entry-search?text=${encodeURIComponent(query)}`, { signal: controller.signal });
-      if (!controller.signal.aborted) setAnswer({ question: query, content: result.content });
-    }, "Search complete.");
-  }}><label>Question<input type="search" value={query} disabled={action.pending} onChange={event => setQuery(event.target.value)} /></label><ActionBar label="Entry search actions"><button className="secondary" disabled={action.pending || !query.trim()}>{action.pending ? "Searching..." : "Search entries"}</button></ActionBar></form>
-    <WorkspaceFeedback action={action} pendingLabel="Searching entries..." />
-    {answer && <div className="search-answer"><p className="eyebrow">Context · {timeline.code}: {timeline.name}</p><h5>Question</h5><p className="entry-content">{answer.question}</p><h5>Answer and references</h5><p className="entry-content">{answer.content || "No answer was returned for this question."}</p></div>}
-    {!answer && !action.pending && !action.error && <p className="muted">Ask a question about this timeline. Search runs only when submitted.</p>}
+      const controller = fence.begin();
+      try {
+        const result = await searchTimelineFacts(api, timeline.id, question, controller.signal);
+        if (fence.isCurrent(controller)) setAnswer({ question, result, timelineId: timeline.id, projectId });
+      } catch (error) {
+        if (fence.isCurrent(controller)) { setAnswer(null); throw error; }
+      }
+    }, "Fact search complete.");
+  }}><label>Question<input type="search" maxLength={300} aria-describedby={hintId} value={query} disabled={action.pending} onChange={event => { setQuery(event.target.value); setAnswer(null); }} /></label>
+    <p className="muted" id={hintId}>1–300 characters. Searches accepted valid facts, not original entry content. Matching searches may incur model billing.</p>
+    <ActionBar label="Fact search actions"><button className="secondary" disabled={action.pending || !query.trim() || query.length > 300}>{action.pending ? "Searching..." : "Search facts"}</button></ActionBar></form>
+    <WorkspaceFeedback action={action} pendingLabel="Searching facts..." />
+    {visibleAnswer && <><p className="eyebrow">Context · {timeline.code}: {timeline.name}</p><h5>Question</h5><p className="entry-content">{visibleAnswer.question}</p>
+      <TimelineSearchResults result={visibleAnswer.result} projectId={projectId} timelineId={timeline.id} Link={Link} /></>}
+    {!visibleAnswer && !action.pending && !action.error && <p className="muted">Ask about accepted facts in this timeline. Search runs only when submitted; chronology is unchanged.</p>}
   </section>;
 }
 function TimelineEntries({ timeline, projectId }) {
@@ -517,7 +529,7 @@ function TimelineEntries({ timeline, projectId }) {
     <div className="conversation" aria-label={`${timeline.name} conversation`}>{entries.map(entry => <article className="conversation-entry" key={entry.id}><div className="entry-metadata"><span>Entry {entry.entryNumber}</span><StatusBadge>{entry.status}</StatusBadge><span>{entry.author.displayName}</span></div><h5>{entry.title}</h5><p className="entry-content">{entry.preview}</p><ArtifactLinks artifacts={entry.artifacts} />
       <RecordActions label={`entry ${entry.entryNumber}`} primary={<Link className="secondary" href={`/projects/${projectId}/timelines/${timeline.id}/entries/${entry.id}?projectId=${projectId}`}>Read full entry</Link>}><Link className="secondary" href={`/projects/${projectId}/timelines/${timeline.id}/entries/${entry.id}/edit`}>Edit</Link><ConfirmButton className="danger" disabled={mutation.pending} label="Delete" message={`Delete entry ${entry.entryNumber}? This cannot be undone.`} onConfirm={() => mutation.run(async () => { await api(`/api/entries/${entry.id}`, { method: "DELETE" }); reload(); }, "Entry deleted.")} /></RecordActions>
     </article>)}</div><WorkspaceFeedback action={mutation} />
-  </section><aside className="timeline-tools" aria-label={`${timeline.code} tools`}><TimelineSearch key={timeline.id} timeline={timeline} /><SnapshotMaintenance key={timeline.id} timelineId={timeline.id} entries={entries} entriesLoading={loading} entriesError={error} /></aside></div>;
+  </section><aside className="timeline-tools" aria-label={`${timeline.code} tools`}><TimelineSearch key={timeline.id} timeline={timeline} projectId={projectId} /><SnapshotMaintenance key={timeline.id} timelineId={timeline.id} entries={entries} entriesLoading={loading} entriesError={error} /></aside></div>;
 }
 function Workspace({ project, go }) {
   const { data: timelines, loading, error, reload } = useResource(`/api/projects/${project.id}/timelines`, []);

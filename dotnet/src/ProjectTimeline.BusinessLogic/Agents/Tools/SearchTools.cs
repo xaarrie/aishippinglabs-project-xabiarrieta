@@ -38,27 +38,13 @@ namespace ProjectTimeline.BusinessLogic.Agents.Tools
             return tools;
         }
     }
-    public class SearchEntries(ProjectTimelineDbContext db, Guid timelineId)
+    // Compatibility tool name; authorization scope is captured exclusively by its server constructor.
+    public sealed class SearchEntries(ProjectTimelineDbContext db, TimelineFactInformationScope scope, Guid actorId, bool administrator)
     {
-        [Description("Method that searches in the entries about related text")]
-        public async Task<List<string>> search_entries(
-            [Description("Text to search in the entries. Max text length is 200 characters")]
-            string text)
-        {
-
-
-            Console.WriteLine($"TOOL: BuscarEntradas ejecutada: {text}");
-
-            
-            var bounded = (text ?? "").Trim(); 
-            if (bounded.Length is 0 or > 200) 
-                return new List<string>();
-            var query = db.TimelineEntries.AsNoTracking().Where(x => x.TimelineId == timelineId);
-            if (db.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true)
-                query = query.Where(x => EF.Functions.ToTsVector("simple", x.Content).Matches(EF.Functions.PlainToTsQuery("simple", bounded)));
-            else query = query.Where(x => x.Content.Contains(bounded, StringComparison.OrdinalIgnoreCase));
-            return await query.OrderBy(x => x.EntryNumber).ThenBy(x => x.Id).Select(x => x.Content).ToListAsync();
-        }
+        [Description("Search latest valid accepted timeline facts by bounded lexical/entity terms. Never searches original entries.")]
+        public Task<TimelineFactInformationEvidence> search_entries(
+            [Description("Search text, at most 300 characters")] string text) =>
+            new TimelineFactInformationSearch(db, scope, actorId, administrator).SearchAsync(text);
     }
     public class SearchTools()
     {

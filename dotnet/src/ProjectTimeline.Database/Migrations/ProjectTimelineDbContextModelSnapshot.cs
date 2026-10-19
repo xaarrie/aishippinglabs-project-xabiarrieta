@@ -648,6 +648,8 @@ namespace ProjectTimeline.Database.Migrations
                 {
                     b.Navigation("Users");
                 });
+            DirectTimelineFactSnapshotModel.Configure(modelBuilder);
+            FactInvalidationCauseSnapshotModel.Configure(modelBuilder);
 #pragma warning restore 612, 618
         }
     }

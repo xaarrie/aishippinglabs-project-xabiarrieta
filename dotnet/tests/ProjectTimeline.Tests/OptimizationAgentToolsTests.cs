@@ -144,9 +144,18 @@ public sealed class OptimizationAgentToolsTests
 
     private static TimelineEntry Entry(ProjectTimelineDbContext db, Guid timeline, int number)
     {
+        var scope = db.Timelines.Local.SingleOrDefault(x => x.Id == timeline);
+        if (scope is null)
+        {
+            var owner = new User { Email = $"{timeline:N}@example.test", DisplayName = "Review author", PasswordHash = "test" };
+            var project = new Project { Code = $"P-{timeline:N}", Name = "Review fixture", OwnerId = owner.Id };
+            scope = new Timeline { Id = timeline, ProjectId = project.Id, Code = "MAIN", Name = "Review timeline" };
+            db.AddRange(owner, project, scope);
+        }
         var entry = new TimelineEntry
         {
-            TimelineId = timeline, EntryNumber = number, Title = $"Entry {number}", Content = $"Content {number}"
+            TimelineId = timeline, AuthorId = scope.Project.OwnerId,
+            EntryNumber = number, Title = $"Entry {number}", Content = $"Content {number}"
         };
         db.TimelineEntries.Add(entry);
         return entry;

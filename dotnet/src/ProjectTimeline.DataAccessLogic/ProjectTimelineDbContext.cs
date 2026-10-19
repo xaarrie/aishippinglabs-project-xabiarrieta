@@ -1,12 +1,20 @@
 using Microsoft.EntityFrameworkCore;
+using Pgvector.EntityFrameworkCore;
 
 namespace ProjectTimeline.DataAccessLogic;
 
-public sealed class ProjectTimelineDbContext(DbContextOptions<ProjectTimelineDbContext> options) : DbContext(options)
+public sealed partial class ProjectTimelineDbContext(DbContextOptions<ProjectTimelineDbContext> options) : DbContext(options)
 {
     public DbSet<User> Users => Set<User>(); public DbSet<UserRole> UserRoles => Set<UserRole>(); public DbSet<Project> Projects => Set<Project>(); public DbSet<ProjectParticipant> ProjectParticipants => Set<ProjectParticipant>(); public DbSet<ProjectRole> ProjectRoles => Set<ProjectRole>(); public DbSet<Timeline> Timelines => Set<Timeline>(); public DbSet<TimelineEntry> TimelineEntries => Set<TimelineEntry>(); public DbSet<TimelineArtifact> TimelineArtifacts => Set<TimelineArtifact>(); public DbSet<TimelineSnapshot> TimelineSnapshots => Set<TimelineSnapshot>(); public DbSet<TimelineSnapshotEntry> TimelineSnapshotEntries => Set<TimelineSnapshotEntry>(); public DbSet<MergeRequest> MergeRequests => Set<MergeRequest>(); public DbSet<PasswordRecoveryState> PasswordRecoveryStates => Set<PasswordRecoveryState>();
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (optionsBuilder.Options.Extensions.Any(x => x.GetType().Name == "NpgsqlOptionsExtension"))
+            optionsBuilder.UseNpgsql(o => o.UseVector());
+    }
     protected override void OnModelCreating(ModelBuilder b)
     {
+        TimelineFactModel.Configure(b, Database.IsNpgsql());
+        if (Database.IsNpgsql()) b.HasPostgresExtension("vector");
         foreach (var type in new[] { typeof(User), typeof(UserRole), typeof(Project), typeof(ProjectParticipant), typeof(ProjectRole), typeof(Timeline), typeof(TimelineEntry), typeof(TimelineArtifact), typeof(TimelineSnapshot), typeof(TimelineSnapshotEntry), typeof(MergeRequest), typeof(PasswordRecoveryState) }) b.Entity(type).Property<DateTime>(nameof(AuditedEntity.CreatedAtUtc)).IsRequired();
         b.Entity<User>().Property(x => x.Email).HasMaxLength(320).IsRequired(); b.Entity<User>().HasIndex(x => x.Email).IsUnique(); b.Entity<User>().Property(x => x.DisplayName).HasMaxLength(160).IsRequired(); b.Entity<User>().Property(x => x.PasswordHash).HasMaxLength(512).IsRequired(); b.Entity<User>().Property(x => x.IDUserRole).IsRequired();
         b.Entity<UserRole>().Property(x => x.RoleName).HasMaxLength(40).IsRequired(); b.Entity<UserRole>().HasIndex(x => x.RoleName).IsUnique(); b.Entity<User>().HasOne(x => x.UserRole).WithMany(x => x.Users).HasForeignKey(x => x.IDUserRole).OnDelete(DeleteBehavior.Restrict);
@@ -22,6 +30,19 @@ public sealed class ProjectTimelineDbContext(DbContextOptions<ProjectTimelineDbC
         b.Entity<PasswordRecoveryState>().Property(x => x.TokenHash).HasMaxLength(128).IsRequired(); b.Entity<PasswordRecoveryState>().HasIndex(x => x.TokenHash).IsUnique(); b.Entity<PasswordRecoveryState>().Property(x => x.ExpiresAtUtc).IsRequired();
         b.Entity<Project>().HasOne(x => x.Owner).WithMany().HasForeignKey(x => x.OwnerId).OnDelete(DeleteBehavior.Restrict); b.Entity<Project>().HasOne(x => x.PrimaryTimeline).WithMany().HasForeignKey(x => x.PrimaryTimelineId).OnDelete(DeleteBehavior.SetNull); b.Entity<Project>().HasIndex(x => x.PrimaryTimelineId); b.Entity<TimelineEntry>().HasOne(x => x.Author).WithMany().HasForeignKey(x => x.AuthorId).OnDelete(DeleteBehavior.Restrict); b.Entity<MergeRequest>().HasOne(x => x.Author).WithMany().HasForeignKey(x => x.AuthorId).OnDelete(DeleteBehavior.Restrict);
     }
-    public override int SaveChanges() { Stamp(); return base.SaveChanges(); } public override Task<int> SaveChangesAsync(CancellationToken ct = default) { Stamp(); return base.SaveChangesAsync(ct); }
+    public override int SaveChanges() => SaveChanges(true);
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ValidateFactsAsync(default).GetAwaiter().GetResult();
+        Stamp();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+    public override Task<int> SaveChangesAsync(CancellationToken ct = default) => SaveChangesAsync(true, ct);
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken ct = default)
+    {
+        await ValidateFactsAsync(ct);
+        Stamp();
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, ct);
+    }
     private void Stamp() { var now = DateTime.UtcNow; foreach (var e in ChangeTracker.Entries<AuditedEntity>()) { if (e.State == EntityState.Added) e.Entity.CreatedAtUtc = now; if (e.State is EntityState.Added or EntityState.Modified) e.Entity.UpdatedAtUtc = now; } }
 }

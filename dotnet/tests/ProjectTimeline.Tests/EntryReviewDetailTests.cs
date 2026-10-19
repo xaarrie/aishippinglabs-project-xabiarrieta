@@ -190,8 +190,11 @@ public sealed class EntryReviewDetailTests
 
     private static async Task<TimelineEntry> PersistAnchor(ProjectTimelineDbContext db, string title, string content)
     {
-        var entry = new TimelineEntry { TimelineId = Guid.NewGuid(), EntryNumber = 1, Title = title, Content = content };
-        db.TimelineEntries.Add(entry);
+        var owner = new User { Email = "review-detail@example.test", DisplayName = "Review author", PasswordHash = "test" };
+        var project = new Project { Code = "REVIEW", Name = "Review fixture", OwnerId = owner.Id };
+        var timeline = new Timeline { Code = "MAIN", Name = "Review timeline", ProjectId = project.Id };
+        var entry = new TimelineEntry { TimelineId = timeline.Id, AuthorId = owner.Id, EntryNumber = 1, Title = title, Content = content };
+        db.AddRange(owner, project, timeline, entry);
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
         return entry;
