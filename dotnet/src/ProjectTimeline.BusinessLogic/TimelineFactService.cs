@@ -28,9 +28,11 @@ public sealed class TimelineFactService(ProjectTimelineDbContext db)
         EnsureClean();
         await using var tx = db.Database.IsRelational() ? await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct) : null;
         var (timeline, source) = await LoadScopeAsync(scope, actorId, administrator, ct);
+        await db.RequireUnreconciledFactSourceAsync(source.Id, ct);
         if (timeline.FactRevision != expectedRevision) throw Conflict("Timeline changed; regenerate the proposal.");
         ValidateDraft(draft, source);
         await LoadInvalidationsAsync(draft.Invalidations.Select(x => x.FactId).ToArray(), source, ct);
+        await db.SupersedeFactProposalsAsync(source.Id, includeGeneration: false, ct);
         var proposal = new TimelineFactProposal
         {
             EntryId = source.Id,
@@ -66,7 +68,9 @@ public sealed class TimelineFactService(ProjectTimelineDbContext db)
         await db.Entry(proposal).ReloadAsync(ct);
         if (TimelineFactEvidence.Fingerprint(source) != proposal.SourceFingerprint) throw Conflict("Proposal source changed.");
         if (proposal.Status == "Accepted") return proposal; // Idempotency key is the persisted proposal ID, not supplied content.
-        if (proposal.Status != "Pending") throw Conflict("Proposal is not pending.");
+        await db.RequireUnreconciledFactSourceAsync(source.Id, ct);
+        if (proposal.Status != "Pending" || await db.TimelineFactJobs.AnyAsync(x => x.Id == proposal.Id && x.Kind == "Extraction", ct))
+            throw Conflict("Only a reconciled pending proposal can be accepted.");
         if (timeline.FactRevision != proposal.ExpectedRevision) throw Conflict("Timeline changed; regenerate the proposal.");
         var additions = await db.TimelineFactAdditions.AsNoTracking().Where(x => x.ProposalId == proposalId).ToListAsync(ct);
         var invalidations = await db.TimelineFactInvalidations.AsNoTracking().Where(x => x.ProposalId == proposalId).ToListAsync(ct);
@@ -156,30 +160,26 @@ public sealed class TimelineFactService(ProjectTimelineDbContext db)
         return facts;
     }
 
-    // Worker owns the serializable transaction and leased job. No review proposal is created.
-    // Facts, candidate identities, queued embeddings, revision and completion share one SaveChanges.
+    // Worker owns the serializable transaction. Generated is a non-acceptible extraction draft;
+    // its primary key is the durable extraction job ID. No facts/embeddings exist before reconciliation.
     internal async Task CompleteExtractionAsync(TimelineFactJob job, TimelineFactDraft draft, CancellationToken ct)
     {
         var source = await db.TimelineEntries.AsNoTracking().SingleAsync(x => x.Id == job.EntryId, ct);
         if (TimelineFactEvidence.Fingerprint(source) != job.SourceFingerprint) throw Conflict("Extraction source changed.");
         if (draft.Invalidations.Count != 0 || draft.Questions.Count != 0) throw Conflict("Extraction cannot propose review changes.");
         TimelineFactProcessing.ValidateCandidates(draft.Additions, new(source.Title, source.Content));
-        var facts = draft.Additions.Select(x => new TimelineFact
+        var proposal = new TimelineFactProposal
         {
-            EntryId = source.Id, ExtractionJobId = job.Id, SourceFingerprint = job.SourceFingerprint,
-            Claim = x.Claim, EntityKey = x.EntityKey, EntityType = x.EntityType, SourceQuote = x.SourceQuote, SourceKind = "Entry"
+            Id = job.Id, EntryId = source.Id, Status = "Generated", SourceFingerprint = job.SourceFingerprint,
+            ExpectedRevision = checked(job.ExtractionRevision!.Value + 1)
+        };
+        proposal.Additions = draft.Additions.Select(x => new TimelineFactAddition
+        {
+            ProposalId = proposal.Id, Claim = x.Claim, EntityKey = x.EntityKey, EntityType = x.EntityType,
+            SourceQuote = x.SourceQuote, SourceKind = x.SourceKind
         }).ToList();
-        foreach (var fact in facts)
-        {
-            fact.CandidateKey = TimelineFactEvidence.CandidateKey(fact);
-            db.TimelineFacts.Add(fact);
-            db.TimelineFactJobs.Add(new TimelineFactJob
-            {
-                EntryId = source.Id, FactId = fact.Id, Kind = "Embedding", WorkKey = $"embedding:{fact.Id:N}",
-                SourceFingerprint = job.SourceFingerprint
-            });
-        }
-        job.ExtractionResultHash = TimelineFactEvidence.ResultHash(facts);
+        db.TimelineFactProposals.Add(proposal);
+        job.ExtractionResultHash = TimelineFactEvidence.ResultHash(proposal.Additions.Select(TimelineFactEvidence.CandidateEvidence));
         job.State = "Completed";
         job.LeaseOwner = null;
         job.LeaseExpiresAtUtc = null;
@@ -189,8 +189,6 @@ public sealed class TimelineFactService(ProjectTimelineDbContext db)
 
     private static void ValidateDraft(TimelineFactDraft draft, TimelineEntry source, bool accepting = false)
     {
-        if (draft.Additions.Count + draft.Invalidations.Count == 0 && (accepting || draft.Questions.Count == 0))
-            throw Conflict("Proposal has no changes.");
         if (draft.Additions.Count > 200 || draft.Invalidations.Count > 200 || draft.Questions.Count > 100) throw Conflict("Proposal is too large.");
         foreach (var question in draft.Questions)
         {

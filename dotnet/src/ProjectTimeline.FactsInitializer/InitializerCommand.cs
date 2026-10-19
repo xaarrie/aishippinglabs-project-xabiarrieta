@@ -4,7 +4,7 @@ namespace ProjectTimeline.FactsInitializer;
 
 public static class InitializerCommand
 {
-    public const string Usage = "Usage: ProjectTimeline.FactsInitializer --actor-id <guid> [--page-size <1-100>] [--apply] [--retry-existing --timeline-id <guid>]\nDefault: dry-run (WouldSave/WouldRetry). --apply saves initial extraction facts directly, without proposals or acceptance; queues embeddings only. Retry mode never enriches existing facts.";
+    public const string Usage = "Usage: ProjectTimeline.FactsInitializer --actor-id <guid> [--page-size <1-100>] [--apply] [--retry-existing --timeline-id <guid>]\nDefault: dry-run (WouldSave/WouldRetry). --apply persists pending extraction candidates; Saved means nonempty pending evidence, not active facts. Activation requires explicit reconciliation acceptance elsewhere; this command never accepts or queues embeddings. Retry mode never enriches existing facts.";
 
     public static TimelineFactRetryOptions ParseRetry(string[] args)
     {

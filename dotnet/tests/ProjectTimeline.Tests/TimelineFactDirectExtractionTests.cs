@@ -46,45 +46,52 @@ public sealed class TimelineFactDirectExtractionTests
         }
         public Task<float[]> EmbedAsync(string claim, CancellationToken ct)
         { Embeddings++; return Task.FromResult(Enumerable.Repeat(0.1f, 1536).ToArray()); }
+        public async Task SeedHistoricalDirectAsync()
+        {
+            // Pre-cleanup rows remain effective and immutable. This is historical data, not a new write path.
+            await using var raw = Raw();
+            var job = await raw.Set<TimelineFactJob>().SingleAsync();
+            var fact = new TimelineFact { EntryId = Entry.Id, ExtractionJobId = job.Id, Claim = "Alice owns delivery",
+                EntityKey = "alice", EntityType = "Person", SourceQuote = Entry.Content, SourceFingerprint = job.SourceFingerprint };
+            fact.CandidateKey = TimelineFactEvidence.CandidateKey(fact);
+            job.State = "Completed"; job.ExtractionResultHash = TimelineFactEvidence.ResultHash([fact]);
+            raw.Add(fact);
+            raw.Add(new TimelineFactJob { EntryId = Entry.Id, FactId = fact.Id, Kind = "Embedding",
+                WorkKey = $"embedding:{fact.Id:N}", SourceFingerprint = job.SourceFingerprint });
+            await raw.SaveChangesAsync();
+        }
         public Task<string> Run() => new TimelineFactProcessing(Db, this).ProcessAsync(Job.Id, "worker");
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 
     [Fact]
-    public async Task Direct_origin_is_immediate_searchable_queued_and_replay_stable()
+    public async Task Generation_is_pending_not_searchable_not_queued_and_replay_stable()
     {
         await using var f = new Fixture(); await f.Initialize();
         await using var before = f.Db(); var revision = (await before.Timelines.SingleAsync()).FactRevision;
         Assert.Equal("Completed", await f.Run());
         await using var db = f.Db();
-        var fact = await db.TimelineFacts.SingleAsync();
-        Assert.Null(fact.CreationReviewId); Assert.Null(fact.AdditionId);
-        Assert.Equal(f.Job.Id, fact.ExtractionJobId);
-        Assert.Equal(TimelineFactEvidence.CandidateKey(fact), fact.CandidateKey);
-        var job = await db.TimelineFactJobs.SingleAsync(x => x.Id == f.Job.Id);
-        Assert.Equal(TimelineFactEvidence.ResultHash([fact]), job.ExtractionResultHash);
+        Assert.Empty(await db.TimelineFacts.ToListAsync());
+        var proposal = await db.TimelineFactProposals.SingleAsync();
+        Assert.Equal(f.Job.Id, proposal.Id); Assert.Equal("Generated", proposal.Status);
+        var addition = await db.TimelineFactAdditions.SingleAsync();
+        var job = await db.TimelineFactJobs.SingleAsync();
+        Assert.Equal(TimelineFactEvidence.ResultHash([TimelineFactEvidence.CandidateEvidence(addition)]), job.ExtractionResultHash);
         Assert.Equal(revision, job.ExtractionRevision);
         Assert.Equal(revision + 1, (await db.Timelines.SingleAsync()).FactRevision);
-        Assert.Empty(await db.TimelineFactProposals.ToListAsync());
-        Assert.Empty(await db.TimelineFactAdditions.ToListAsync());
-        var queued = await db.TimelineFactJobs.SingleAsync(x => x.Kind == "Embedding");
-        Assert.Equal("Pending", queued.State); Assert.Null(fact.EmbeddedAtUtc); Assert.Equal(0, f.Embeddings);
-        var hit = Assert.Single(await new TimelineFactSearch(db, f.Scope, f.Actor.Id, false).SearchAsync("Alice"));
-        Assert.Equal(f.Job.Id, hit.ExtractionJobId); Assert.Null(hit.CreationReviewId);
-        Assert.Single((await new TimelineFactInformationSearch(db, new(f.Project.Id, f.Timeline.Id), f.Actor.Id, false).SearchAsync("Alice")).Facts);
-        Assert.Single(await new TimelineFactService(db).EffectiveAsync(f.Scope, f.Actor.Id, false));
-        Assert.Equal("Completed", await f.Run()); Assert.Equal(1, f.Extractions);
+        Assert.Empty(await new TimelineFactSearch(db, f.Scope, f.Actor.Id, false).SearchAsync("Alice"));
+        Assert.Empty((await new TimelineFactInformationSearch(db, new(f.Project.Id, f.Timeline.Id), f.Actor.Id, false).SearchAsync("Alice")).Facts);
+        Assert.Empty(await new TimelineFactService(db).EffectiveAsync(f.Scope, f.Actor.Id, false));
+        Assert.Equal("Completed", await f.Run()); Assert.Equal(1, f.Extractions); Assert.Equal(0, f.Embeddings);
         await using var replay = f.Db();
-        Assert.Single(await replay.TimelineFacts.ToListAsync()); Assert.Equal(2, await replay.TimelineFactJobs.CountAsync());
+        Assert.Single(await replay.TimelineFactAdditions.ToListAsync()); Assert.Single(await replay.TimelineFactJobs.ToListAsync());
         Assert.Equal(revision + 1, (await replay.Timelines.SingleAsync()).FactRevision);
-        Assert.Equal("Completed", await new TimelineFactProcessing(f.Db, f).ProcessAsync(queued.Id, "embed-test"));
-        Assert.Equal(1, f.Embeddings);
     }
 
     [Fact]
     public async Task Planner_and_information_citations_carry_direct_provenance_without_review_acceptance()
     {
-        await using var f = new Fixture(); await f.Initialize(); Assert.Equal("Completed", await f.Run());
+        await using var f = new Fixture(); await f.Initialize(); await f.SeedHistoricalDirectAsync();
         await using var db = f.Db(); var fact = await db.TimelineFacts.SingleAsync();
         var fake = new FactReviewFakeAgent { Result = new() };
         var plan = await new TimelineFactReviewPlanner(db, f.Scope, f.Actor.Id, false,
@@ -104,18 +111,25 @@ public sealed class TimelineFactDirectExtractionTests
     [Fact]
     public async Task Later_review_preserves_direct_history_and_normal_review_origin()
     {
-        await using var f = new Fixture(); await f.Initialize(); Assert.Equal("Completed", await f.Run());
+        await using var f = new Fixture(); await f.Initialize(); await f.SeedHistoricalDirectAsync();
         await using var db = f.Db();
         var original = await db.TimelineFacts.SingleAsync();
+        var correction = new TimelineEntry { TimelineId = f.Timeline.Id, AuthorId = f.Actor.Id,
+            EntryNumber = f.Entry.EntryNumber + 1, Title = f.Entry.Title, Content = f.Entry.Content };
+        db.Add(correction); await db.SaveChangesAsync();
+        var correctionScope = f.Scope with { EntryId = correction.Id };
         var service = new TimelineFactService(db);
-        var review = await service.PrepareAsync(f.Scope, f.Actor.Id, false, (await db.Timelines.SingleAsync()).FactRevision,
+        var review = await service.PrepareAsync(correctionScope, f.Actor.Id, false, (await db.Timelines.SingleAsync()).FactRevision,
             new([new("Delivery belongs to Alice", "alice", "Person", f.Entry.Content)], [new(original.Id, "Rephrased", 0)], []));
         Assert.True((await db.TimelineFacts.AsNoTracking().SingleAsync()).Valid);
-        await service.AcceptAsync(f.Scope, review.Id, f.Actor.Id, false);
-        var replacement = Assert.Single(await service.EffectiveAsync(f.Scope, f.Actor.Id, false));
+        await service.AcceptAsync(correctionScope, review.Id, f.Actor.Id, false);
+        await service.AcceptAsync(correctionScope, review.Id, f.Actor.Id, false);
+        var replacement = Assert.Single(await service.EffectiveAsync(correctionScope, f.Actor.Id, false));
         Assert.Equal(review.Id, replacement.CreationReviewId); Assert.Null(replacement.ExtractionJobId);
         Assert.False(original.Valid); Assert.Equal(review.Id, original.InvalidationReviewId); Assert.Equal(f.Job.Id, original.ExtractionJobId);
         Assert.Equal(replacement.Id, original.InvalidatedByFactId);
+        Assert.Equal(f.Entry.Id, original.EntryId); Assert.Equal(correction.Id, replacement.EntryId);
+        Assert.Equal(f.Entry.Content, original.SourceQuote); Assert.Equal(correction.Content, replacement.SourceQuote);
         Assert.Equal(2, await db.TimelineFacts.CountAsync());
         Assert.Equal("Skipped", await new TimelineFactProcessing(f.Db, f).ProcessAsync(
             (await db.TimelineFactJobs.SingleAsync(x => x.FactId == original.Id)).Id, "embed-test"));
@@ -237,7 +251,7 @@ public sealed class TimelineFactDirectExtractionTests
     [InlineData("incomplete")]
     public async Task Invalid_persisted_provenance_never_becomes_search_or_embedding_evidence(string attack)
     {
-        await using var f = new Fixture(); await f.Initialize(); Assert.Equal("Completed", await f.Run());
+        await using var f = new Fixture(); await f.Initialize(); await f.SeedHistoricalDirectAsync();
         await using (var raw = f.Raw())
         {
             var fact = await raw.Set<TimelineFact>().SingleAsync();
@@ -275,7 +289,7 @@ public sealed class TimelineFactDirectExtractionTests
     [Fact]
     public async Task Completed_job_and_fact_origin_cannot_be_reused_for_additional_insertions()
     {
-        await using var f = new Fixture(); await f.Initialize(); Assert.Equal("Completed", await f.Run());
+        await using var f = new Fixture(); await f.Initialize(); await f.SeedHistoricalDirectAsync();
         await using (var db = f.Db())
         {
             var fact = await db.TimelineFacts.SingleAsync();

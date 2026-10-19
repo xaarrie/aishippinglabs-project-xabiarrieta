@@ -37,8 +37,9 @@ public sealed class TimelineFactReviewPlanner(ProjectTimelineDbContext db, Timel
         var candidates = await (from addition in db.TimelineFactAdditions.AsNoTracking()
                                 join proposal in db.TimelineFactProposals on addition.ProposalId equals proposal.Id
                                 join job in db.TimelineFactJobs on proposal.Id equals job.Id
-                                where proposal.EntryId == source.Id && proposal.Status == "Pending"
-                                    && proposal.SourceFingerprint == fingerprint && job.Kind == "Extraction"
+                                where proposal.EntryId == source.Id && proposal.Status == "Generated"
+                                    && proposal.SourceFingerprint == fingerprint && job.Kind == "Extraction" && job.State == "Completed"
+                                    && job.EntryId == source.Id && job.SourceFingerprint == fingerprint && job.ExtractionResultHash != null
                                 orderby addition.Id
                                 select new TimelineFactCandidate(addition.Claim, addition.EntityKey, addition.EntityType,
                                     addition.SourceQuote, addition.SourceKind)).Take(201).ToListAsync(ct);

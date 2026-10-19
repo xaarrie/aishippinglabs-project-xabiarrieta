@@ -1,99 +1,78 @@
-# Direct optimizer evaluations
+# Retained business-agent live tests
 
-These tests call `OptimizeEntryAgent` directly with synthetic conversation context. Normal tests need no API, database, frontend, credentials, or network. Live evaluations use the real OpenAI model **gpt-4o-mini**; skipped or scripted tests do not establish model quality.
+All four retained agents have real-model suites. **Paid execution has not been performed for T5 and requires separate authorization.** Offline passes, synthetic seeds, discovery, and skips are not evidence of model quality.
 
-## Context is loaded by C#, not by the model
+## Coverage at a glance
 
-Every anchored `RunAsync`, including clarification rounds and retries, holds the existing consumer-identity gate while it:
+| Production agent | Suite | Discovered cases | Main oracle |
+| --- | --- | ---: | --- |
+| `SearchEntriesAgent` | `SearchEntriesLiveModelTests` | 3 | Accepted scoped evidence, answer/source membership, insufficient evidence, foreign-scope exclusion, coverage warnings |
+| `TimelineFactExtractionAgent` | `TimelineFactExtractionLiveModelTests` | 6 | Five entry scenarios plus sequential different entries on the same client/agent; semantic anchors, no leakage |
+| `TimelineFactOptimizationAgent` | `TimelineFactOptimizationLiveModelTests` | 1 | Two-round ambiguous conflict → actual clarification → supported addition/invalidation cause; no agent writes |
+| `TimelineFactSemanticVerifierAgent` | `TimelineFactSemanticVerifierLiveModelTests` | 6 | Supported two-candidate batch/evidence IDs; numeric, date, actor, negation, unsupported-detail rejection |
 
-1. Lists persisted IDs once and snapshots the returned order. Null, empty, duplicate or empty-GUID windows fail closed; they are never silently normalized.
-2. Awaits exactly one content fetch per ID in returned order, including the current entry last. There is no GUID sorting, parallel fetch, truncation or cross-run context cache.
-3. Builds the internal envelope below, initializes the consumer with **no history tools**, and invokes the typed review once. Constructor-time consumer initialization is deferred.
+`LiveModelCoverageTests` reflects over concrete business `*Agent` types (excluding framework/tools and static helpers), requires an identifiable gated suite for each, and checks gated attributes, per-suite case counts, `Category=LiveModel`, and the nonparallel collection. Metadata inspection does not construct agents or clients or resolve credentials. New agents without a mapped suite fail offline.
 
-```json
-{
-  "original_message": "<entire original caller string, preserved exactly>",
-  "review_context": {
-    "entries": [{ "entry_id": "<persisted ID>", "content": "<full persisted content>" }]
-  }
-}
-```
+### Extraction scenarios and limits
 
-`original_message` retains JSON or plain text, all unknown fields, original source, prior draft, answers, Unicode and whitespace. Caller-supplied IDs/context cannot replace the C# selection. Persisted entries are chronological prior context with the current entry last; all source/context text is untrusted data, not role or tool instructions. No digest is retrieved or invented. Null-tools legacy runs forward the original string unchanged.
+- **Multiple claims:** Atlas car C-7's color and Nora's ownership must both survive.
+- **Quantities/units:** tank R-2's 24 liters of coolant and pump P-9's 3 liters per minute retain their relationships.
+- **Date/condition/negation:** a planned shipment on 12 March 2027 depends on approval that has not happened.
+- **Ambiguity/duplicate:** a possibly leaking valve remains uncertain; repeated source text must not pad exact duplicate claims.
+- **Empty:** empty title/content returns no claims, not invented content.
+- **Session isolation:** the same production extraction agent and real client receive car, equipment, then empty entries sequentially. The API accepts **one entry per call**, not a batch.
 
-Each actual application read reports a local `FunctionCall` with **no SDK ID**; progress and completion reuse that same object. A failed attempt is marked executed with a null result and sanitized exception. List, first/later fetch, malformed-window and canceled-read failures stop before consumer initialization or model invocation: **zero model calls**, including after partial reads. Downstream provider/consumer errors retain their own error boundary.
+Assertions use per-claim semantic anchors, shared scope/entities, coverage, units, uncertainty, selected forbidden inventions, numeric provenance, and exact duplicate detection. They do not demand exact generated prose or an exact nonempty claim count. Draft `SourceQuote` may be approximate under extraction's contract; these tests do not demand literal substring grounding before independent semantic-verifier reconstruction. Anchors are bounded deterministic checks, not a complete entailment proof or a claim that all paraphrases work. Offline mutation tests demonstrate rejection of missing claims, changed units/quantities, dropped negation/conditions/uncertainty, duplicates, and selected invented facts. A positive alternate test allows combined claims and approximate draft quotes.
 
-This guarantees application retrieval order, not internal model attention order or semantic completeness.
+### Execution seams
 
-## Normal verification
+Every model-backed path uses the actual production agent with `CustomOpenAIClient` and either `LocalCustomAgent` (typed extraction/verification) or the production harness (search/optimization). Harness local memory, skills, todo, and mode facilities are disabled. Each test owns synthetic InMemory users/projects/timelines; no PostgreSQL, ambient history, repository conversations, or target-agent transport fakes are needed.
+
+Optimization seeds current `Generated` candidates using a synthetic **non-target extraction provider**, never a paid extractor or embedding client. Prior facts are explicitly accepted through `TimelineFactService`. The planner exposes only production read-only search/fetch tools. Only the deterministic service stores the intermediate clarification proposal; the agent must leave accepted facts, source text, revision, and proposal count unchanged. No proposal is automatically accepted.
+
+Search runs actual synthesis for answerable and insufficient-but-matching evidence. Insufficiency must still satisfy the production outer contract (nonempty valid citations). The unrelated/foreign-only query exercises the deterministic no-hit path and deliberately makes no model call. Raw unaccepted entry content cannot supply a budget answer.
+
+The semantic verifier must return every supported assessment with valid source-bound IDs and descriptive finite scores in `[0,1]`. **There is no score acceptance threshold.** Negative cases require `InvalidResponse` / `SemanticUnsupported`; provider outages, arbitrary exceptions, refusals, and malformed results do not count as semantic rejection. No extra LLM judge is used.
+
+## Safe verification (no paid calls)
 
 From the repository root, with dependencies already restored:
 
 ```sh
-dotnet build dotnet/src/ProjectTimeline.BusinessLogic/ProjectTimeline.BusinessLogic.csproj --no-restore --verbosity minimal
-dotnet test dotnet/tests/ProjectTimeline.Tests/ProjectTimeline.Tests.csproj --no-restore -p:BuildProjectReferences=false --filter "Category!=LiveModel" --verbosity minimal
-dotnet test dotnet/tests/ProjectTimeline.Tests/ProjectTimeline.Tests.csproj --no-build --no-restore --filter "Category=LiveModel&FullyQualifiedName~AgentTests" --verbosity minimal
+dotnet build dotnet/tests/ProjectTimeline.Tests/ProjectTimeline.Tests.csproj --no-restore -p:DesignTimeBuild=true -p:BuildProjectReferences=true
+dotnet test dotnet/tests/ProjectTimeline.Tests/ProjectTimeline.Tests.csproj --no-build --no-restore --filter "Category!=LiveModel&FullyQualifiedName!~ProjectTimeline.Tests.TimelineFactPostgresTests"
 ```
 
-The last command must visibly **skip all six live methods** with an opt-in reason when the gate is absent (zero paid calls). Enabled expansion is **11 cases**, before any additional clarification-round requests. `BuildProjectReferences=false` reuses existing WebApi/Database reference assemblies; this is not a fresh full-application build.
+The build refreshes backend references without generating frontend assets; the offline filter excludes paid and real PostgreSQL execution. For discovery and explicit disabled execution, **Git Bash/POSIX** child-process environment syntax is:
 
-## Local credentials outside Git
+```sh
+PROJECT_TIMELINE_RUN_LIVE_AGENT_TESTS=0 dotnet test dotnet/tests/ProjectTimeline.Tests/ProjectTimeline.Tests.csproj --no-build --no-restore --list-tests --filter "Category=LiveModel"
+PROJECT_TIMELINE_RUN_LIVE_AGENT_TESTS=0 dotnet test dotnet/tests/ProjectTimeline.Tests/ProjectTimeline.Tests.csproj --no-build --no-restore --filter "Category=LiveModel" --logger "console;verbosity=normal"
+```
 
-Live evaluations automatically resolve `OPENAI_API_KEY` in this order:
+Expected: **16 discovered, 16 skipped, zero passed/failed live cases**. The gate is default-off, even if an API key exists. It is enabled only by the exact value `1`. Each live scenario has its own gated fact method: xUnit collapses a disabled theory into one skipped group, so separate facts keep every case individually discoverable/skippable without enabling the gate. There are no credential-bearing constructors, static initializers, or `MemberData` providers.
 
-1. A non-whitespace environment value overrides local credentials; the local store is not opened.
-2. Otherwise, read the optional **dedicated test .NET User Secrets store**, bound to the test assembly's `UserSecretsId`: `ProjectTimeline.Tests-e1899e37-47c2-4d29-9aca-d7e656777469`.
+**Do not load the old ignored local `AgentTests/OptimizeEntryLiveModelTests.runsettings`.** It still filters the retired suite. Leave unknown credential-bearing config untouched and use the current category/suite filters above; no new secret config file is needed.
 
-Populate only the `OPENAI_API_KEY` entry securely in that dedicated store, outside the repository. It is **not the WebApi store**, a project environment file, or a launch-settings reader. User Secrets stays outside Git but is **not encrypted at rest**. Do not put credential values in command arguments, logs, chat, fixtures, or test reports, or use commands that dump the store. Existing launch settings are not changed or imported by these tests.
+## Separately authorized user-run paid execution
 
-Credential sources are selected only during explicitly enabled live execution, never during test discovery or disabled runs. Missing/whitespace credentials fail clearly; configuration-read failures are sanitized without inner diagnostics. Resolution does not change process-global environment. Production constructors remain environment-only, and deterministic tests inject synthetic sources without opening the developer's store.
+**Billing warning:** the following commands enable real requests. They are documentation for a future explicitly authorized run, not commands executed during T5. Provision credentials privately first; credential presence alone is not permission to run.
 
-## Explicit live execution
+```sh
+# One suite first (Git Bash/POSIX); do not use the obsolete local runsettings.
+PROJECT_TIMELINE_RUN_LIVE_AGENT_TESTS=1 dotnet test dotnet/tests/ProjectTimeline.Tests/ProjectTimeline.Tests.csproj --no-build --no-restore --filter "Category=LiveModel&FullyQualifiedName~TimelineFactExtractionLiveModelTests"
+# All four suites, only after cost approval:
+PROJECT_TIMELINE_RUN_LIVE_AGENT_TESTS=1 dotnet test dotnet/tests/ProjectTimeline.Tests/ProjectTimeline.Tests.csproj --no-build --no-restore --filter "Category=LiveModel"
+```
 
-1. Securely populate the dedicated test User Secrets entry above, or preconfigure the environment override outside the test process. Credential setup alone does not authorize model calls.
-2. Set `PROJECT_TIMELINE_RUN_LIVE_AGENT_TESTS=1` in that environment (PowerShell: `$env:PROJECT_TIMELINE_RUN_LIVE_AGENT_TESTS = "1"`). Only the exact value `1` enables execution.
-3. Run the live filter above, optionally adding `--logger "console;verbosity=detailed"` to see scenario identities, actual structured responses, and tool traces. This makes paid external requests. Unset the gate afterward.
+Credentials resolve only **inside opted-in method bodies** via `Support/LiveModelCredentials.cs`: a nonblank `OPENAI_API_KEY` environment value wins, otherwise the optional dedicated test User Secrets store (`ProjectTimeline.Tests-e1899e37-47c2-4d29-9aca-d7e656777469`) is consulted. No project `.env`, launch settings, or local runsettings are read by that helper. User Secrets is outside Git but **not encrypted at rest**. Missing credentials fail before requests; credential-read errors are sanitized. Do not put keys in commands, source files, chat, logs, or reports, and do not print HTTP headers/payloads. Commands above scope the gate to the child process; no permanent environment change is required.
 
-With the gate explicitly enabled but no key, each executing live evaluation **fails clearly before model invocation and semantic assertions**. No fake keys are installed by this suite. The earlier paid-run permission is exhausted; setup or a previous authorization does not authorize another run.
+### Cost and evidence limits
 
-All live tests use `Category=LiveModel` and a nonparallel collection that cannot overlap other collections, including legacy environment-key mutation tests.
+All scenarios currently use `gpt-4o-mini`. A full successful run starts **18 logical model runs**: extraction 8 (including three sequential calls), search 2, optimization 2, semantic verification 6. Search's third case is intentionally local. Tool rounds and SDK structured-result processing can make multiple completions per logical run; **18 is not a request/cost ceiling**. The production planner bounds read tools, not total billing. The explicit-key client disables transport retries and uses a 90-second network timeout; typed extraction/verifier output is bounded by production limits. There is no additional grading client, embedding model, or monetary budget cap. Run a single suite first and monitor billing outside test output; reruns incur cost.
 
-## Scenarios and fixtures
+Report model/scenario identities, passed/failed/skipped counts, actual call/cost evidence if available, and failures honestly after any authorized execution. T5 verifies implementation, compilation, offline oracles, discovery, and safe skip structure only; **live behavior remains unverified**.
 
-| Evaluation | Contract |
-| --- | --- |
-| OE-01 | Clear software/travel/business assignments: Ready, no optional-field questions or invented planning fields; ambiguous CSV/PDF reference: clarification. |
-| OE-02 | Enrich one prior planned login team with Luis/Pablo, retain provenance and planned tense, preserve existing Marta, no invented roles/exclusivity. |
-| OE-03 | Entry-only UI/API ownership, password/no-SSO, tentative approval/date, lockout/exception/retention; Spanish travel and business condition/unit detail sets. |
-| OE-04 | Controlled **input draft**: Q1=date, Q2=owner; date-only answer leaves stable Q2 pending, then owner answer yields Ready. Separate actual-first-result roundtrip accepts the model's own question grouping. |
+## Retained deterministic infrastructure
 
-OE-05's three pure retrieval-failure rows are now deterministic controls, not paid cases. `OptimizeEntryAgentFailureTests` and the actual-harness integration cover list/first-fetch/later-fetch failures with zero consumer/transport requests and sanitized local tracking. OE-01 through OE-04 semantic oracles and fixture facts are unchanged.
-
-`Support/ConversationFixtures.cs` is the shared three-domain corpus. `Support/LiveEvaluationFixtures.cs` extends its immutable context windows and supplies the controlled OE-04 input. Every answer round sends the original source **alongside**, not replaced by, `previous_result`.
-
-## Isolation and evidence boundaries
-
-Live tests create a real in-memory `OpenAIClient` with the resolved key, select **gpt-4o-mini**, adapt it with `AsIChatClient()`, and pass that transport to `CustomOpenAIClient(transport, isolateHarnessFacilities: true)`. There is no fake live transport. Harness 1.24.0's supported disable options isolate file memory, cwd skill discovery, todo/mode providers, and web search. File access/background agents remain unconfigured (opt-in). Defaults for existing callers are unchanged. Apart from the optional dedicated credential store, live tests never open repository/private files.
-
-`CustomOpenAIClient(IChatClient, bool)` is the injected-transport seam used consistently by `GetChatClient`, `CreateAgent`, and `CreateHarnessAgent`. `CustomOpenAIClientIsolationTests` exercises the **actual** production harness, local wrapper and optimizer with scripted transport: success receives the prepared envelope and no history tools in one request; each preload failure produces zero requests. Generic provider/factory isolation controls remain. Its wire drafts are not model output or quality evidence.
-
-| Deterministic coverage | Replacement contract |
-| --- | --- |
-| `OptimizationContextLoadingTests` | Exact unsorted ID order/count, awaited reads before Init/Run, zero tools, intact envelope, forged-context isolation, malformed windows, per-run ID snapshot, changed clarification context, actual local tracking identity. |
-| `OptimizeEntryAgentInfrastructureTests` | Injection/legacy constructors, scoped read-only windows and tracker wiring replace SDK registration assertions. |
-| `OptimizeEntryAgentFailureTests` | Zero consumer calls on list/first/later failure or cancellation, sanitized attempts, fresh retry and unchanged downstream error boundaries replace recovery-veto/stale-wrapper checks. |
-| `OptimizationAsyncGuardTests` | Async preload failure/cancellation, same/shared-consumer serialization through preload and model work, tracker isolation, independent-consumer overlap replace wrapper-lifetime checks. |
-
-The optimizer-only SDK termination tests and execution guard are retired. EF window tests remain unchanged. Successful live traces require exact per-round read/tracker count and order, not `Distinct` normalization or invented SDK IDs.
-
-`EvaluationOracleTests` tests the oracle itself with positive and mutated negative controls. `EvaluationAssertions` combines typed status/IDs, pending-reference invariants and bounded lexical relations within Entry components; Questions/ChangeSummary echoes do not count as factual coverage. It does not compare exact prose or search whole-result JSON.
-
-**Lexical limits:** relation/negation/unit patterns can miss valid paraphrases or accept contradictions elsewhere. A regex hit is not independent semantic verification. Human inspection of the actual Entry, source provenance and trace is still required; passing these checks is not proof of completeness. Do not weaken an oracle merely to obtain a passing model score.
-
-## Historical results and limits
-
-The previous, separately authorized paid run used the old model-driven retrieval path: **14 expanded cases, 2 passed, 12 failed, 0 skipped**. Both passes were OE-05 retrieval failures; many semantic assertions were blocked by earlier chronology failures. That result is historical, not a quality score for this C# preload implementation. No new paid execution was authorized or performed for T6.
-
-Current T6 verification: **353 deterministic tests passed** and **6 disabled live methods visibly skipped**. The initial behavioral RED was 9 failed / 2 passed before production changes; expanded context-loading checks now pass all 18 cases. Default skips, synthetic drafts and deterministic retrieval checks provide **no new model-quality evidence**.
-
-Any future paid run or repetition requires separate authorization. Retain every run's model/scenario, passed/failed/skipped counts, structured response, application-owned read trace and criterion failures. Report denominators and repetitions, not only favorable samples. Requested model identity is not a guarantee of an immutable provider revision. Logs contain synthetic evaluation material and whitelisted call metadata, never raw provider errors or credentials.
+`CustomOpenAIClientIsolationTests`, credential/gate tests, injected transport controls, immutable `ConversationFixtures`, and `FakeConversationRepository` remain unchanged. Scripted responses and fixture windows are synthetic infrastructure evidence, never model-quality evidence. All live suites reuse `IsolatedAgentCollection` (`DisableParallelization=true`) and the existing `LiveModelFact` gate; the shared `LiveModelTheory` gate is also retained unchanged.

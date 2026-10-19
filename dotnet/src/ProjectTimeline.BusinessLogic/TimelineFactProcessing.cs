@@ -73,22 +73,55 @@ public sealed class TimelineFactProcessing(Func<ProjectTimelineDbContext> create
         return new(entries.LastOrDefault()?.EntryNumber ?? throughEntryNumber, entries.Count, count);
     }
 
-    /// <returns>Completed, Retry, Failed, Skipped, Cancelled, LostLease or NotDue.</returns>
+    // Explicit request path is independent of the hosted poller. A regeneration must name the
+    // observed generation so concurrent clicks cannot silently supersede a newer draft.
+    public async Task<Guid> RequestGenerationAsync(TimelineFactScope scope, Guid actorId, bool administrator,
+        bool regenerate = false, Guid? expectedGenerationId = null, CancellationToken ct = default)
+    {
+        await using var db = createContext();
+        await using var tx = db.Database.IsRelational() ? await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct) : null;
+        if (!await db.Users.AnyAsync(x => x.Id == actorId && x.IsActive, ct)
+            || !await new ProjectAuthorization(db).CanWriteAsync(scope.ProjectId, actorId, administrator, ct)) throw new UnauthorizedAccessException();
+        var entry = await db.TimelineEntries.Include(x => x.Timeline).SingleOrDefaultAsync(x => x.Id == scope.EntryId && x.TimelineId == scope.TimelineId
+            && x.Timeline.ProjectId == scope.ProjectId, ct) ?? throw new KeyNotFoundException();
+        if (await db.TimelineFacts.AnyAsync(x => x.EntryId == entry.Id, ct)
+            || await db.TimelineFactProposals.AnyAsync(x => x.EntryId == entry.Id && x.Status == "Accepted", ct))
+            throw new TimelineFactConflictException("Accepted reconciliation locks generation; create a new entry for corrections.");
+        var current = await db.TimelineFactJobs.SingleOrDefaultAsync(x => x.EntryId == entry.Id && x.Kind == "Extraction" && x.State != "Superseded", ct);
+        if (!regenerate && current is not null) return current.Id;
+        if (regenerate && (expectedGenerationId is null || !await db.TimelineFactJobs.AnyAsync(x => x.Id == expectedGenerationId
+            && x.EntryId == entry.Id && x.Kind == "Extraction", ct) || current is not null && current.Id != expectedGenerationId))
+            throw new TimelineFactConflictException("Generation changed; refresh before regenerating.");
+        await db.SupersedeFactProposalsAsync(entry.Id, includeGeneration: true, ct);
+        var job = NewExtractionJob(entry);
+        job.WorkKey = $"extraction:{entry.Id:N}:{job.Id:N}";
+        db.TimelineFactJobs.Add(job);
+        await db.SaveChangesAsync(ct);
+        if (tx is not null) await tx.CommitAsync(ct);
+        return job.Id;
+    }
+
+    /// <returns>Completed, Retry, Failed, Skipped, Superseded, Cancelled, LostLease or NotDue.</returns>
     public async Task<string> ProcessAsync(Guid jobId, string owner, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(owner) || owner.Length > 200) throw new ArgumentException("Invalid worker identity.");
         Guid version;
+        Exception? acquisitionFailure = null;
         await using (var db = createContext())
         {
             var job = await db.TimelineFactJobs.SingleOrDefaultAsync(x => x.Id == jobId, ct);
             if (job is null) return "NotDue";
-            if (job.State is "Completed" or "Skipped" or "Failed") return job.State;
+            if (job.State is "Completed" or "Skipped" or "Failed" or "Superseded") return job.State;
             if (job.NextAttemptAtUtc > Now || job.State == "Running" && job.LeaseExpiresAtUtc > Now) return "NotDue";
             if (job.Kind == "Extraction")
             {
                 var entry = await db.TimelineEntries.AsNoTracking().SingleAsync(x => x.Id == job.EntryId, ct);
                 job.ExtractionRevision = await db.Timelines.Where(x => x.Id == entry.TimelineId).Select(x => x.FactRevision).SingleAsync(ct);
-                if (job.Model == "unassigned") job.Model = provider.ExtractionModel;
+                if (job.Model == "unassigned")
+                {
+                    try { job.Model = provider.ExtractionModel; }
+                    catch (Exception ex) { acquisitionFailure = ex; }
+                }
             }
             job.State = "Running"; job.LeaseOwner = owner; job.LeaseExpiresAtUtc = Now.AddMinutes(3);
             job.Attempts = checked(job.Attempts + 1);
@@ -98,6 +131,7 @@ public sealed class TimelineFactProcessing(Func<ProjectTimelineDbContext> create
         }
         try
         {
+            if (acquisitionFailure is not null) throw new TimelineFactProviderException("Unavailable");
             // Context is disposed BEFORE the remote call; never hold a DB transaction over HTTP.
             TimelineFactExtraction? source = null;
             string? claim = null;
@@ -111,10 +145,10 @@ public sealed class TimelineFactProcessing(Func<ProjectTimelineDbContext> create
                 if (kind == "Extraction")
                 {
                     if (job.Model != provider.ExtractionModel) throw new TimelineFactProviderException("Unavailable");
-                    if (job.FactId is not null || job.WorkKey != $"extraction:{entry.Id:N}"
+                    if (job.FactId is not null || !TimelineFactEvidence.ExtractionKey(job)
                         || await db.TimelineFacts.AnyAsync(x => x.EntryId == entry.Id, ct)
-                        || await db.TimelineFactProposals.AnyAsync(x => x.EntryId == entry.Id, ct)
-                        || await db.TimelineFactJobs.AnyAsync(x => x.EntryId == entry.Id && x.Id != job.Id, ct))
+                        || await db.TimelineFactProposals.AnyAsync(x => x.EntryId == entry.Id && x.Status != "Superseded", ct)
+                        || await db.TimelineFactJobs.AnyAsync(x => x.EntryId == entry.Id && x.Id != job.Id && x.State != "Superseded", ct))
                         throw new TimelineFactProviderException("InvalidResponse");
                     var projectId = await db.Timelines.Where(x => x.Id == entry.TimelineId).Select(x => x.ProjectId).SingleAsync(ct);
                     var admin = await db.Users.AnyAsync(x => x.Id == entry.AuthorId && x.IsActive && x.UserRole.RoleName == "Admin", ct);

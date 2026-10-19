@@ -8,6 +8,8 @@ using ProjectTimeline.DataAccessLogic;
 namespace ProjectTimeline.FactsInitializer;
 
 public sealed record InitializerOptions(Guid ActorId, bool Apply = false, int PageSize = 50);
+// Saved means durable, nonempty Generated candidates, never activated facts. Empty means a verified
+// successful Generated draft with zero additions. Both require explicit reconciliation/acceptance later.
 public sealed record EntryResult(Guid EntryId, string Outcome, string? DiagnosticCode = null);
 
 /// <summary>Explicit legacy initialization only. Never resumes existing work or drains a queue.</summary>
@@ -123,12 +125,8 @@ public sealed class FactInitializer(Func<ProjectTimelineDbContext> createContext
             return changed.Outcome ?? (state is "LostLease" or "NotDue" ? "Stale" : "ExtractionFailed");
         }
 
-        // Completion already atomically saved direct facts and queued embeddings. No review is prepared or accepted.
         await using var completed = createContext();
-        var completedJob = await completed.TimelineFactJobs.AsNoTracking().SingleOrDefaultAsync(x => x.Id == jobId
-            && x.EntryId == selected.Id && x.Kind == "Extraction" && x.State == "Completed", ct);
-        if (completedJob is null || completedJob.SourceFingerprint != TimelineFactEvidence.Fingerprint(selected)) return "Stale";
-        return await completed.TimelineFacts.AnyAsync(x => x.ExtractionJobId == jobId, ct) ? "Saved" : "Empty";
+        return await GeneratedExtractionOutcome.ReadAsync(completed, selected, jobId, ct);
     }
 
     private static async Task<(TimelineEntry? Entry, bool Administrator, string? Outcome)> CheckAsync(
@@ -168,7 +166,7 @@ public sealed class FactInitializer(Func<ProjectTimelineDbContext> createContext
         {
             await check(ct);
             var result = await inner.ExtractAsync(source, ct);
-            await check(ct); // Recheck the invoking actor and eligibility after HTTP, before direct completion.
+            await check(ct); // Recheck the invoking actor and eligibility after HTTP, before candidate completion.
             return result;
         }
         public Task<float[]> EmbedAsync(string claim, CancellationToken ct) => throw new InvalidOperationException("Initializer never embeds.");
@@ -180,5 +178,38 @@ public sealed class FactInitializer(Func<ProjectTimelineDbContext> createContext
             .Select(x => new { Administrator = x.UserRole != null && x.UserRole.RoleName == "Admin" }).SingleOrDefaultAsync(ct);
         if (actor is null) throw new UnauthorizedAccessException();
         return actor.Administrator;
+    }
+}
+
+// Shared reporting only: never creates, accepts, resumes or rewrites evidence.
+internal static class GeneratedExtractionOutcome
+{
+    public static async Task<string> ReadAsync(ProjectTimelineDbContext db, TimelineEntry selected, Guid jobId, CancellationToken ct)
+    {
+        await using var tx = db.Database.IsRelational()
+            ? await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct) : null;
+        var job = await db.TimelineFactJobs.AsNoTracking().SingleOrDefaultAsync(x => x.Id == jobId, ct);
+        var source = await db.TimelineEntries.AsNoTracking().SingleOrDefaultAsync(x => x.Id == selected.Id, ct);
+        var fingerprint = TimelineFactEvidence.Fingerprint(selected);
+        if (source is null || TimelineFactEvidence.Fingerprint(source) != fingerprint
+            || job is null || job.EntryId != source.Id || job.Kind != "Extraction" || job.State != "Completed"
+            || !TimelineFactEvidence.ExtractionKey(job) || job.FactId is not null
+            || job.SourceFingerprint != fingerprint || job.ExtractionRevision is null || job.ExtractionResultHash is null
+            || job.LeaseOwner is not null || job.LeaseExpiresAtUtc is not null
+            || await db.TimelineFactJobs.AnyAsync(x => x.EntryId == source.Id && x.Kind == "Extraction"
+                && x.Id != jobId && x.State != "Superseded", ct)
+            || await db.TimelineFacts.AnyAsync(x => x.EntryId == source.Id, ct)
+            || await db.TimelineFactProposals.AnyAsync(x => x.EntryId == source.Id && x.Status == "Accepted", ct)) return "Stale";
+        var proposal = await db.TimelineFactProposals.AsNoTracking().SingleOrDefaultAsync(x => x.Id == jobId, ct);
+        if (proposal is null || proposal.Status != "Generated" || proposal.EntryId != source.Id
+            || proposal.SourceFingerprint != fingerprint || proposal.ExpectedRevision != job.ExtractionRevision + 1
+            || proposal.QuestionsJson != "[]" || proposal.ClarificationEvidence != ""
+            || await db.TimelineFactInvalidations.AnyAsync(x => x.ProposalId == jobId, ct)) return "Stale";
+        var additions = await db.TimelineFactAdditions.AsNoTracking().Where(x => x.ProposalId == jobId).Take(201).ToListAsync(ct);
+        var evidence = additions.Select(TimelineFactEvidence.CandidateEvidence).ToArray();
+        if (additions.Count > 200 || evidence.Select(TimelineFactEvidence.CandidateKey).Distinct().Count() != additions.Count
+            || TimelineFactEvidence.ResultHash(evidence) != job.ExtractionResultHash) return "Stale";
+        if (tx is not null) await tx.CommitAsync(ct);
+        return additions.Count == 0 ? "Empty" : "Saved";
     }
 }

@@ -28,6 +28,20 @@ public sealed class TimelineFactInformationTests
     private static TimelineFactInformationSearch Search(TimelineFactReviewFixture f, Guid? actor = null, bool admin = false) =>
         new(f.Db, new(f.Project.Id, f.Timeline.Id), actor ?? f.Actor.Id, admin);
 
+    private static async Task<TimelineFactProposal> PrepareNewSourceAsync(TimelineFactReviewFixture f, string quote, string entity)
+    {
+        var source = new TimelineEntry { TimelineId = f.Timeline.Id, AuthorId = f.Actor.Id,
+            EntryNumber = await f.Db.TimelineEntries.MaxAsync(x => x.EntryNumber) + 1, Title = f.Entry.Title, Content = f.Entry.Content };
+        f.Db.Add(source); await f.Db.SaveChangesAsync();
+        return await new TimelineFactService(f.Db).PrepareAsync(new(f.Project.Id, f.Timeline.Id, source.Id), f.Actor.Id, false,
+            await f.Db.Timelines.Select(x => x.FactRevision).SingleAsync(), new([new(quote, entity, "Person", quote)], [], []));
+    }
+    private static async Task AcceptNewSourceAsync(TimelineFactReviewFixture f, string quote, string entity)
+    {
+        var proposal = await PrepareNewSourceAsync(f, quote, entity);
+        await new TimelineFactService(f.Db).AcceptAsync(new(f.Project.Id, f.Timeline.Id, proposal.EntryId), proposal.Id, f.Actor.Id, false);
+    }
+
     [Fact]
     public async Task Latest_valid_search_is_timeline_wide_while_review_anchor_remains_chronological()
     {
@@ -59,7 +73,7 @@ public sealed class TimelineFactInformationTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var accepted = await f.AcceptAsync("Alice owns delivery.", "alice");
-        await f.PrepareAsync("Bob owns testing.", "bob");
+        await PrepareNewSourceAsync(f, "Bob owns testing.", "bob");
         Assert.Empty((await Search(f).SearchAsync("bob")).Facts);
         Assert.Equal(1, (await Search(f).SearchAsync("alice")).Coverage.PendingReviews);
         // Corrupt persisted provenance simulation only; normal fixtures use the actual guarded acceptance service.
@@ -88,7 +102,7 @@ public sealed class TimelineFactInformationTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         await f.AcceptAsync("Alice owns delivery.", "alice");
-        await f.AcceptAsync("Bob owns testing.", "bob");
+        await AcceptNewSourceAsync(f, "Bob owns testing.", "bob");
         var result = await Search(f).SearchAsync("Person", 1);
         Assert.Single(result.Facts); Assert.True(result.Coverage.Truncated);
         Assert.Equal(2, result.Coverage.AcceptedValidFacts);
@@ -128,7 +142,7 @@ public sealed class TimelineFactInformationTests
     public async Task Empty_failed_processing_and_unauthorized_never_construct_agents_or_fallback_to_raw_content()
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
-        f.Db.TimelineFactJobs.Add(new() { EntryId = f.Entry.Id, Kind = "Extraction", State = "Failed", WorkKey = "test",
+        f.Db.TimelineFactJobs.Add(new() { EntryId = f.Entry.Id, Kind = "Extraction", State = "Failed", WorkKey = $"extraction:{f.Entry.Id:N}",
             SourceFingerprint = TimelineFactEvidence.Fingerprint(f.Entry) });
         await f.Db.SaveChangesAsync();
         var calls = 0;
@@ -195,7 +209,7 @@ public sealed class TimelineFactInformationTests
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var fact = await f.AcceptAsync("Alice owns delivery.", "alice");
         var fake = new InformationFakeAgent { Result = new() { Content = "Answer", CitedFactIds = [fact.Id] } };
-        fake.Script = async () => { await f.AcceptAsync("Bob owns testing.", "bob"); };
+        fake.Script = async () => { await AcceptNewSourceAsync(f, "Bob owns testing.", "bob"); };
         var agent = new SearchEntriesAgent(f.Db, new(f.Project.Id, f.Timeline.Id), f.Actor.Id, false, () => fake);
         await Assert.ThrowsAsync<TimelineFactConflictException>(() => agent.RunAsync("Alice"));
         fake.Script = async () => { f.Actor.IsActive = false; await f.Db.SaveChangesAsync(); };
@@ -222,14 +236,17 @@ public sealed class TimelineFactInformationTests
     public async Task Latest_extraction_state_not_historical_completion_controls_coverage()
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
-        var job = new TimelineFactJob { EntryId = f.Entry.Id, WorkKey = "test", Kind = "Extraction", State = "Completed",
+        var job = new TimelineFactJob { EntryId = f.Entry.Id, WorkKey = $"extraction:{f.Entry.Id:N}", Kind = "Extraction", State = "Completed",
             SourceFingerprint = TimelineFactEvidence.Fingerprint(f.Entry) };
         // Historical completed jobs predate direct provenance; import fixture state through the raw context.
         await using (var legacy = f.Unguarded()) { legacy.Add(job); await legacy.SaveChangesAsync(); }
         Assert.Equal(0, (await Search(f).SearchAsync("alice")).Coverage.EntriesWithoutCompletedExtraction);
-        f.Db.Add(new TimelineFactJob { EntryId = f.Entry.Id, WorkKey = "test-newer", Kind = "Extraction", State = "Failed",
-            SourceFingerprint = TimelineFactEvidence.Fingerprint(f.Entry) });
-        await f.Db.SaveChangesAsync();
+        var replacement = await new TimelineFactProcessing(() => SeparateContext(f), new PendingGenerationProvider())
+            .RequestGenerationAsync(f.Scope, f.Actor.Id, false, true, job.Id);
+        var current = await f.Db.TimelineFactJobs.SingleAsync(x => x.Id == replacement);
+        current.State = "Failed"; await f.Db.SaveChangesAsync();
+        Assert.Equal("Superseded", (await f.Db.TimelineFactJobs.AsNoTracking().SingleAsync(x => x.Id == job.Id)).State);
+        Assert.True(TimelineFactEvidence.ExtractionKey(current));
         Assert.Equal(1, (await Search(f).SearchAsync("alice")).Coverage.EntriesWithoutCompletedExtraction);
         Assert.Empty((await Search(f).SearchAsync("alice")).Facts);
     }
@@ -420,7 +437,7 @@ public sealed class TimelineFactInformationTests
         Assert.Equal(HttpStatusCode.BadGateway, failure.StatusCode);
         Assert.DoesNotContain("SECRET_SENTINEL", await failure.Content.ReadAsStringAsync());
         failFactory = false; fake.Result.CitedFactIds = [fact.Id];
-        fake.Script = async () => { await f.AcceptAsync("Bob owns testing.", "bob"); };
+        fake.Script = async () => { await AcceptNewSourceAsync(f, "Bob owns testing.", "bob"); };
         Assert.Equal(HttpStatusCode.Conflict, (await client.GetAsync(url)).StatusCode);
         var before = calls;
         f.Actor.IsActive = false; await f.Db.SaveChangesAsync();

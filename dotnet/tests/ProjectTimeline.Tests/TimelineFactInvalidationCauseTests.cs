@@ -26,6 +26,7 @@ public sealed class TimelineFactInvalidationCauseTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var old = await f.AcceptAsync(Alice.SourceQuote, "alice");
+        await f.NewSourceAsync();
         await Assert.ThrowsAsync<TimelineFactConflictException>(() => Prepare(f,
             new([Bob], [new(old.Id, "Replaced")], [])));
         Assert.True(old.Valid);
@@ -37,6 +38,7 @@ public sealed class TimelineFactInvalidationCauseTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var old = await f.AcceptAsync(Alice.SourceQuote, "alice");
+        await f.NewSourceAsync();
         var fake = new FactReviewFakeAgent { Result = new() { Additions = [Bob], Invalidations = [new(old.Id, "Replaced")] } };
         await Assert.ThrowsAsync<TimelineFactConflictException>(() => new TimelineFactReviewPlanner(f.Db, f.Scope,
             f.Actor.Id, false, new TimelineFactOptimizationAgent(fake)).PlanAsync());
@@ -49,7 +51,9 @@ public sealed class TimelineFactInvalidationCauseTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var first = await f.AcceptAsync(Alice.SourceQuote, "alice");
+        await f.NewSourceAsync();
         var second = await f.AcceptAsync(Bob.SourceQuote, "bob");
+        await f.NewSourceAsync();
         var proposal = await Prepare(f, new([Alice, Bob], [new(first.Id, "Corrected", 1), new(second.Id, "Corrected", 1)], []));
         var selected = proposal.Additions.ElementAt(1).Id;
         Assert.All(proposal.Invalidations, x => Assert.Equal(selected, x.InvalidatingAdditionId));
@@ -59,6 +63,8 @@ public sealed class TimelineFactInvalidationCauseTests
         var facts = await f.Db.TimelineFacts.ToListAsync();
         var cause = facts.Single(x => x.AdditionId == selected);
         Assert.Equal(selected, cause.Id);
+        Assert.Equal(proposal.EntryId, cause.EntryId);
+        Assert.NotEqual(first.EntryId, cause.EntryId); Assert.NotEqual(second.EntryId, cause.EntryId);
         foreach (var id in new[] { first.Id, second.Id })
         {
             var target = facts.Single(x => x.Id == id);
@@ -71,6 +77,7 @@ public sealed class TimelineFactInvalidationCauseTests
         await Accept(f, proposal);
         Assert.Equal(revision, (await f.Db.Timelines.SingleAsync()).FactRevision);
         Assert.Equal(4, await f.Db.TimelineFacts.CountAsync());
+        await f.NewSourceAsync();
         var next = await Prepare(f, new([Alice], [new(cause.Id, "Later replacement", 0)], []));
         await Accept(f, next);
         Assert.False(cause.Valid); Assert.Equal(next.Additions.Single().Id, cause.InvalidatedByFactId);
@@ -88,6 +95,7 @@ public sealed class TimelineFactInvalidationCauseTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var old = await f.AcceptAsync(Alice.SourceQuote, "alice");
+        await f.NewSourceAsync();
         var draft = new TimelineFactDraft([Alice, Bob], [new(old.Id, "Corrected", index)], []);
         await Assert.ThrowsAsync<TimelineFactConflictException>(() => Prepare(f, draft));
         var fake = new FactReviewFakeAgent { Result = new() { Additions = draft.Additions.ToList(), Invalidations = draft.Invalidations.ToList() } };
@@ -102,6 +110,7 @@ public sealed class TimelineFactInvalidationCauseTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var old = await f.AcceptAsync(Alice.SourceQuote, "alice");
+        await f.NewSourceAsync();
         await Assert.ThrowsAsync<TimelineFactConflictException>(() => Prepare(f, new([], [new(old.Id, "Unknown replacement", 0)], [])));
         var fake = new FactReviewFakeAgent { Result = new() { Questions = [new("Which fact replaces the old responsibility?", null)] } };
         var plan = await new TimelineFactReviewPlanner(f.Db, f.Scope, f.Actor.Id, false, new TimelineFactOptimizationAgent(fake)).PlanAsync();
@@ -120,6 +129,7 @@ public sealed class TimelineFactInvalidationCauseTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var old = await f.AcceptAsync(Alice.SourceQuote, "alice");
+        await f.NewSourceAsync();
         var proposal = new TimelineFactProposal { EntryId = f.Entry.Id, ExpectedRevision = f.Timeline.FactRevision + 1,
             SourceFingerprint = TimelineFactEvidence.Fingerprint(f.Entry), ClarificationEvidence = "[]" };
         var addition = new TimelineFactAddition { ProposalId = proposal.Id, Claim = Bob.Claim, EntityKey = Bob.EntityKey,
@@ -146,6 +156,7 @@ public sealed class TimelineFactInvalidationCauseTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var old = await f.AcceptAsync(Alice.SourceQuote, "alice");
+        await f.NewSourceAsync();
         var proposal = await Prepare(f, new([Bob], [new(old.Id, "Corrected", 0)], []));
         await using (var raw = f.Unguarded())
         {
@@ -194,6 +205,7 @@ public sealed class TimelineFactInvalidationCauseTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var old = await f.AcceptAsync(Alice.SourceQuote, "alice");
+        await f.NewSourceAsync();
         var proposal = await Prepare(f, new([Alice, Bob], [new(old.Id, "Corrected", 1)], []));
         StageAcceptance(f, proposal, old);
         switch (attack)
@@ -234,6 +246,7 @@ public sealed class TimelineFactInvalidationCauseTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var old = await f.AcceptAsync(Alice.SourceQuote, "alice");
+        await f.NewSourceAsync();
         var proposal = await Prepare(f, new([Bob], [new(old.Id, "Corrected", 0)], []));
         await Accept(f, proposal);
         var cause = old.InvalidatedByFactId;
@@ -267,7 +280,9 @@ public sealed class TimelineFactInvalidationCauseTests
         await new TimelineFactService(f.Db).AcceptAsync(f.Scope, legacyId, f.Actor.Id, false);
         Assert.Null((await f.Db.TimelineFacts.SingleAsync()).InvalidatedByFactId);
         Assert.Null((await f.Db.TimelineFactInvalidations.SingleAsync()).InvalidatingAdditionId);
-        await f.AcceptAsync(Bob.SourceQuote, "bob");
+        await f.NewSourceAsync();
+        var correction = await f.AcceptAsync(Bob.SourceQuote, "bob");
+        Assert.NotEqual(old.EntryId, correction.EntryId);
         Assert.Null((await f.Db.TimelineFacts.SingleAsync(x => x.Id == old.Id)).InvalidatedByFactId);
         Assert.Equal(2, await f.Db.TimelineFacts.CountAsync());
     }
@@ -277,6 +292,7 @@ public sealed class TimelineFactInvalidationCauseTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var old = await f.AcceptAsync(Alice.SourceQuote, "alice");
+        await f.NewSourceAsync();
         var previous = await Prepare(f, new([Alice, Bob], [new(old.Id, "Corrected", 1)], [new("Who confirmed?", null)]));
         var cause = previous.Invalidations.Single().InvalidatingAdditionId;
         var fake = new FactReviewFakeAgent();

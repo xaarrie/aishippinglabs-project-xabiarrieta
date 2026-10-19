@@ -84,7 +84,8 @@ public sealed class TimelineFactHostingTests
         var poller = new TimelineFactPoller(root.GetRequiredService<IServiceScopeFactory>(), config, NullLogger<TimelineFactPoller>.Instance);
         Assert.Equal(2, await poller.PollOnceAsync(CancellationToken.None));
         Assert.Equal(2, provider.Calls);
-        Assert.Empty(await f.Db.TimelineFactProposals.ToListAsync());
+        Assert.Equal(2, await f.Db.TimelineFactProposals.CountAsync(x => x.Status == "Generated"));
+        Assert.Empty(await f.Db.TimelineFacts.ToListAsync());
         Assert.Equal(2, await f.Db.TimelineFactJobs.CountAsync(x => jobs.Take(2).Select(j => j.Id).Contains(x.Id)
             && x.State == "Completed"));
         Assert.Equal("Completed", (await f.Db.TimelineFactJobs.AsNoTracking().SingleAsync(x => x.Id == jobs[4].Id)).State);
@@ -113,6 +114,29 @@ public sealed class TimelineFactHostingTests
         Assert.Equal(f.Entry.EntryNumber, page.LastEntryNumber);
         Assert.Equal(0, (await processing.EnqueueAsync(f.Project.Id, f.Timeline.Id, f.Actor.Id, false, 0, 3, 1)).Enqueued);
         Assert.Equal("Pending", (await f.Db.TimelineFactJobs.SingleAsync()).State);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Explicit_generation_runs_with_poller_disabled_and_unavailable_factory_is_durable(bool unavailable)
+    {
+        await using var f = await TimelineFactReviewFixture.CreateAsync();
+        var services = new ServiceCollection();
+        var options = (DbContextOptions<ProjectTimelineDbContext>)f.Db.GetService<IDbContextOptions>();
+        services.AddSingleton(options);
+        services.AddScoped(_ => new ProjectTimelineDbContext(options));
+        services.AddTimelineFacts(new ConfigurationBuilder().Build()); // No poller switch, credentials or live configuration.
+        var provider = new HostingProvider();
+        services.AddScoped<ITimelineFactProvider>(_ => unavailable ? throw new InvalidOperationException("PRIVATE") : provider);
+        await using var root = services.BuildServiceProvider();
+        using var scope = root.CreateScope();
+        var api = scope.ServiceProvider.GetRequiredService<TimelineFactApplication>();
+        var state = await api.GenerateAsync(f.Entry.Id, f.Actor.Id, false, new());
+        Assert.Equal(unavailable ? "Retry" : "Empty", state.LifecycleState);
+        Assert.Equal(unavailable ? 0 : 1, provider.Calls);
+        Assert.Empty(state.Facts);
+        Assert.Equal(unavailable ? "Unavailable" : null, Assert.Single(state.Processing).ErrorCode);
     }
 
     private sealed class HostingProvider : ITimelineFactProvider

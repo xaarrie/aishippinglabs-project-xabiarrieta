@@ -45,6 +45,8 @@ public static class TimelineFactEndpoints
     {
         app.MapGet("/api/entries/{entryId:guid}/facts", (Guid entryId, ClaimsPrincipal user, TimelineFactApplication service, CancellationToken ct) =>
             RespondAsync(user, (actor, admin) => service.ReadAsync(entryId, actor, admin, ct))).RequireAuthorization();
+        app.MapPost("/api/entries/{entryId:guid}/fact-generation", (Guid entryId, TimelineFactGenerationRequest request, ClaimsPrincipal user, TimelineFactApplication service, CancellationToken ct) =>
+            RespondAsync(user, (actor, admin) => service.GenerateAsync(entryId, actor, admin, request, ct))).RequireAuthorization();
         app.MapPost("/api/entries/{entryId:guid}/fact-proposals", (Guid entryId, TimelineFactPlanRequest request, ClaimsPrincipal user, TimelineFactApplication service, CancellationToken ct) =>
             RespondAsync(user, (actor, admin) => service.PlanAsync(entryId, actor, admin, request, ct))).RequireAuthorization();
         app.MapPost("/api/entries/{entryId:guid}/fact-proposals/{proposalId:guid}/accept", (Guid entryId, Guid proposalId, HttpRequest request, ClaimsPrincipal user, TimelineFactApplication service, CancellationToken ct) =>

@@ -29,7 +29,8 @@ public static class TimelineFactHosting
         });
         services.AddScoped<TimelineFactService>();
         services.AddScoped(sp => new TimelineFactApplication(sp.GetRequiredService<ProjectTimelineDbContext>(),
-            () => new LocalCustomHarnessAgent(new CustomOpenAIClient(isolateHarnessFacilities: true))));
+            () => new LocalCustomHarnessAgent(new CustomOpenAIClient(isolateHarnessFacilities: true)),
+            sp.GetRequiredService<TimelineFactProcessing>()));
         services.AddScoped(sp => new TimelineFactProcessing(
             () => new ProjectTimelineDbContext(sp.GetRequiredService<DbContextOptions<ProjectTimelineDbContext>>()),
             new DeferredProvider(() => sp.GetRequiredService<ITimelineFactProvider>())));

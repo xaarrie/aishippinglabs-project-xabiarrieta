@@ -16,7 +16,11 @@ public sealed class TimelineFactSearchTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var fact = await f.AcceptAsync("Alice owns delivery.", "alice-delivery");
-        await f.PrepareAsync("Bob owns testing.", "bob");
+        await f.NewSourceAsync();
+        var pending = await f.PrepareAsync("Bob owns testing.", "bob");
+        Assert.NotEqual(fact.EntryId, pending.EntryId);
+        Assert.Equal(f.Entry.Id, pending.EntryId);
+        Assert.Equal("Bob owns testing.", pending.Additions.Single().SourceQuote);
         var hit = Assert.Single(await f.Search.SearchAsync("ALIC"));
         Assert.Equal(fact.Id, hit.Id);
         Assert.Equal("Alice owns delivery.", hit.SourceQuote);
@@ -36,7 +40,9 @@ public sealed class TimelineFactSearchTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var accepted = await f.AcceptAsync("Alice owns delivery.", "alice");
+        await f.NewSourceAsync();
         var pending = await f.PrepareAsync("Bob owns testing.", "bob");
+        Assert.NotEqual(accepted.EntryId, pending.EntryId);
         // Simulate persisted rows, including hostile provenance combinations, without the write guards.
         await using var raw = f.Unguarded();
         var fact = await raw.Set<TimelineFact>().SingleAsync();
@@ -56,7 +62,7 @@ public sealed class TimelineFactSearchTests
                 timeline = new Timeline { ProjectId = projectId, Code = "other", Name = "Other" };
                 raw.Add(timeline);
             }
-            var other = new TimelineEntry { TimelineId = timeline.Id, AuthorId = f.Actor.Id, EntryNumber = 3,
+            var other = new TimelineEntry { TimelineId = timeline.Id, AuthorId = f.Actor.Id, EntryNumber = f.Entry.EntryNumber + 1,
                 Title = "Other", Content = "Alice owns delivery." };
             raw.Add(other);
             if (kind == "futureReview")
@@ -67,9 +73,11 @@ public sealed class TimelineFactSearchTests
         Assert.Empty(await f.Search.SearchAsync("alice"));
         Assert.Empty(await f.Search.FetchAsync([accepted.Id]));
         var fake = new FactReviewFakeAgent();
-        fake.Result.Invalidations.Add(new(accepted.Id, "Untrusted target"));
-        await Assert.ThrowsAsync<TimelineFactConflictException>(() => new TimelineFactReviewPlanner(f.Db, f.Scope,
+        fake.Result.Additions.Add(new("Bob owns testing.", "bob", "Person", "Bob owns testing."));
+        fake.Result.Invalidations.Add(new(accepted.Id, "Untrusted target", 0));
+        var error = await Assert.ThrowsAsync<TimelineFactConflictException>(() => new TimelineFactReviewPlanner(f.Db, f.Scope,
             f.Actor.Id, false, new TimelineFactOptimizationAgent(fake)).PlanAsync());
+        Assert.Contains("authorized effective scope", error.Message);
     }
 
     [Fact]
@@ -138,7 +146,7 @@ internal sealed class TimelineFactReviewFixture : IAsyncDisposable
     public User Actor { get; } = new() { Email = "review@example.test", DisplayName = "Author", PasswordHash = "test" };
     public Project Project { get; } = new() { Code = "P", Name = "Project" };
     public Timeline Timeline { get; } = new() { Code = "T", Name = "Timeline" };
-    public TimelineEntry Entry { get; } = new() { EntryNumber = 2, Title = "  Original\nTitle  ", Content = "Alice owns delivery.\nBob owns testing.  " };
+    public TimelineEntry Entry { get; private set; } = new() { EntryNumber = 2, Title = "  Original\nTitle  ", Content = "Alice owns delivery.\nBob owns testing.  " };
     public TimelineFactScope Scope => new(Project.Id, Timeline.Id, Entry.Id);
     public TimelineFactSearch Search => new(Db, Scope, Actor.Id, false);
     public static async Task<TimelineFactReviewFixture> CreateAsync()
@@ -149,6 +157,15 @@ internal sealed class TimelineFactReviewFixture : IAsyncDisposable
         f.Db.AddRange(f.Actor, f.Project, f.Timeline, f.Entry);
         await f.Db.SaveChangesAsync();
         return f;
+    }
+    // Explicitly advance only tests that need a new reconciliation source; accepted evidence stays immutable.
+    public async Task NewSourceAsync()
+    {
+        var source = new TimelineEntry { TimelineId = Timeline.Id, AuthorId = Actor.Id,
+            EntryNumber = await Db.TimelineEntries.Where(x => x.TimelineId == Timeline.Id).MaxAsync(x => x.EntryNumber) + 1,
+            Title = Entry.Title, Content = Entry.Content };
+        Db.Add(source); await Db.SaveChangesAsync();
+        Entry = source;
     }
     public async Task<TimelineFactProposal> PrepareAsync(string quote, string entity)
     {

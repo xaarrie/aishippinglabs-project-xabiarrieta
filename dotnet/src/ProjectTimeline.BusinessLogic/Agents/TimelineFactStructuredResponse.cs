@@ -4,11 +4,10 @@ using ProjectTimeline.BusinessLogic.Agents.Framework;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using ChatMessage = Microsoft.Extensions.AI.ChatMessage;
 
 namespace ProjectTimeline.BusinessLogic.Agents;
 
-// Shared bounded single-response transport, not an agent loop. Callers own their typed contracts.
+// Shared bounded structured-run contracts. Domain agents consume only admitted typed results.
 internal static class TimelineFactStructuredResponse
 {
     internal static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
@@ -31,15 +30,45 @@ internal static class TimelineFactStructuredResponse
             throw new TimelineFactProviderException("InvalidResponse", "InputLimit");
     }
 
-    internal static async Task<string> ReadAsync(ICustomChatClient client, string model, string instructions,
-        object input, JsonElement schema, string schemaName, CancellationToken ct)
+    internal static ICustomAgent CreateAgent(ICustomChatClient client, string model) =>
+        new LocalCustomAgent(client as ICustomAgentClient ?? new CustomOpenAIClient(client.GetChatClient(model)));
+
+    internal static string SerializeInput(object input)
     {
         var payload = JsonSerializer.Serialize(input, Json);
         if (Encoding.UTF8.GetByteCount(payload) > 768 * 1024)
             throw new TimelineFactProviderException("InvalidResponse", "InputLimit");
-        var response = await client.GetChatClient(model).GetResponseAsync([
-            new ChatMessage(ChatRole.System, instructions), new ChatMessage(ChatRole.User, payload)
-        ], new ChatOptions
+        return payload;
+    }
+
+    internal static StructuredAgentRunOptions ExtractionOptions(JsonElement schema) => Options(schema, "entry_claims", root =>
+    {
+        // Keep root errors distinct from malformed candidate diagnostics.
+        if (root.ValueKind != JsonValueKind.Object || root.EnumerateObject().Count() != 1
+            || !root.TryGetProperty("claims", out var claims) || claims.ValueKind != JsonValueKind.Array)
+            throw new JsonException();
+        if (claims.GetArrayLength() >= 200) throw new TimelineFactProviderException("InvalidResponse", "CandidateLimit");
+    }, "ResponseSchema", "CandidateShape");
+
+    internal static StructuredAgentRunOptions VerificationOptions(JsonElement schema, int count) => Options(schema, "fact_semantic_assessments", root =>
+    {
+        if (root.ValueKind != JsonValueKind.Object || root.EnumerateObject().Count() != 1
+            || !root.TryGetProperty("assessments", out var list) || list.ValueKind != JsonValueKind.Array
+            || list.GetArrayLength() != count) throw new JsonException();
+        // JSON enum converters accept integers and case variants by default; this contract does not.
+        foreach (var item in list.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.Object || !item.TryGetProperty("issues", out var issues)
+                || issues.ValueKind != JsonValueKind.Array || issues.EnumerateArray().Any(issue =>
+                    issue.ValueKind != JsonValueKind.String || issue.GetString() is not ("Numeric" or "Date" or "Actor" or "Negation" or "Unsupported")))
+                throw new JsonException();
+        }
+    }, "MalformedAssessment", "MalformedAssessment");
+
+    private static StructuredAgentRunOptions Options(JsonElement schema, string schemaName, Action<JsonElement> validateRoot,
+        string rootDiagnostic, string resultDiagnostic) => new()
+    {
+        ChatOptions = new ChatOptions
         {
             MaxOutputTokens = 12000,
             ResponseFormat = Microsoft.Extensions.AI.ChatResponseFormat.ForJsonSchema(schema, schemaName),
@@ -48,8 +77,24 @@ internal static class TimelineFactStructuredResponse
                 ResponseFormat = OpenAI.Chat.ChatResponseFormat.CreateJsonSchemaFormat(schemaName,
                     BinaryData.FromString(schema.GetRawText()), jsonSchemaIsStrict: true)
             }
-        }, ct);
-        ct.ThrowIfCancellationRequested();
+        },
+        SerializerOptions = new JsonSerializerOptions(Json),
+        ValidateResponse = response =>
+        {
+            ValidateEnvelope(response);
+            try
+            {
+                using var document = JsonDocument.Parse(response.Text, new JsonDocumentOptions { MaxDepth = 16 });
+                validateRoot(document.RootElement);
+            }
+            catch (Exception ex) when (ex is JsonException or InvalidOperationException or ArgumentException)
+            { throw new TimelineFactProviderException("InvalidResponse", rootDiagnostic); }
+        },
+        InvalidResult = () => new TimelineFactProviderException("InvalidResponse", resultDiagnostic)
+    };
+
+    private static void ValidateEnvelope(ChatResponse response)
+    {
         if (response.RawRepresentation is not ChatCompletion raw)
             throw new TimelineFactProviderException("InvalidResponse", "ResponseEnvelope");
         if (raw.FinishReason == OpenAI.Chat.ChatFinishReason.Length)
@@ -61,6 +106,5 @@ internal static class TimelineFactStructuredResponse
         var text = response.Text;
         if (Encoding.UTF8.GetByteCount(text) > 512 * 1024)
             throw new TimelineFactProviderException("InvalidResponse", "ResponseLimit");
-        return text;
     }
 }

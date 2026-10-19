@@ -51,23 +51,32 @@ public sealed class TimelineFactProcessingTests
             Entry = await new TimelineService(Db).AddEntryAsync(Timeline.Id, Actor.Id, "Title", "Alice owns delivery.", default);
             return await Db.TimelineFactJobs.Select(x => x.Id).SingleAsync();
         }
+        public async Task<TimelineFactProposal> AcceptGeneratedAsync()
+        {
+            await using var db = NewContext();
+            var service = new TimelineFactService(db);
+            var proposal = await service.PrepareAsync(Scope, Actor.Id, false,
+                await db.Timelines.Select(x => x.FactRevision).SingleAsync(), new(Provider.Claims, [], []));
+            return await service.AcceptAsync(Scope, proposal.Id, Actor.Id, false);
+        }
         public ValueTask DisposeAsync() => Db.DisposeAsync();
     }
 
     [Fact]
-    public async Task Extraction_is_direct_evidenced_and_replay_never_duplicates_facts_or_embeddings()
+    public async Task Extraction_is_pending_and_replay_never_duplicates_candidates_or_embeddings()
     {
         await using var f = new Fixture(); var id = await f.InitializeAsync();
         Assert.Equal("Completed", await f.Worker.ProcessAsync(id, "one"));
-        Assert.Empty(await f.Db.TimelineFactProposals.ToListAsync());
-        Assert.Empty(await f.Db.TimelineFactAdditions.ToListAsync());
-        var direct = Assert.Single(await new TimelineFactService(f.Db).EffectiveAsync(f.Scope, f.Actor.Id, false));
-        Assert.Equal("Alice owns delivery.", direct.SourceQuote);
+        Assert.Equal("Generated", (await f.Db.TimelineFactProposals.SingleAsync()).Status);
+        Assert.Single(await f.Db.TimelineFactAdditions.ToListAsync());
+        Assert.Empty(await new TimelineFactService(f.Db).EffectiveAsync(f.Scope, f.Actor.Id, false));
+        Assert.Empty(await f.Db.TimelineFactJobs.Where(x => x.Kind == "Embedding").ToListAsync());
         Assert.Equal(0, f.Provider.Embeddings);
         for (var i = 0; i < 3; i++) Assert.Equal("Completed", await f.Worker.ProcessAsync(id, "restarted"));
         Assert.Equal(1, f.Provider.Extractions);
-        Assert.Empty(await f.Db.TimelineFactProposals.ToListAsync());
-        Assert.Single(await f.Db.TimelineFacts.ToListAsync());
+        Assert.Single(await f.Db.TimelineFactProposals.ToListAsync());
+        Assert.Empty(await f.Db.TimelineFacts.ToListAsync());
+        await f.AcceptGeneratedAsync();
         await using var acceptance = f.NewContext();
         var embedId = await acceptance.TimelineFactJobs.Where(x => x.Kind == "Embedding").Select(x => x.Id).SingleAsync();
         Assert.Equal("Completed", await f.Worker.ProcessAsync(embedId, "embedder"));
@@ -78,7 +87,7 @@ public sealed class TimelineFactProcessingTests
     }
 
     [Fact]
-    public async Task Retry_retains_error_backoff_and_recovers_with_direct_facts()
+    public async Task Retry_retains_error_backoff_and_recovers_with_pending_candidates()
     {
         await using var f = new Fixture(); var id = await f.InitializeAsync();
         f.Provider.Error = new Exception("PRIVATE provider payload");
@@ -89,7 +98,8 @@ public sealed class TimelineFactProcessingTests
         Assert.Empty(await f.Db.TimelineFactProposals.ToListAsync());
         f.Clock.Value = f.Clock.Value.AddHours(1); f.Provider.Error = null;
         Assert.Equal("Completed", await f.Worker.ProcessAsync(id, "worker"));
-        Assert.Single(await f.Db.TimelineFacts.ToListAsync());
+        Assert.Empty(await f.Db.TimelineFacts.ToListAsync());
+        Assert.Single(await f.Db.TimelineFactAdditions.ToListAsync());
     }
 
     [Fact]
@@ -101,7 +111,8 @@ public sealed class TimelineFactProcessingTests
         Assert.Empty(await f.Db.TimelineFactProposals.ToListAsync());
         f.Provider.DuringExtraction = null;
         Assert.Equal("Completed", await f.Worker.ProcessAsync(id, "new"));
-        Assert.Single(await f.Db.TimelineFacts.ToListAsync());
+        Assert.Empty(await f.Db.TimelineFacts.ToListAsync());
+        Assert.Single(await f.Db.TimelineFactAdditions.ToListAsync());
     }
 
     [Fact]
@@ -119,7 +130,8 @@ public sealed class TimelineFactProcessingTests
         Assert.Empty(await f.Db.TimelineFactProposals.ToListAsync());
         f.Provider.DuringExtraction = null; f.Clock.Value = f.Clock.Value.AddMinutes(4);
         Assert.Equal("Completed", await f.Worker.ProcessAsync(id, "recovery"));
-        Assert.Single(await f.Db.TimelineFacts.ToListAsync());
+        Assert.Empty(await f.Db.TimelineFacts.ToListAsync());
+        Assert.Single(await f.Db.TimelineFactAdditions.ToListAsync());
     }
 
     [Fact]
@@ -143,23 +155,30 @@ public sealed class TimelineFactProcessingTests
     {
         await using var f = new Fixture(); var id = await f.InitializeAsync();
         await f.Worker.ProcessAsync(id, "worker");
+        var accepted = await f.AcceptGeneratedAsync();
         await using var db = f.NewContext();
         var fact = await db.TimelineFacts.SingleAsync();
         var embedId = await db.TimelineFactJobs.Where(x => x.Kind == "Embedding").Select(x => x.Id).SingleAsync();
+        var correction = new TimelineEntry { TimelineId = f.Timeline.Id, AuthorId = f.Actor.Id,
+            EntryNumber = f.Entry.EntryNumber + 1, Title = f.Entry.Title, Content = f.Entry.Content };
+        db.Add(correction); await db.SaveChangesAsync();
+        var correctionScope = f.Scope with { EntryId = correction.Id };
         var revision = await db.Timelines.Select(x => x.FactRevision).SingleAsync();
-        var retraction = await new TimelineFactService(db).PrepareAsync(f.Scope, f.Actor.Id, false, revision,
+        var retraction = await new TimelineFactService(db).PrepareAsync(correctionScope, f.Actor.Id, false, revision,
             new([new("Bob owns delivery.", "bob", "Person", "Bob owns delivery.", "Clarification")],
                 [new(fact.Id, "Owner corrected", 0)], [new("Who owns delivery now?", "Bob owns delivery.")]));
-        await new TimelineFactService(db).AcceptAsync(f.Scope, retraction.Id, f.Actor.Id, false);
+        await new TimelineFactService(db).AcceptAsync(correctionScope, retraction.Id, f.Actor.Id, false);
         Assert.Equal("Skipped", await f.Worker.ProcessAsync(embedId, "embedder"));
         Assert.Equal(0, f.Provider.Embeddings);
         var original = await db.TimelineFacts.AsNoTracking().SingleAsync(x => x.Id == fact.Id);
         var replacement = await db.TimelineFacts.AsNoTracking().SingleAsync(x => x.CreationReviewId == retraction.Id);
         Assert.Null(original.EmbeddedAtUtc);
-        Assert.Equal(id, original.ExtractionJobId);
-        Assert.Null(original.CreationReviewId);
+        Assert.Null(original.ExtractionJobId);
+        Assert.Equal(accepted.Id, original.CreationReviewId);
         Assert.Equal(replacement.Id, original.InvalidatedByFactId);
         Assert.Equal(retraction.Id, original.InvalidationReviewId);
+        Assert.Equal(f.Entry.Id, original.EntryId); Assert.Equal(correction.Id, replacement.EntryId);
+        Assert.Equal("Clarification", replacement.SourceKind); Assert.Contains("Bob owns delivery.", replacement.ClarificationEvidence);
         Assert.True(replacement.Valid);
     }
 
@@ -184,7 +203,8 @@ public sealed class TimelineFactProcessingTests
         Assert.Equal("InvalidResponse", (await f.Db.TimelineFactJobs.AsNoTracking().SingleAsync()).LastErrorCode);
         f.Clock.Value = f.Clock.Value.AddHours(1); f.Provider.Claims = [];
         Assert.Equal("Completed", await f.Worker.ProcessAsync(id, "worker"));
-        Assert.Empty(await f.Db.TimelineFacts.ToListAsync()); Assert.Empty(await f.Db.TimelineFactProposals.ToListAsync());
+        Assert.Empty(await f.Db.TimelineFacts.ToListAsync()); Assert.Equal("Generated", (await f.Db.TimelineFactProposals.SingleAsync()).Status);
+        Assert.Empty(await f.Db.TimelineFactAdditions.ToListAsync());
     }
 
     [Theory]
@@ -222,6 +242,7 @@ public sealed class TimelineFactProcessingTests
     {
         await using var f = new Fixture(); var id = await f.InitializeAsync();
         await f.Worker.ProcessAsync(id, "worker");
+        await f.AcceptGeneratedAsync();
         await using var db = f.NewContext();
         var embedId = await db.TimelineFactJobs.Where(x => x.Kind == "Embedding").Select(x => x.Id).SingleAsync();
         f.Provider.Vector = variant switch
@@ -253,7 +274,7 @@ public sealed class TimelineFactProcessingTests
     }
 
     [Fact]
-    public async Task Saving_entry_also_persists_extraction_work_and_protects_source()
+    public async Task Saving_entry_persists_work_and_pending_edits_supersede_it()
     {
         await using var db = new ProjectTimelineDbContext(new DbContextOptionsBuilder<ProjectTimelineDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
@@ -269,6 +290,8 @@ public sealed class TimelineFactProcessingTests
         Assert.Equal("Extraction", job.Kind);
         Assert.Empty(await db.TimelineFacts.ToListAsync());
         entry.Content = "Replacement";
-        await Assert.ThrowsAsync<TimelineFactConflictException>(() => db.SaveChangesAsync());
+        await db.SaveChangesAsync();
+        Assert.Equal("Superseded", job.State);
+        Assert.Empty(await db.TimelineFacts.ToListAsync());
     }
 }

@@ -22,27 +22,24 @@ public sealed class TimelineFactReviewPlannerTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var accepted = await f.AcceptAsync("Alice owns delivery.", "alice");
-        // Preserve pre-direct-extraction legacy pending evidence, seeded without weakening current guards.
-        var job = new TimelineFactJob { EntryId = f.Entry.Id, WorkKey = "extract:test", State = "Completed",
-            SourceFingerprint = TimelineFactEvidence.Fingerprint(f.Entry) };
-        await using (var legacy = f.Unguarded()) { legacy.Add(job); await legacy.SaveChangesAsync(); }
-        var pending = new TimelineFactProposal { Id = job.Id, EntryId = f.Entry.Id,
-            SourceFingerprint = job.SourceFingerprint, ExpectedRevision = f.Timeline.FactRevision + 1 };
-        pending.Additions.Add(new TimelineFactAddition { ProposalId = pending.Id, Claim = "Bob owns testing.",
-            EntityKey = "bob", EntityType = "Person", SourceQuote = "Bob owns testing." });
-        f.Db.Add(pending); await f.Db.SaveChangesAsync();
+        var entry = new TimelineEntry { TimelineId = f.Timeline.Id, AuthorId = f.Actor.Id, EntryNumber = 3,
+            Title = f.Entry.Title, Content = f.Entry.Content };
+        f.Db.Add(entry); await f.Db.SaveChangesAsync();
+        await PendingGenerationProvider.GenerateAsync(f.Db, entry, f.Actor.Id, f.Project.Id);
+        var pending = await f.Db.TimelineFactProposals.SingleAsync(x => x.EntryId == entry.Id);
         var fake = new FactReviewFakeAgent { Result = new() { Additions = [new("Bob owns testing.", "bob", "Person", "Bob owns testing.")] } };
         var revision = f.Timeline.FactRevision;
         var count = await f.Db.TimelineFactProposals.CountAsync();
-        var result = await Planner(f, fake).PlanAsync();
+        var result = await new TimelineFactReviewPlanner(f.Db, new(f.Project.Id, f.Timeline.Id, entry.Id), f.Actor.Id, false,
+            new TimelineFactOptimizationAgent(fake)).PlanAsync();
         var json = JsonDocument.Parse(fake.Message!).RootElement;
-        Assert.Equal(f.Entry.Content, json.GetProperty("original_entry").GetProperty("Content").GetString());
-        Assert.Equal(f.Entry.Title, json.GetProperty("original_entry").GetProperty("Title").GetString());
+        Assert.Equal(entry.Content, json.GetProperty("original_entry").GetProperty("Content").GetString());
+        Assert.Equal(entry.Title, json.GetProperty("original_entry").GetProperty("Title").GetString());
         Assert.Contains(json.GetProperty("seed_facts").EnumerateArray(), x => x.GetProperty("Id").GetGuid() == accepted.Id);
         Assert.DoesNotContain(json.GetProperty("seed_facts").EnumerateArray(), x => x.GetProperty("CreationReviewId").GetGuid() == pending.Id);
-        Assert.Equal("bob", Assert.Single(json.GetProperty("pending_extraction_candidates").EnumerateArray()).GetProperty("EntityKey").GetString());
+        Assert.Equal("alice", Assert.Single(json.GetProperty("pending_extraction_candidates").EnumerateArray()).GetProperty("EntityKey").GetString());
         Assert.Equal(revision, result.ExpectedRevision);
-        Assert.Equal(TimelineFactEvidence.Fingerprint(f.Entry), result.SourceFingerprint);
+        Assert.Equal(TimelineFactEvidence.Fingerprint(entry), result.SourceFingerprint);
         Assert.Equal(count, await f.Db.TimelineFactProposals.CountAsync());
         Assert.False(f.Db.ChangeTracker.HasChanges());
         Assert.Equal(new[] { "fetch_facts", "search_facts" }, fake.Tools.Select(x => x.Name).Order().ToArray());
@@ -118,6 +115,7 @@ public sealed class TimelineFactReviewPlannerTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var accepted = await f.AcceptAsync("Alice owns delivery.", "alice");
+        await f.NewSourceAsync();
         var fake = new FactReviewFakeAgent { Result = new() {
             Additions = [new("Bob owns testing.", "bob", "Person", "Bob owns testing.")],
             Invalidations = [new(accepted.Id, "Source update requires explicit review", 0)] } };
@@ -130,6 +128,7 @@ public sealed class TimelineFactReviewPlannerTests
         Assert.Equal(1, await f.Db.TimelineFactProposals.CountAsync());
         var proposal = await new TimelineFactService(f.Db).PrepareAsync(f.Scope, f.Actor.Id, false, plan.ExpectedRevision, plan.Draft);
         Assert.Equal(plan.SourceFingerprint, proposal.SourceFingerprint);
+        Assert.Equal(f.Entry.Id, proposal.EntryId); Assert.NotEqual(accepted.EntryId, proposal.EntryId);
         Assert.True(accepted.Valid);
     }
 
@@ -140,7 +139,7 @@ public sealed class TimelineFactReviewPlannerTests
     public async Task Extraction_not_completed_is_reported_without_inventing_context(string state)
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
-        f.Db.Add(new TimelineFactJob { EntryId = f.Entry.Id, State = state, WorkKey = "extract:test",
+        f.Db.Add(new TimelineFactJob { EntryId = f.Entry.Id, State = state, WorkKey = $"extraction:{f.Entry.Id:N}",
             SourceFingerprint = TimelineFactEvidence.Fingerprint(f.Entry) });
         await f.Db.SaveChangesAsync();
         var plan = await Planner(f, new()).PlanAsync();

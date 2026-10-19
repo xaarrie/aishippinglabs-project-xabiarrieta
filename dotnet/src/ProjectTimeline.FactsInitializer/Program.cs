@@ -61,7 +61,7 @@ public static class Program
                 return new TimelineFactOpenAIProvider(new TimelineFactExtractionAgent(client, model),
                     new TimelineFactSemanticVerifierAgent(client, model), client);
             }
-            await output.WriteLineAsync(options.Apply ? "APPLY: direct extraction persistence authorized; embeddings queued only, no review acceptance." : "DRY RUN: no extraction calls or writes.");
+            await output.WriteLineAsync(options.Apply ? "APPLY: persist pending extraction candidates only. Saved means nonempty pending evidence, not active facts; activation requires explicit reconciliation acceptance elsewhere. No acceptance or embeddings here." : "DRY RUN: no extraction calls or writes.");
             void Report(EntryResult result)
             {
                 counts[result.Outcome] = counts.GetValueOrDefault(result.Outcome) + 1;

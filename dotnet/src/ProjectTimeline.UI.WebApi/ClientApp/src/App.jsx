@@ -3,7 +3,10 @@ import { api, clearToken, download, setToken } from "./api.js";
 import FactReview from "./FactReview.jsx";
 import TimelineSearchResults from "./TimelineSearchResults.jsx";
 import { createSearchRequestFence, searchTimelineFacts } from "./timelineSearch.js";
-import { hasEntryWriteAccess } from "./entryReview.js";
+import { hasEntryWriteAccess } from "./entryAccess.js";
+import { createEntrySaveAction, createFactReviewClient, factReviewActions, savedFactSource, entryMatchesFactSource } from "./factReview.js";
+
+const factClient = createFactReviewClient(api);
 
 const formValues = event => Object.fromEntries(new FormData(event.currentTarget));
 const currentPath = () => location.pathname.replace(/\/$/, "") || "/";
@@ -29,7 +32,7 @@ export function resolveRoute(source = location) {
 }
 const SPA_NAVIGATION_EVENT = "project-timeline:navigation";
 function useLocationState() { const [route, setRoute] = useState(() => resolveRoute()); useEffect(() => { const update = () => setRoute(resolveRoute()); addEventListener("popstate", update); addEventListener(SPA_NAVIGATION_EVENT, update); return () => { removeEventListener("popstate", update); removeEventListener(SPA_NAVIGATION_EVENT, update); }; }, []); return route; }
-function navigate(path, { replace = false } = {}) { (replace ? history.replaceState : history.pushState).call(history, {}, "", path); window.dispatchEvent(new Event(SPA_NAVIGATION_EVENT)); }
+function navigate(path, { replace = false, state = null } = {}) { (replace ? history.replaceState : history.pushState).call(history, state, "", path); window.dispatchEvent(new Event(SPA_NAVIGATION_EVENT)); }
 function Link({ href, children, className = "", onNavigate, onClick, ...props }) {
   const disabled = props["aria-disabled"] === true || props["aria-disabled"] === "true";
   return <a {...props} className={className} href={href} onClick={event => {
@@ -404,25 +407,43 @@ function UploadForm({ entryId, onUploaded }) {
   }}><label htmlFor={`file-${entryId}`}>Choose file<input ref={fileInput} id={`file-${entryId}`} name="file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.md,.markdown" aria-describedby={`file-help-${entryId}`} required /></label></ManagedForm><p id={`file-help-${entryId}`} className="muted">PDF, Word, Excel or Markdown. A failed upload keeps the selected file; submit again to retry.</p>{uploaded && <p className="request-feedback request-success" role="status">Uploaded {uploaded}.</p>}</div>;
 }
 function ArtifactLinks({ artifacts = [] }) { return artifacts.length ? <ul aria-label="Entry artifacts">{artifacts.map(item => <li key={item.id}><button className="link-button" type="button" onClick={() => download(`/api/artifacts/${item.id}`, item.fileName)}>{item.fileName}</button></li>)}</ul> : <p className="muted">No artifacts attached.</p>; }
-function EntryDetail({ id, projectId, timelineId }) {
+function EntryDetail({ id, projectId, timelineId, user }) {
+  const project = useResource(`/api/projects/${projectId}`, null);
+  const participants = useResource(`/api/projects/${projectId}/participants`, []);
+  const canWrite = hasEntryWriteAccess(user, project.data, participants.data);
+  const [facts, setFacts] = useState(null);
+  const [reviewActive, setReviewActive] = useState(false);
+  const source = savedFactSource(facts, id);
+  const receipt = history.state?.entrySave;
+  const editable = factReviewActions(facts, { canWrite, busy: reviewActive }).edit && !reviewActive;
   const { data: entry, loading, error, reload } = useResource(`/api/entries/${id}?projectId=${projectId}&timelineId=${timelineId}`, null);
   const timeline = useResource(`/api/timelines/${timelineId}`, null);
   const contextError = timeline.data && timeline.data.projectId !== projectId ? "The timeline does not belong to this project." : entry && entry.timelineId !== timelineId ? "The entry does not belong to this timeline." : "";
   const verified = entry && timeline.data && !contextError;
-  return <section className="workspace-page entry-page"><PageHeader eyebrow={verified ? `Entry ${entry.entryNumber} · ${timeline.data.code}` : "Timeline conversation"} title={verified ? entry.title : "Entry detail"}><Link className="secondary" href={`/projects/${projectId}`}>Back to project</Link></PageHeader>
+  return <section className="workspace-page entry-page"><PageHeader eyebrow={verified ? `Entry ${entry.entryNumber} · ${timeline.data.code}` : "Timeline conversation"} title={verified && source ? source.title : "Entry detail"}><Link className="secondary" href={`/projects/${projectId}`}>Back to project</Link></PageHeader>
     <LoadFeedback label="entry" loading={loading || timeline.loading} error={error || timeline.error || contextError} onRetry={() => { reload(); timeline.reload(); }} hasData={!!entry} />
-    {verified && <><section className="workspace-section"><div className="entry-metadata"><StatusBadge>{entry.status}</StatusBadge><span>By {entry.author.displayName}</span><span>Entry {entry.entryNumber}</span></div><h2>Entry content</h2><p className="entry-content">{entry.content}</p><p className="context-field"><span>Entry identifier</span><strong>{entry.id}</strong></p></section>
-      <section className="workspace-section"><h2>Artifacts</h2><ArtifactLinks artifacts={entry.artifacts} /><UploadForm key={id} entryId={entry.id} onUploaded={reload} /></section></>}
+    {receipt?.id === id && <p className={`request-feedback ${receipt.generationError ? "request-error" : "request-success"}`} role={receipt.generationError ? "alert" : "status"}>{receipt.generationError || "Entry saved. Review the generation status and pending facts below; nothing was automatically accepted."}</p>}
+    {verified && <><ActionBar label="Entry source actions"><Link className="secondary" aria-disabled={!editable} href={`/projects/${projectId}/timelines/${timelineId}/entries/${id}/edit`}>Edit source</Link>{facts?.lifecycleState === "Reconciled" && <Link className="primary" href={`/projects/${projectId}/timelines/${timelineId}/entries/new`}>New correction entry</Link>}</ActionBar><section className="workspace-section" aria-label="Saved entry source">{source ? <><div className="entry-metadata"><StatusBadge>{source.status}</StatusBadge><span>By {entry.author.displayName}</span><span>Entry {entry.entryNumber}</span></div><h2>Entry content</h2><p className="entry-content">{source.content}</p><p className="context-field"><span>Entry identifier</span><strong>{entry.id}</strong></p></> : <p role="status">Loading authoritative saved source...</p>}</section>
+      <FactReview key={id} entry={entry} canWrite={canWrite} onActiveChange={setReviewActive} onStateChange={setFacts} />
+      <section className="workspace-section"><h2>Artifacts</h2><ArtifactLinks artifacts={entry.artifacts} />{canWrite && <UploadForm key={id} entryId={entry.id} onUploaded={reload} />}</section></>}
   </section>;
 }
 function EntryCreate(props) { return <EntryComposer key={`${props.projectId}-${props.timelineId}`} {...props} />; }
-function EntryComposer({ timelineId, projectId, go }) {
+function EntryComposer({ timelineId, projectId, go, user }) {
   const { project, timeline, loading, error, reload } = useTimelineContext(projectId, timelineId);
-  const [created, setCreated] = useState(null);
-  if (created) return <FormPage eyebrow="Timeline conversation" title="Entry created" description="The entry is saved. Attach artifacts in this second step."><h2>Artifacts</h2><UploadForm entryId={created.id} onUploaded={() => go(`/projects/${projectId}/timelines/${timelineId}/entries/${created.id}`)} /><ActionBar label="Entry actions"><Link className="secondary" href={`/projects/${projectId}`}>Back to project</Link><Link className="primary" href={`/projects/${projectId}/timelines/${timelineId}/entries/${created.id}`}>Open entry</Link></ActionBar></FormPage>;
-  return <FormPage eyebrow={project && timeline && !error ? `${timeline.code}: ${timeline.name}` : "Timeline conversation"} title="New conversation entry" description="Create the text first, then attach optional artifacts.">
+  const participants = useResource(`/api/projects/${projectId}/participants`, []);
+  const canWrite = hasEntryWriteAccess(user, project, participants.data);
+  const [saveAction] = useState(() => createEntrySaveAction(factClient));
+  const lifetime = useRef(null);
+  const [saved, setSaved] = useState(null);
+  useEffect(() => { const controller = new AbortController(); lifetime.current = controller; return () => controller.abort(); }, []);
+  return <FormPage eyebrow={project && timeline && !error ? `${timeline.code}: ${timeline.name}` : "Timeline conversation"} title="New conversation entry" description="Save the source and automatically generate pending facts, then review and explicitly reconcile. Optional artifacts can be attached on the saved entry.">
     <LoadFeedback label="timeline" loading={loading} error={error} onRetry={reload} />
-    {project && timeline && !error && <ManagedForm key={`${projectId}-${timelineId}`} ariaLabel="Create timeline entry" submitLabel="Create entry" pendingLabel="Creating entry..." cancelHref={`/projects/${projectId}`} onSuccess={setCreated} onSubmit={values => api(`/api/timelines/${timelineId}/entries`, { method: "POST", body: JSON.stringify({ ...values, status: "Draft" }) })}><fieldset><legend>Entry details</legend><p className="context-field"><span>Timeline</span><strong>{timeline.code}: {timeline.name}</strong></p><Field name="title" label="Title" /><label htmlFor="new-entry-content">Content<textarea id="new-entry-content" name="content" required /></label></fieldset><div className="inline-actions"><button className="secondary" type="button" disabled aria-describedby="new-entry-review-help">Review</button><span id="new-entry-review-help" className="muted">Save this new entry before reviewing it.</span></div></ManagedForm>}
+    {saved && <p role="status">Entry saved. Generating pending facts; this does not activate them. <Link href={`/projects/${projectId}/timelines/${timelineId}/entries/${saved.id}`}>Open saved entry</Link></p>}
+    {project && timeline && !error && !canWrite && <p role="status">Read-only access. Entry creation is unavailable.</p>}
+    {project && timeline && !error && canWrite && <ManagedForm key={`${projectId}-${timelineId}`} ariaLabel="Create timeline entry" submitLabel="Create entry" pendingLabel="Saving entry and generating pending facts..." cancelHref={`/projects/${projectId}`} onSuccess={result => {
+      if (result) go(`/projects/${projectId}/timelines/${timelineId}/entries/${result.entry.id}`, { state: { entrySave: { id: result.entry.id, generationError: result.generationError } } });
+    }} onSubmit={values => saveAction.run(options => api(`/api/timelines/${timelineId}/entries`, { ...options, method: "POST", body: JSON.stringify({ ...values, status: "Draft" }) }), { signal: lifetime.current.signal, onSaved: setSaved })}><fieldset><legend>Entry details</legend><p className="context-field"><span>Timeline</span><strong>{timeline.code}: {timeline.name}</strong></p><Field name="title" label="Title" /><label htmlFor="new-entry-content">Content<textarea id="new-entry-content" name="content" required /></label></fieldset><p className="muted">Saving triggers generation and may incur model billing. Candidates remain pending until explicit reconciliation and acceptance.</p></ManagedForm>}
   </FormPage>;
 }
 function EntryEdit({ id, projectId, timelineId, go, user }) {
@@ -430,9 +451,12 @@ function EntryEdit({ id, projectId, timelineId, go, user }) {
   const [editor, setEditor] = useState({ title: "", content: "", status: "" });
   const [canWrite, setCanWrite] = useState(false);
   const [reviewActive, setReviewActive] = useState(false);
+  const [factState, setFactState] = useState(null);
   const [saving, setSaving] = useState(false);
-  const saveLock = useRef(false); const mounted = useRef(false);
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const [saved, setSaved] = useState(false);
+  const [saveAction] = useState(() => createEntrySaveAction(factClient));
+  const saveLock = useRef(false); const lifetime = useRef(null);
+  useEffect(() => { const controller = new AbortController(); lifetime.current = controller; return () => controller.abort(); }, []);
   const [loadRevision, setLoadRevision] = useState(0);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -450,27 +474,44 @@ function EntryEdit({ id, projectId, timelineId, go, user }) {
     if (saveLock.current) return;
     saveLock.current = true; setSaving(true); setError("");
     try {
-      await api(`/api/entries/${id}`, { method: "PUT", body: JSON.stringify(values) });
-      if (mounted.current) go(`/projects/${projectId}/timelines/${timelineId}/entries/${id}`);
-    } finally { saveLock.current = false; setSaving(false); }
+      const signal = lifetime.current.signal;
+      const result = await saveAction.run(async options => {
+        await api(`/api/entries/${id}`, { ...options, method: "PUT", body: JSON.stringify(values) });
+        return { ...entry, ...values };
+      }, { signal, onSaved: value => { setSaved(true); setEntry(value); setFactState(null); } });
+      if (!signal.aborted && result) {
+        go(`/projects/${projectId}/timelines/${timelineId}/entries/${id}`, { state: { entrySave: { id, generationError: result.generationError } } });
+      }
+    } finally { saveLock.current = false; if (!lifetime.current.signal.aborted) setSaving(false); }
   };
   if (!entry) return <FormPage eyebrow="Timeline maintenance" title="Edit entry"><LoadFeedback label="entry" loading={!error} error={error} onRetry={() => { setError(""); setLoadRevision(value => value + 1); }} /></FormPage>;
   const dirty = ["title", "content", "status"].some(key => editor[key] !== entry[key]);
-  return <FormPage eyebrow="Timeline maintenance" title={`Edit entry ${entry.entryNumber}`} description={`By ${entry.author.displayName} · ${entry.status}`}>
+  const source = savedFactSource(factState, id);
+  const sourceChanged = !!source && !entryMatchesFactSource(entry, source);
+  const editable = factReviewActions(factState, { canWrite }).edit && !sourceChanged;
+  const reviewDirty = dirty || sourceChanged;
+  return <FormPage eyebrow="Timeline maintenance" title={`Edit entry ${entry.entryNumber}`} description={`By ${entry.author.displayName} · ${source?.status || "Checking saved source"}`}>
     {!canWrite && <p className="request-feedback" role="status">Read-only access. Editing and Review are unavailable.</p>}
+    {!factState && <p role="status">Checking server source-edit permission...</p>}
+    {sourceChanged && <div role="alert"><p>The saved source changed in another session. Your editor draft is retained; reload the saved source before saving or reconciling.</p><button type="button" className="secondary" disabled={saving || reviewActive} onClick={() => {
+      const values = { title: source.title, content: source.content, status: source.status };
+      setEditor(values); setEntry(previous => ({ ...previous, ...values })); setError("");
+    }}>Reload saved source (discard draft)</button></div>}
+    {factState?.lifecycleState === "Reconciled" && <p role="status">Accepted reconciliation locks this source. <Link href={`/projects/${projectId}/timelines/${timelineId}/entries/new`}>Create a new correction entry</Link>.</p>}
+    {saved && <p role="status">Entry saved. Generating pending facts; nothing has been activated. <Link href={`/projects/${projectId}/timelines/${timelineId}/entries/${id}`}>Open saved entry</Link></p>}
     <Form className="managed-form" aria-busy={saving} ariaLabel="Edit timeline entry" onSubmit={async () => {
-      if (!canWrite || saving || reviewActive) return;
-      try { await save(editor); } catch (e) { setError(e.status === 409 ? "Original source is locked by saved evidence. Keep it unchanged and use fact review for corrections." : e.message); }
+      if (!editable || saving || reviewActive) return;
+      try { await save(editor); } catch (e) { setError(e.status === 409 ? "The source changed or was locked by accepted reconciliation. Refresh fact state; accepted-source corrections require a new entry." : e.message); }
     }}>
-      <fieldset disabled={!canWrite || saving || reviewActive}><legend>Entry details</legend>
+      <fieldset disabled={!editable || saving || reviewActive}><legend>Entry details</legend>
         <label htmlFor="edit-entry-title">Title<input id="edit-entry-title" name="title" value={editor.title} onChange={event => setEditor({ ...editor, title: event.target.value })} required /></label>
         <label htmlFor="edit-entry-content">Content<textarea id="edit-entry-content" name="content" value={editor.content} onChange={event => setEditor({ ...editor, content: event.target.value })} required /></label>
         <label htmlFor="edit-entry-status">Status<input id="edit-entry-status" name="status" value={editor.status} onChange={event => setEditor({ ...editor, status: event.target.value })} required /></label>
       </fieldset>
-      <ActionBar label="Edit entry actions"><button className="primary" disabled={!canWrite || saving || reviewActive}>{saving ? "Saving..." : "Save entry"}</button><Link className="secondary" aria-disabled={saving || reviewActive} href={`/projects/${projectId}`}>Cancel</Link></ActionBar>
+      <ActionBar label="Edit entry actions"><button className="primary" disabled={!editable || saving || reviewActive}>{saving ? "Saving..." : "Save entry"}</button><Link className="secondary" aria-disabled={saving || reviewActive} href={`/projects/${projectId}`}>Cancel</Link></ActionBar>
     </Form>
     {saving && <p className="request-feedback" role="status">Saving entry...</p>}
-    <FactReview key={id} entry={entry} canWrite={canWrite && !saving} dirty={dirty} onActiveChange={setReviewActive} />
+    <FactReview key={id} entry={entry} canWrite={canWrite && !saving} dirty={reviewDirty} onActiveChange={setReviewActive} onStateChange={setFactState} />
     {error && <p className="request-feedback request-error" role="alert">{error} Your editor draft is retained.</p>}
   </FormPage>;
 }
@@ -527,7 +568,7 @@ function TimelineEntries({ timeline, projectId }) {
     <LoadFeedback label="entries" loading={loading} error={error} onRetry={reload} hasData={!!entries.length} />
     {!loading && !error && !entries.length && <p className="empty-state" role="status">No entries yet.</p>}
     <div className="conversation" aria-label={`${timeline.name} conversation`}>{entries.map(entry => <article className="conversation-entry" key={entry.id}><div className="entry-metadata"><span>Entry {entry.entryNumber}</span><StatusBadge>{entry.status}</StatusBadge><span>{entry.author.displayName}</span></div><h5>{entry.title}</h5><p className="entry-content">{entry.preview}</p><ArtifactLinks artifacts={entry.artifacts} />
-      <RecordActions label={`entry ${entry.entryNumber}`} primary={<Link className="secondary" href={`/projects/${projectId}/timelines/${timeline.id}/entries/${entry.id}?projectId=${projectId}`}>Read full entry</Link>}><Link className="secondary" href={`/projects/${projectId}/timelines/${timeline.id}/entries/${entry.id}/edit`}>Edit</Link><ConfirmButton className="danger" disabled={mutation.pending} label="Delete" message={`Delete entry ${entry.entryNumber}? This cannot be undone.`} onConfirm={() => mutation.run(async () => { await api(`/api/entries/${entry.id}`, { method: "DELETE" }); reload(); }, "Entry deleted.")} /></RecordActions>
+      <RecordActions label={`entry ${entry.entryNumber}`} primary={<Link className="secondary" href={`/projects/${projectId}/timelines/${timeline.id}/entries/${entry.id}?projectId=${projectId}`}>Read full entry</Link>}><Link className="secondary" href={`/projects/${projectId}/timelines/${timeline.id}/entries/${entry.id}`}>Review facts / source access</Link><ConfirmButton className="danger" disabled={mutation.pending} label="Delete" message={`Delete entry ${entry.entryNumber}? This cannot be undone.`} onConfirm={() => mutation.run(async () => { await api(`/api/entries/${entry.id}`, { method: "DELETE" }); reload(); }, "Entry deleted.")} /></RecordActions>
     </article>)}</div><WorkspaceFeedback action={mutation} />
   </section><aside className="timeline-tools" aria-label={`${timeline.code} tools`}><TimelineSearch key={timeline.id} timeline={timeline} projectId={projectId} /><SnapshotMaintenance key={timeline.id} timelineId={timeline.id} entries={entries} entriesLoading={loading} entriesError={error} /></aside></div>;
 }
@@ -564,7 +605,7 @@ function Shell({ user, route, onUserSaved, onSignOut }) {
       setDesktopOpen(false);
     }
   };
-  const go = target => { navigate(target); closeMobileNavigation(); };
+  const go = (target, options) => { navigate(target, options); closeMobileNavigation(); };
   useLayoutEffect(() => {
     // Match the literal CSS breakpoint; crossing it never carries an open modal into desktop.
     const query = window.matchMedia("(max-width: 700px)");
@@ -614,7 +655,7 @@ function Shell({ user, route, onUserSaved, onSignOut }) {
       if (target?.isConnected) target.focus({ preventScroll: true });
     };
   }, [drawerOpen]);
-  const path = route.path; const projectMatch = path.match(/^\/projects\/([^/]+)$/); const projectTimelines = path.match(/^\/projects\/([^/]+)\/timelines$/); const timelineCreate = path.match(/^\/projects\/([^/]+)\/timelines\/new$/); const timelineEdit = path.match(/^\/projects\/([^/]+)\/timelines\/([^/]+)\/edit$/); const userEdit = path.match(/^\/users\/([^/]+)\/edit$/); const projectEdit = path.match(/^\/projects\/([^/]+)\/edit$/); const administrator = (user.roleCode || user.roleName) === "Admin"; const entryNew = path.match(/^\/projects\/([^/]+)\/timelines\/([^/]+)\/entries\/new$/); const entryEdit = path.match(/^\/projects\/([^/]+)\/timelines\/([^/]+)\/entries\/([^/]+)\/edit$/); const entryDetail = path.match(/^\/projects\/([^/]+)\/timelines\/([^/]+)\/entries\/([^/]+)$/); const [projectState, setProjectState] = useState({ data: null, loading: false, error: null }); useEffect(() => { const projectId = route.params.projectId; if (!projectId) { setProjectState({ data: null, loading: false, error: null }); return undefined; } const controller = new AbortController(); setProjectState({ data: null, loading: true, error: null }); api(`/api/projects/${projectId}`, { signal: controller.signal }).then(data => { if (!controller.signal.aborted) setProjectState({ data, loading: false, error: null }); }).catch(error => { if (error.name !== "AbortError" && !controller.signal.aborted) setProjectState({ data: null, loading: false, error: error.message }); }); return () => controller.abort(); }, [route.path, route.params.projectId]); const selectedProject = projectState.data; const active = target => path === target || (target === "/projects" && path.startsWith("/projects/")); let content; if (path === "/profile") content = <Profile user={user} onSaved={onUserSaved} />; else if (path === "/users") content = (user.roleCode || user.roleName) === "Admin" ? <Users go={go} /> : <NotFound />; else if (path === "/users/new") content = (user.roleCode || user.roleName) === "Admin" ? <UserCreate onDone={() => go("/users")} /> : <NotFound />; else if (userEdit) content = (user.roleCode || user.roleName) === "Admin" ? <UserEdit id={userEdit[1]} onDone={() => go("/users")} /> : <NotFound />; else if (path === "/projects") content = <Projects go={go} />; else if (path === "/projects/new") content = <ProjectCreate onDone={id => go(`/projects/${id}`)} />; else if (projectEdit) content = <ProjectEdit id={projectEdit[1]} administrator={administrator} onDone={() => go(`/projects/${projectEdit[1]}`)} />; else if (entryNew) content = <EntryCreate projectId={entryNew[1]} timelineId={entryNew[2]} go={go} />; else if (entryEdit) content = <EntryEdit key={path} id={entryEdit[3]} projectId={entryEdit[1]} timelineId={entryEdit[2]} go={go} user={user} />; else if (entryDetail) content = <EntryDetail id={entryDetail[3]} projectId={entryDetail[1]} timelineId={entryDetail[2]} go={go} />; else if (projectTimelines) content = <Timelines projectId={projectTimelines[1]} go={go} />; else if (timelineCreate) content = <TimelineCreate projectId={timelineCreate[1]} onDone={() => go(`/projects/${timelineCreate[1]}/timelines`)} />; else if (timelineEdit) content = <TimelineEdit projectId={timelineEdit[1]} id={timelineEdit[2]} onDone={() => go(`/projects/${timelineEdit[1]}/timelines`)} />; else if (projectMatch) content = projectState.loading ? <p role="status">Loading project...</p> : selectedProject ? <Workspace project={selectedProject} go={go} /> : <section className="card"><p role="alert">Unable to load this project.</p><ErrorMessage error={projectState.error} /><Link href="/projects">Return to projects</Link></section>; else content = <NotFound />; return <div className={`app-shell ${sidebarOpen ? "sidebar-open" : "sidebar-closed"} ${drawerOpen ? "drawer-open" : ""}`}>
+  const path = route.path; const projectMatch = path.match(/^\/projects\/([^/]+)$/); const projectTimelines = path.match(/^\/projects\/([^/]+)\/timelines$/); const timelineCreate = path.match(/^\/projects\/([^/]+)\/timelines\/new$/); const timelineEdit = path.match(/^\/projects\/([^/]+)\/timelines\/([^/]+)\/edit$/); const userEdit = path.match(/^\/users\/([^/]+)\/edit$/); const projectEdit = path.match(/^\/projects\/([^/]+)\/edit$/); const administrator = (user.roleCode || user.roleName) === "Admin"; const entryNew = path.match(/^\/projects\/([^/]+)\/timelines\/([^/]+)\/entries\/new$/); const entryEdit = path.match(/^\/projects\/([^/]+)\/timelines\/([^/]+)\/entries\/([^/]+)\/edit$/); const entryDetail = path.match(/^\/projects\/([^/]+)\/timelines\/([^/]+)\/entries\/([^/]+)$/); const [projectState, setProjectState] = useState({ data: null, loading: false, error: null }); useEffect(() => { const projectId = route.params.projectId; if (!projectId) { setProjectState({ data: null, loading: false, error: null }); return undefined; } const controller = new AbortController(); setProjectState({ data: null, loading: true, error: null }); api(`/api/projects/${projectId}`, { signal: controller.signal }).then(data => { if (!controller.signal.aborted) setProjectState({ data, loading: false, error: null }); }).catch(error => { if (error.name !== "AbortError" && !controller.signal.aborted) setProjectState({ data: null, loading: false, error: error.message }); }); return () => controller.abort(); }, [route.path, route.params.projectId]); const selectedProject = projectState.data; const active = target => path === target || (target === "/projects" && path.startsWith("/projects/")); let content; if (path === "/profile") content = <Profile user={user} onSaved={onUserSaved} />; else if (path === "/users") content = (user.roleCode || user.roleName) === "Admin" ? <Users go={go} /> : <NotFound />; else if (path === "/users/new") content = (user.roleCode || user.roleName) === "Admin" ? <UserCreate onDone={() => go("/users")} /> : <NotFound />; else if (userEdit) content = (user.roleCode || user.roleName) === "Admin" ? <UserEdit id={userEdit[1]} onDone={() => go("/users")} /> : <NotFound />; else if (path === "/projects") content = <Projects go={go} />; else if (path === "/projects/new") content = <ProjectCreate onDone={id => go(`/projects/${id}`)} />; else if (projectEdit) content = <ProjectEdit id={projectEdit[1]} administrator={administrator} onDone={() => go(`/projects/${projectEdit[1]}`)} />; else if (entryNew) content = <EntryCreate projectId={entryNew[1]} timelineId={entryNew[2]} go={go} user={user} />; else if (entryEdit) content = <EntryEdit key={path} id={entryEdit[3]} projectId={entryEdit[1]} timelineId={entryEdit[2]} go={go} user={user} />; else if (entryDetail) content = <EntryDetail key={path} user={user} id={entryDetail[3]} projectId={entryDetail[1]} timelineId={entryDetail[2]} go={go} />; else if (projectTimelines) content = <Timelines projectId={projectTimelines[1]} go={go} />; else if (timelineCreate) content = <TimelineCreate projectId={timelineCreate[1]} onDone={() => go(`/projects/${timelineCreate[1]}/timelines`)} />; else if (timelineEdit) content = <TimelineEdit projectId={timelineEdit[1]} id={timelineEdit[2]} onDone={() => go(`/projects/${timelineEdit[1]}/timelines`)} />; else if (projectMatch) content = projectState.loading ? <p role="status">Loading project...</p> : selectedProject ? <Workspace project={selectedProject} go={go} /> : <section className="card"><p role="alert">Unable to load this project.</p><ErrorMessage error={projectState.error} /><Link href="/projects">Return to projects</Link></section>; else content = <NotFound />; return <div className={`app-shell ${sidebarOpen ? "sidebar-open" : "sidebar-closed"} ${drawerOpen ? "drawer-open" : ""}`}>
     <header ref={topbarRef} className="topbar" role="banner">
       <button ref={menuButtonRef} className="hamburger" type="button" aria-label={sidebarOpen ? "Hide navigation" : "Show navigation"} aria-controls="app-navigation" aria-expanded={sidebarOpen} onClick={() => sidebarOpen ? closeSidebar() : mobile ? setMobileOpen(true) : setDesktopOpen(true)}>Menu</button>
       <Link className="brand" href="/projects">Project Timeline</Link><span className="user-context">{user.email}</span>

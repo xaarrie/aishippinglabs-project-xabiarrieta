@@ -26,8 +26,19 @@ public sealed class TimelineFactRetryTests
     {
         private readonly string database = Guid.NewGuid().ToString();
         private readonly InMemoryDatabaseRoot root = new();
-        public ProjectTimelineDbContext Db() => new(new DbContextOptionsBuilder<ProjectTimelineDbContext>()
-            .UseInMemoryDatabase(database, root).Options);
+        public Func<Task>? AfterCompletion { get; set; }
+        public ProjectTimelineDbContext Db()
+        {
+            var db = new ProjectTimelineDbContext(new DbContextOptionsBuilder<ProjectTimelineDbContext>()
+                .UseInMemoryDatabase(database, root).Options);
+            db.SavedChanges += (_, _) =>
+            {
+                if (AfterCompletion is { } callback && db.ChangeTracker.Entries<TimelineFactJob>()
+                    .Any(x => x.Entity.Kind == "Extraction" && x.Entity.State == "Completed"))
+                { AfterCompletion = null; callback().GetAwaiter().GetResult(); }
+            };
+            return db;
+        }
         // Simulate legacy/stale rows or external concurrent writers without weakening production guards.
         public DbContext Raw()
         {
@@ -51,6 +62,7 @@ public sealed class TimelineFactRetryTests
         }
         public List<EntryResult> Results = [];
         public string ExtractionModel => "fake";
+        public IReadOnlyList<TimelineFactCandidate> Claims { get; set; } = [new("Alice owns delivery", "alice", "Person", "Alice owns delivery.")];
         public async Task Initialize()
         {
             await using var db = Db();
@@ -64,6 +76,18 @@ public sealed class TimelineFactRetryTests
             db.AddRange(role, Actor, project, Timeline, Entry, Job);
             await db.SaveChangesAsync();
         }
+        public async Task<Guid> RegeneratedRetry()
+        {
+            var worker = new TimelineFactProcessing(Db, this);
+            var id = await worker.RequestGenerationAsync(new(Timeline.ProjectId, Timeline.Id, Entry.Id), Actor.Id, false, true, Job.Id);
+            DuringCall = () => throw new TimelineFactProviderException("InvalidResponse");
+            Assert.Equal("Retry", await worker.ProcessAsync(id, "failed-generation"));
+            DuringCall = null;
+            await using var elapsed = Raw();
+            (await elapsed.Set<TimelineFactJob>().SingleAsync(x => x.Id == id)).NextAttemptAtUtc = DateTime.UtcNow.AddSeconds(-1);
+            await elapsed.SaveChangesAsync(); // Simulate elapsed backoff without changing the retry's identity or attempts.
+            return id;
+        }
         public Task Run(bool apply = true) => new TimelineFactRetryRunner(RunnerContext, () =>
         {
             Creations++;
@@ -74,7 +98,7 @@ public sealed class TimelineFactRetryTests
         {
             Calls++;
             if (DuringCall is not null) await DuringCall();
-            return [new("Alice owns delivery", "alice", "Person", "Alice owns delivery.")];
+            return Claims;
         }
         public Task<float[]> EmbedAsync(string claim, CancellationToken ct) => throw new Exception("No embeddings");
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;
@@ -97,7 +121,7 @@ public sealed class TimelineFactRetryTests
     }
 
     [Fact]
-    public async Task Retry_reuses_job_increments_attempts_saves_directly_and_never_replays()
+    public async Task Retry_reuses_job_increments_attempts_saves_pending_candidates_and_never_replays()
     {
         await using var f = new Fixture(); await f.Initialize();
         await f.Run(); await f.Run();
@@ -106,14 +130,121 @@ public sealed class TimelineFactRetryTests
         await using var db = f.Db();
         var job = await db.TimelineFactJobs.SingleAsync(x => x.Id == f.Job.Id);
         Assert.Equal(2, job.Attempts); Assert.Equal("Completed", job.State);
-        Assert.Empty(await db.TimelineFactProposals.ToListAsync());
-        Assert.Empty(await db.TimelineFactAdditions.ToListAsync());
-        var fact = Assert.Single(await db.TimelineFacts.ToListAsync());
-        Assert.Equal(job.Id, fact.ExtractionJobId);
-        Assert.Null(fact.CreationReviewId);
-        Assert.Null(fact.AdditionId);
-        Assert.Equal(f.Entry.Content, fact.SourceQuote);
-        Assert.Equal("Pending", (await db.TimelineFactJobs.SingleAsync(x => x.Kind == "Embedding")).State);
+        var proposal = Assert.Single(await db.TimelineFactProposals.ToListAsync());
+        var addition = Assert.Single(await db.TimelineFactAdditions.ToListAsync());
+        Assert.Equal(job.Id, proposal.Id);
+        Assert.Equal("Generated", proposal.Status);
+        Assert.Equal(proposal.Id, addition.ProposalId);
+        Assert.Equal(f.Entry.Content, addition.SourceQuote);
+        Assert.Equal(TimelineFactEvidence.Fingerprint(f.Entry), proposal.SourceFingerprint);
+        Assert.Equal(TimelineFactEvidence.ResultHash([TimelineFactEvidence.CandidateEvidence(addition)]), job.ExtractionResultHash);
+        Assert.Empty(await db.TimelineFacts.ToListAsync());
+        Assert.Empty(await db.TimelineFactJobs.Where(x => x.Kind == "Embedding").ToListAsync());
+    }
+
+    [Fact]
+    public async Task Regenerated_retry_selects_only_current_generation_preserves_history_and_reports_pending_saved()
+    {
+        await using var f = new Fixture(); await f.Initialize();
+        var id = await f.RegeneratedRetry();
+        await using var before = f.Db();
+        var historical = await before.TimelineFactJobs.AsNoTracking().SingleAsync(x => x.Id == f.Job.Id);
+        await f.Run(false);
+        Assert.Equal("WouldRetry", Assert.Single(f.Results).Outcome);
+        Assert.Equal(0, f.Creations); Assert.Equal(1, f.Calls);
+        await f.Run(); await f.Run();
+        Assert.Equal(["WouldRetry", "Saved", "ExistingWork"], f.Results.Select(x => x.Outcome));
+        Assert.Equal(1, f.Creations); Assert.Equal(2, f.Calls);
+        await using var db = f.Db();
+        var old = await db.TimelineFactJobs.SingleAsync(x => x.Id == f.Job.Id);
+        Assert.Equal("Superseded", old.State); Assert.Equal(historical.Version, old.Version);
+        Assert.Equal(historical.Attempts, old.Attempts); Assert.Equal(historical.LastErrorCode, old.LastErrorCode);
+        var current = await db.TimelineFactJobs.SingleAsync(x => x.Id == id);
+        Assert.Equal(2, current.Attempts); Assert.Equal("Completed", current.State);
+        Assert.Equal(id, (await db.TimelineFactProposals.SingleAsync()).Id);
+        Assert.Equal("Generated", (await db.TimelineFactProposals.SingleAsync()).Status);
+        Assert.Single(await db.TimelineFactAdditions.ToListAsync()); Assert.Empty(await db.TimelineFacts.ToListAsync());
+        Assert.Empty(await db.TimelineFactJobs.Where(x => x.Kind == "Embedding").ToListAsync());
+    }
+
+    [Fact]
+    public async Task Superseded_generated_candidates_do_not_turn_current_empty_retry_into_saved()
+    {
+        await using var f = new Fixture(); await f.Initialize();
+        Assert.Equal("Completed", await new TimelineFactProcessing(f.Db, f).ProcessAsync(f.Job.Id, "old-generation"));
+        var id = await f.RegeneratedRetry(); f.Claims = [];
+        await f.Run();
+        Assert.Equal("Empty", Assert.Single(f.Results).Outcome);
+        await using var db = f.Db();
+        Assert.Equal("Superseded", (await db.TimelineFactProposals.SingleAsync(x => x.Id == f.Job.Id)).Status);
+        Assert.Single(await db.TimelineFactAdditions.Where(x => x.ProposalId == f.Job.Id).ToListAsync());
+        Assert.Equal("Generated", (await db.TimelineFactProposals.SingleAsync(x => x.Id == id)).Status);
+        Assert.Empty(await db.TimelineFactAdditions.Where(x => x.ProposalId == id).ToListAsync());
+        Assert.Empty(await db.TimelineFacts.ToListAsync());
+    }
+
+    [Theory]
+    [InlineData("ambiguous")]
+    [InlineData("source")]
+    [InlineData("key")]
+    [InlineData("superseded")]
+    public async Task Ambiguous_or_stale_regenerated_retry_never_constructs_provider_or_changes_history(string change)
+    {
+        await using var f = new Fixture(); await f.Initialize(); var id = await f.RegeneratedRetry();
+        await using (var raw = f.Raw())
+        {
+            var current = await raw.Set<TimelineFactJob>().SingleAsync(x => x.Id == id);
+            if (change == "source") (await raw.Set<TimelineEntry>().SingleAsync()).Content = "Changed";
+            else if (change == "key") current.WorkKey = $"extraction:{f.Entry.Id:N}:{Guid.NewGuid():N}";
+            else if (change == "superseded") current.State = "Superseded";
+            else
+            {
+                var competing = TimelineFactProcessing.NewExtractionJob(f.Entry);
+                competing.WorkKey = $"extraction:{f.Entry.Id:N}:{competing.Id:N}";
+                competing.State = "Retry"; raw.Add(competing);
+            }
+            await raw.SaveChangesAsync();
+        }
+        await f.Run();
+        Assert.Equal(change is "source" or "key" ? "Stale" : "ExistingWork", Assert.Single(f.Results).Outcome);
+        Assert.Equal(0, f.Creations); Assert.Equal(1, f.Calls);
+        await using var db = f.Db();
+        Assert.Equal(1, (await db.TimelineFactJobs.SingleAsync(x => x.Id == id)).Attempts);
+        Assert.Equal("Superseded", (await db.TimelineFactJobs.SingleAsync(x => x.Id == f.Job.Id)).State);
+        Assert.Empty(await db.TimelineFactProposals.ToListAsync()); Assert.Empty(await db.TimelineFacts.ToListAsync());
+    }
+
+    [Fact]
+    public async Task Empty_retry_is_durable_without_facts_embeddings_or_rebilling()
+    {
+        await using var f = new Fixture(); await f.Initialize(); f.Claims = [];
+        await f.Run(); await f.Run();
+        Assert.Equal(["Empty", "ExistingWork"], f.Results.Select(x => x.Outcome));
+        Assert.Equal(1, f.Calls); Assert.Equal(1, f.Creations);
+        await using var db = f.Db();
+        Assert.Equal("Completed", (await db.TimelineFactJobs.SingleAsync()).State);
+        Assert.Equal("Generated", (await db.TimelineFactProposals.SingleAsync()).Status);
+        Assert.Empty(await db.TimelineFactAdditions.ToListAsync()); Assert.Empty(await db.TimelineFacts.ToListAsync());
+    }
+
+    [Theory]
+    [InlineData("source")]
+    [InlineData("proposal")]
+    [InlineData("job")]
+    [InlineData("hash")]
+    [InlineData("missing-hash")]
+    [InlineData("fingerprint")]
+    [InlineData("revision")]
+    [InlineData("accepted-zero")]
+    [InlineData("regenerated")]
+    public async Task Completion_reporting_never_counts_stale_or_superseded_candidates(string change)
+    {
+        await using var f = new Fixture(); await f.Initialize();
+        f.AfterCompletion = () => GeneratedCompletionChanges.ApplyAsync(f.Db, f.Raw,
+            new(f.Timeline.ProjectId, f.Timeline.Id, f.Entry.Id), f.Actor.Id, change);
+        await f.Run();
+        Assert.Equal("Stale", Assert.Single(f.Results).Outcome); Assert.Equal(1, f.Calls);
+        await using var db = f.Db(); Assert.Empty(await db.TimelineFacts.ToListAsync());
     }
 
     [Fact]
@@ -141,6 +272,7 @@ public sealed class TimelineFactRetryTests
 
     [Theory]
     [InlineData("Completed")]
+    [InlineData("Superseded")]
     [InlineData("Failed")]
     [InlineData("Skipped")]
     [InlineData("Pending")]
@@ -151,9 +283,11 @@ public sealed class TimelineFactRetryTests
     [InlineData("model")]
     [InlineData("proposal")]
     [InlineData("accepted")]
+    [InlineData("generated")]
+    [InlineData("superseded-proposal")]
     [InlineData("competing")]
     [InlineData("unrelated")]
-    public async Task Ineligible_work_is_untouched(string reason)
+    public async Task Ineligible_work_is_untouched_and_superseded_proposals_are_preserved(string reason)
     {
         await using var f = new Fixture(); await f.Initialize();
         await using (var db = f.Raw())
@@ -165,8 +299,9 @@ public sealed class TimelineFactRetryTests
                 case "future": job.NextAttemptAtUtc = DateTime.UtcNow.AddHours(1); break;
                 case "source": (await db.Set<TimelineEntry>().SingleAsync()).Content = "Changed"; break;
                 case "model": job.Model = "other-model"; break;
-                case "proposal": case "accepted":
-                    db.Add(new TimelineFactProposal { EntryId = f.Entry.Id, Status = reason == "accepted" ? "Accepted" : "Pending" }); break;
+                case "proposal": case "accepted": case "generated": case "superseded-proposal":
+                    db.Add(new TimelineFactProposal { EntryId = f.Entry.Id, Status = reason switch
+                    { "accepted" => "Accepted", "generated" => "Generated", "superseded-proposal" => "Superseded", _ => "Pending" } }); break;
                 case "competing": db.Add(new TimelineFactJob { EntryId = f.Entry.Id, Kind = "Embedding", WorkKey = "other" }); break;
                 case "unrelated": (await db.Set<TimelineEntry>().SingleAsync()).TimelineId = Guid.NewGuid(); break;
                 default: job.State = reason; break;
@@ -174,10 +309,22 @@ public sealed class TimelineFactRetryTests
             await db.SaveChangesAsync();
         }
         await f.Run();
-        Assert.Equal(0, f.Creations); Assert.Equal(0, f.Calls);
         await using var check = f.Db();
-        Assert.Equal(1, (await check.TimelineFactJobs.SingleAsync(x => x.Id == f.Job.Id)).Attempts);
-        Assert.DoesNotContain(f.Results, x => x.Outcome is "Saved" or "Accepted");
+        if (reason == "superseded-proposal")
+        {
+            Assert.Equal(1, f.Creations); Assert.Equal(1, f.Calls);
+            Assert.Equal("Saved", Assert.Single(f.Results).Outcome);
+            Assert.Single(await check.TimelineFactProposals.Where(x => x.Status == "Superseded").ToListAsync());
+            Assert.Single(await check.TimelineFactProposals.Where(x => x.Status == "Generated").ToListAsync());
+            Assert.Equal(2, (await check.TimelineFactJobs.SingleAsync()).Attempts);
+            Assert.Empty(await check.TimelineFacts.ToListAsync());
+        }
+        else
+        {
+            Assert.Equal(0, f.Creations); Assert.Equal(0, f.Calls);
+            Assert.Equal(1, (await check.TimelineFactJobs.SingleAsync(x => x.Id == f.Job.Id)).Attempts);
+            Assert.DoesNotContain(f.Results, x => x.Outcome is "Saved" or "Accepted");
+        }
     }
 
     [Theory]
@@ -270,7 +417,7 @@ public sealed class TimelineFactRetryTests
     [InlineData("access")]
     [InlineData("source")]
     [InlineData("competing")]
-    public async Task Rechecks_before_paid_call_and_before_direct_persistence(string change)
+    public async Task Rechecks_before_paid_call_and_before_candidate_persistence(string change)
     {
         foreach (var beforeCall in new[] { true, false })
         {

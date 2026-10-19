@@ -1,0 +1,18 @@
+{
+  "prior": {
+    "title": "Atlas baseline",
+    "content": "Atlas capacity is 10 units.",
+    "candidate": { "claim": "Atlas capacity is 10 units.", "entityKey": "atlas", "entityType": "Project", "sourceQuote": "Atlas capacity is 10 units.", "sourceKind": "Entry" }
+  },
+  "initial": {
+    "title": "Atlas source",
+    "content": "Atlas capacity is 20 units.",
+    "candidate": { "claim": "Atlas capacity is 20 units.", "entityKey": "atlas", "entityType": "Project", "sourceQuote": "Atlas capacity is 20 units.", "sourceKind": "Entry" }
+  },
+  "updated": {
+    "title": "Atlas source",
+    "content": "Atlas capacity is 25 units.",
+    "candidate": { "claim": "Atlas capacity is 25 units.", "entityKey": "atlas", "entityType": "Project", "sourceQuote": "Atlas capacity is 25 units.", "sourceKind": "Entry" }
+  },
+  "clarification": { "question": "Which source should be used?", "answer": "Use the corrected source." }
+}

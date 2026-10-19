@@ -1,6 +1,15 @@
 using System.Net;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using ProjectTimeline.BusinessLogic;
+using ProjectTimeline.UI.WebApi;
 using ProjectTimeline.DataAccessLogic;
 using Xunit;
 
@@ -12,6 +21,56 @@ public sealed class TimelineFactHttpTests
     {
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         return JsonSerializer.Deserialize<JsonElement>(await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Explicit_generation_http_contract_displays_pending_then_reconciles_and_locks()
+    {
+        await using var f = await TimelineFactReviewFixture.CreateAsync();
+        var options = (DbContextOptions<ProjectTimelineDbContext>)f.Db.GetService<IDbContextOptions>();
+        var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions { EnvironmentName = "Testing" });
+        builder.WebHost.UseTestServer();
+        builder.Services.AddAuthentication("Test").AddScheme<AuthenticationSchemeOptions, HeaderAuthentication>("Test", _ => { });
+        builder.Services.AddAuthorization(); builder.Services.AddRouting();
+        builder.Services.AddSingleton(options);
+        builder.Services.AddScoped(_ => new ProjectTimelineDbContext(options));
+        builder.Services.AddTimelineFacts(new ConfigurationBuilder().Build());
+        builder.Services.AddScoped<ITimelineFactProvider>(_ => new PendingGenerationProvider());
+        var agent = new FactReviewFakeAgent { Result = new() { Additions = [new("Alice owns delivery.", "alice", "Person", "Alice owns delivery.")] } };
+        builder.Services.AddScoped(sp => new TimelineFactApplication(sp.GetRequiredService<ProjectTimelineDbContext>(), () => agent,
+            sp.GetRequiredService<TimelineFactProcessing>()));
+        await using var app = builder.Build();
+        app.UseRouting(); app.UseAuthentication(); app.UseAuthorization(); app.UseTimelineFactBodyBounds(); app.MapTimelineFacts();
+        await app.StartAsync();
+        using var client = app.GetTestClient(); client.DefaultRequestHeaders.Add("X-Test-Actor", f.Actor.Id.ToString());
+        var path = $"/api/entries/{f.Entry.Id}";
+        using var generated = await client.PostAsync(path + "/fact-generation", new StringContent("{}", System.Text.Encoding.UTF8, "application/json"));
+        var state = await JsonAsync(generated);
+        Assert.Equal("Pending", state.GetProperty("lifecycleState").GetString());
+        Assert.Empty(state.GetProperty("facts").EnumerateArray());
+        Assert.False(Assert.Single(state.GetProperty("proposals").EnumerateArray()).GetProperty("ready").GetBoolean());
+        var sourceSnapshot = state.GetProperty("source");
+        Assert.Equal(f.Entry.Id, sourceSnapshot.GetProperty("entryId").GetGuid());
+        Assert.Equal(f.Entry.Title, sourceSnapshot.GetProperty("title").GetString());
+        Assert.Equal(f.Entry.Content, sourceSnapshot.GetProperty("content").GetString());
+        Assert.Equal(TimelineFactEvidence.Fingerprint(f.Entry), sourceSnapshot.GetProperty("fingerprint").GetString());
+        Assert.Equal(sourceSnapshot.GetProperty("fingerprint").GetString(), state.GetProperty("proposals")[0].GetProperty("sourceFingerprint").GetString());
+        Assert.False(state.GetProperty("refreshRequired").GetBoolean());
+        var rawId = state.GetProperty("generationId").GetGuid();
+        using var rawAccept = await client.PostAsync($"{path}/fact-proposals/{rawId}/accept", null);
+        Assert.Equal(HttpStatusCode.Conflict, rawAccept.StatusCode);
+        using var planned = await client.PostAsync(path + "/fact-proposals", new StringContent("{}", System.Text.Encoding.UTF8, "application/json"));
+        var reviewId = (await JsonAsync(planned)).GetProperty("proposalId").GetGuid();
+        using var accepted = await client.PostAsync($"{path}/fact-proposals/{reviewId}/accept", null);
+        await JsonAsync(accepted);
+        using var locked = await client.PostAsync(path + "/fact-generation", new StringContent("{}", System.Text.Encoding.UTF8, "application/json"));
+        Assert.Equal(HttpStatusCode.Conflict, locked.StatusCode);
+        using var read = await client.GetAsync(path + "/facts");
+        state = await JsonAsync(read);
+        Assert.Equal("Reconciled", state.GetProperty("lifecycleState").GetString());
+        Assert.False(state.GetProperty("canEdit").GetBoolean());
+        Assert.Equal(sourceSnapshot.GetProperty("fingerprint").GetString(), state.GetProperty("source").GetProperty("fingerprint").GetString());
+        Assert.False(state.GetProperty("refreshRequired").GetBoolean());
     }
 
     [Theory]
@@ -72,6 +131,7 @@ public sealed class TimelineFactHttpTests
     public async Task Exact_64KiB_valid_json_is_allowed(bool chunked)
     {
         await using var h = await TimelineFactHttpHost.CreateAsync();
+        await PendingGenerationProvider.GenerateAsync(h.Db, h.Entry, h.Actor.Id, h.Project.Id);
         using var response = await h.PostAsync(h.Plan, "{}" + new string(' ', 65534), chunked);
         await JsonAsync(response);
         Assert.Equal(1, h.AgentConstructions);
@@ -86,6 +146,7 @@ public sealed class TimelineFactHttpTests
     public async Task Acceptance_rejects_every_supplied_body(bool chunked, string body)
     {
         await using var h = await TimelineFactHttpHost.CreateAsync();
+        await PendingGenerationProvider.GenerateAsync(h.Db, h.Entry, h.Actor.Id, h.Project.Id);
         h.Agent.Result = new() { Additions = [new("Alice owns delivery.", "alice", "Person", "Alice owns delivery.")] };
         using var plan = await h.PostAsync(h.Plan, "{}");
         var id = (await JsonAsync(plan)).GetProperty("proposalId").GetGuid();
@@ -98,6 +159,7 @@ public sealed class TimelineFactHttpTests
     public async Task Activation_is_bodyless_idempotent_source_preserving_and_get_is_safe()
     {
         await using var h = await TimelineFactHttpHost.CreateAsync();
+        await PendingGenerationProvider.GenerateAsync(h.Db, h.Entry, h.Actor.Id, h.Project.Id);
         var source = h.Entry.Content;
         h.Agent.Result = new() { Additions = [new(source, "alice", "Person", source)] };
         using var plan = await h.PostAsync(h.Plan, "{}", true);
@@ -113,7 +175,7 @@ public sealed class TimelineFactHttpTests
         fact.Embedding = new Pgvector.Vector(Enumerable.Repeat(1f, 1536).ToArray());
         fact.EmbeddingModel = "text-embedding-3-small";
         fact.EmbeddedAtUtc = DateTime.UtcNow;
-        var job = await h.Db.TimelineFactJobs.FirstAsync();
+        var job = await h.Db.TimelineFactJobs.FirstAsync(x => x.Kind == "Embedding");
         job.LastErrorCode = "HTTP_SECRET_SENTINEL";
         await h.Db.SaveChangesAsync();
         using var read = await h.Client.GetAsync(h.Facts);
@@ -131,6 +193,7 @@ public sealed class TimelineFactHttpTests
     public async Task Clarification_binds_previous_id_and_question_index_to_stored_proposal()
     {
         await using var h = await TimelineFactHttpHost.CreateAsync();
+        await PendingGenerationProvider.GenerateAsync(h.Db, h.Entry, h.Actor.Id, h.Project.Id);
         h.Agent.Result = new() { Questions = [new("Who owns release?", null)] };
         using var initial = await h.PostAsync(h.Plan, "{}");
         var first = (await JsonAsync(initial)).GetProperty("proposalId").GetGuid();
@@ -155,6 +218,7 @@ public sealed class TimelineFactHttpTests
         h.Agent.Result = new() { Additions = [new(h.Entry.Content, "alice", "Person", h.Entry.Content)] };
         var other = new TimelineEntry { TimelineId = h.Timeline.Id, AuthorId = h.Actor.Id, EntryNumber = 3, Title = "Other", Content = "Other" };
         h.Db.Add(other); await h.Db.SaveChangesAsync();
+        await PendingGenerationProvider.GenerateAsync(h.Db, h.Entry, h.Actor.Id, h.Project.Id);
         using var firstResponse = await h.PostAsync(h.Plan, "{}");
         using var secondResponse = await h.PostAsync(h.Plan, "{}");
         var first = (await JsonAsync(firstResponse)).GetProperty("proposalId").GetGuid();
@@ -178,6 +242,7 @@ public sealed class TimelineFactHttpTests
     public async Task Provider_factory_and_execution_errors_return_safe_502_without_secret_traces(bool factory)
     {
         await using var h = await TimelineFactHttpHost.CreateAsync();
+        await PendingGenerationProvider.GenerateAsync(h.Db, h.Entry, h.Actor.Id, h.Project.Id);
         h.FailFactory = factory;
         h.Agent.Script = () => throw new InvalidOperationException("HTTP_SECRET_SENTINEL provider response");
         using var response = await h.PostAsync(h.Plan, "{}");
@@ -186,7 +251,7 @@ public sealed class TimelineFactHttpTests
         Assert.Contains("Fact provider unavailable", body);
         Assert.DoesNotContain("HTTP_SECRET_SENTINEL", body);
         Assert.DoesNotContain(h.Logs, x => x.Contains("HTTP_SECRET_SENTINEL", StringComparison.Ordinal));
-        Assert.Empty(await h.Db.TimelineFactProposals.ToListAsync());
+        Assert.Equal("Generated", (await h.Db.TimelineFactProposals.SingleAsync()).Status);
     }
 
     [Theory]

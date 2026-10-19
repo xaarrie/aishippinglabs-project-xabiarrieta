@@ -133,7 +133,7 @@ public sealed class LiveModelCredentialsTests
     public void Credential_resolution_and_live_setup_never_mutate_process_environment()
     {
         // Inspect call sites instead of reading or changing the developer's actual environment key.
-        foreach (var type in new[] { typeof(LiveModelCredentials), typeof(OptimizeEntryLiveModelTests), typeof(LiveModelGate) })
+        foreach (var type in new[] { typeof(LiveModelCredentials), typeof(LiveModelGate) })
         foreach (var called in CalledMethods(type))
             Assert.False(called.DeclaringType == typeof(Environment) && called.Name == nameof(Environment.SetEnvironmentVariable),
                 "Live credential setup must not mutate process-global environment.");

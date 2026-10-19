@@ -37,7 +37,7 @@ public sealed class HostedUiTests
         Assert.Contains("function UploadForm", source);
         Assert.Contains("preview", source);
         Assert.Contains("/projects/${projectId}/timelines/${timeline.id}/entries/new", source);
-        Assert.Contains("go(`/projects/${projectId}/timelines/${timelineId}/entries/${id}`)", source);
+        Assert.Contains("go(`/projects/${projectId}/timelines/${timelineId}/entries/${id}`, { state: { entrySave:", source);
         Assert.DoesNotContain("go(`/projects/${projectId}/timelines/${timelineId}`)", source);
         Assert.Contains("const entryNew = path.match", source);
         Assert.Contains("const entryDetail = path.match", source);
@@ -306,17 +306,24 @@ public sealed class HostedUiTests
         Assert.Contains("<legend>Select entries</legend>", workspace);
         Assert.Contains("onRetry={reload}", workspace);
         Assert.Contains("hasData={!!entries.length}", workspace);
-        Assert.Contains("dirty={dirty} onActiveChange={setReviewActive}", workspace);
+        Assert.Contains("dirty={reviewDirty} onActiveChange={setReviewActive}", workspace);
         var factReview = File.ReadAllText(Path.Combine(client, "FactReview.jsx"));
         var factClient = File.ReadAllText(Path.Combine(client, "factReview.js"));
         Assert.Contains("import FactReview from \"./FactReview.jsx\";", source);
-        Assert.Contains("<FactReview key={id} entry={entry} canWrite={canWrite && !saving} dirty={dirty} onActiveChange={setReviewActive} />", workspace);
+        Assert.Contains("<FactReview key={id} entry={entry} canWrite={canWrite && !saving} dirty={reviewDirty} onActiveChange={setReviewActive} onStateChange={setFactState} />", workspace);
+        Assert.Contains("<FactReview key={id} entry={entry} canWrite={canWrite} onActiveChange={setReviewActive} onStateChange={setFacts} />", workspace);
+        Assert.Contains("from \"./entryAccess.js\"", source);
+        Assert.Contains("createEntrySaveAction(factClient)", workspace);
+        Assert.Contains("factReviewActions(factState, { canWrite }).edit", workspace);
         Assert.DoesNotContain("<EntryReview", workspace);
         Assert.DoesNotContain("applyReviewDraft", workspace);
         Assert.DoesNotContain("onSave=", workspace);
         Assert.Contains("client.accept(entry.id, proposal.proposalId, { signal })", factReview);
         Assert.Contains("client.read(entry.id, { signal })", factReview);
-        Assert.Contains("<h4>{entry.title}</h4><pre className=\"entry-content\">{entry.content}</pre>", factReview);
+        Assert.Contains("<h4>{source.title}</h4><pre className=\"entry-content\">{source.content}</pre>", factReview);
+        Assert.Contains("savedFactSource(state, entry.id)", factReview);
+        Assert.Contains("entryMatchesFactSource(entry, source)", workspace);
+        Assert.Contains("Reload saved source (discard draft)", workspace);
         Assert.Contains("Original entry and title are unchanged.", factReview);
         Assert.DoesNotContain("onSave", factReview);
         Assert.DoesNotContain("setEditor", factReview);
@@ -330,53 +337,6 @@ public sealed class HostedUiTests
         Assert.Contains("controller.signal.aborted", workspace);
         Assert.Contains("record-actions", source);
         Assert.Contains("grid-template-columns: var(--ui-grid-workspace)", styles);
-    }
-
-    [Fact]
-    public void Review_presentation_uses_shared_tokens_and_preserves_explicit_evidence_and_save_boundaries()
-    {
-        var root = FindRepositoryRoot(AppContext.BaseDirectory);
-        var client = Path.Combine(root, "dotnet", "src", "ProjectTimeline.UI.WebApi", "ClientApp", "src");
-        var source = File.ReadAllText(Path.Combine(client, "EntryReview.jsx"));
-        var styles = File.ReadAllText(Path.Combine(client, "EntryReview.css"));
-        var tokens = File.ReadAllText(Path.Combine(client, "styles.css"));
-        Assert.Single(Regex.Matches(source, "<h2\\b"));
-        Assert.Contains(">Review</h2>", source);
-        Assert.Contains("<h3>Questions and answers</h3>", source);
-        Assert.Contains("<h3>Editable generated entry preview</h3>", source);
-        Assert.Contains("className=\"review-options\"", source);
-        Assert.Contains("question.suggestedOptions.map", source);
-        Assert.Contains("htmlFor={`${prefix}-previous-${index}`}", source);
-        Assert.Contains("id={`${prefix}-previous-${index}`}", source);
-        Assert.Contains("aria-describedby={[", source);
-        Assert.Contains("side === 'source' ? <del", source);
-        Assert.Contains("<ins key={index}>{part.text}</ins>", source);
-        Assert.DoesNotContain("dangerouslySetInnerHTML", source);
-        Assert.DoesNotContain("<form", source);
-        Assert.Contains("tabIndex={0} aria-label={label}", source);
-        Assert.Contains("Original saved source", source);
-        Assert.Contains("Current generated proposal", source);
-        Assert.Contains("Estimated coverage (0–1)", source);
-        Assert.Contains("inventoried facts", source);
-        Assert.Contains("even when estimated coverage is 1", source);
-        Assert.Contains("Literal quote matches do not verify semantic truth", source);
-        Assert.Contains("{fact.evidenceWarning}", source);
-        Assert.Contains("data.unsupportedAdditions", source);
-        Assert.Contains("className=\"secondary\" onClick={onAudit}", source);
-        Assert.Contains("className=\"primary\" disabled={busy || !canWrite", source);
-        Assert.Contains("className=\"secondary\" disabled={requests.current.saving} onClick={discard}", source);
-        Assert.Contains("var(--ui-focus)", styles);
-        Assert.Contains("var(--ui-diff-delete-ink)", styles);
-        Assert.Contains("var(--ui-diff-insert-surface)", styles);
-        Assert.Contains("--ui-diff-delete-ink: var(--ui-error)", tokens);
-        Assert.Contains("--ui-diff-insert-ink: var(--ui-success)", tokens);
-        Assert.Contains("@media (max-width: 700px)", styles);
-        Assert.Contains("overflow: auto", styles);
-        Assert.Contains("white-space: pre-wrap", styles);
-        Assert.Contains("overflow-wrap: anywhere", styles);
-        Assert.Contains("text-decoration: line-through", styles);
-        Assert.Contains("text-decoration: underline", styles);
-        Assert.DoesNotMatch(new Regex(@"#[0-9a-fA-F]{3,8}|rgba?\("), styles);
     }
 
     private static string FindRepositoryRoot(string start)

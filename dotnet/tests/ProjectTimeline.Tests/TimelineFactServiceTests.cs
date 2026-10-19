@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.Storage;
 using ProjectTimeline.BusinessLogic;
 using ProjectTimeline.DataAccessLogic;
@@ -17,12 +19,13 @@ public sealed class TimelineFactServiceTests
         public User Actor { get; } = new() { Email = "facts@example.test", DisplayName = "Author", PasswordHash = "test" };
         public Project Project { get; } = new() { Code = "P", Name = "Project" };
         public Timeline Timeline { get; } = new() { Code = "T", Name = "Timeline" };
-        public TimelineEntry Entry { get; } = new() { EntryNumber = 1, Title = "Original", Content = "Alice owns delivery. Bob owns testing." };
+        public TimelineEntry Entry { get; private set; } = new() { EntryNumber = 1, Title = "Original", Content = "Alice owns delivery. Bob owns testing." };
         public TimelineFactScope Scope => new(Project.Id, Timeline.Id, Entry.Id);
         public TimelineFactService Service => new(Db);
         public Fixture() => Db = NewContext();
-        public ProjectTimelineDbContext NewContext() => new(new DbContextOptionsBuilder<ProjectTimelineDbContext>()
-            .UseInMemoryDatabase(name, root).Options);
+        public ProjectTimelineDbContext NewContext() => NewContextWith();
+        public ProjectTimelineDbContext NewContextWith(params IInterceptor[] interceptors) => new(new DbContextOptionsBuilder<ProjectTimelineDbContext>()
+            .UseInMemoryDatabase(name, root).AddInterceptors(interceptors).Options);
         public DbContext NewUnguardedContext() => new(new DbContextOptionsBuilder()
             .UseInMemoryDatabase(name, root).UseModel(Db.Model).Options);
         public async Task InitializeAsync()
@@ -44,7 +47,13 @@ public sealed class TimelineFactServiceTests
         {
             var proposal = await PrepareAsync();
             await Service.AcceptAsync(Scope, proposal.Id, Actor.Id, false);
-            return await Db.TimelineFacts.SingleAsync();
+            return await Db.TimelineFacts.SingleAsync(x => x.CreationReviewId == proposal.Id);
+        }
+        public async Task NewSourceAsync()
+        {
+            Entry = new TimelineEntry { TimelineId = Timeline.Id, AuthorId = Actor.Id,
+                EntryNumber = await Db.TimelineEntries.MaxAsync(x => x.EntryNumber) + 1, Title = Entry.Title, Content = Entry.Content };
+            Db.Add(Entry); await Db.SaveChangesAsync();
         }
         public ValueTask DisposeAsync() => Db.DisposeAsync();
     }
@@ -76,11 +85,95 @@ public sealed class TimelineFactServiceTests
         Assert.Equal("Alice owns delivery. Bob owns testing.", f.Entry.Content);
     }
 
+    [Theory]
+    [InlineData(false, "prepare")]
+    [InlineData(true, "prepare")]
+    [InlineData(false, "insert")]
+    [InlineData(true, "insert")]
+    [InlineData(false, "accept")]
+    [InlineData(true, "accept")]
+    [InlineData(false, "context-accept")]
+    [InlineData(true, "context-accept")]
+    public async Task Accepted_entry_rejects_second_reconciliation_at_service_and_context_boundaries(bool empty, string route)
+    {
+        await using var f = new Fixture(); await f.InitializeAsync();
+        var accepted = await f.PrepareAsync(empty ? new([], [], []) : Draft());
+        await f.Service.AcceptAsync(f.Scope, accepted.Id, f.Actor.Id, false);
+        await f.Service.AcceptAsync(f.Scope, accepted.Id, f.Actor.Id, false); // The same accepted ID remains idempotent.
+        if (route == "prepare")
+            await Assert.ThrowsAsync<TimelineFactConflictException>(() => f.PrepareAsync(new([], [], [])));
+        else
+        {
+            var proposal = new TimelineFactProposal { EntryId = f.Entry.Id,
+                SourceFingerprint = TimelineFactEvidence.Fingerprint(f.Entry), ClarificationEvidence = "[]",
+                ExpectedRevision = f.Timeline.FactRevision + (route == "insert" ? 1 : 0) };
+            if (route == "insert")
+            {
+                f.Db.Add(proposal);
+                await Assert.ThrowsAsync<TimelineFactConflictException>(() => f.Db.SaveChangesAsync());
+            }
+            else
+            {
+                // Previously persisted/corrupt pending evidence must not bypass an accepted-entry lock.
+                await using (var raw = f.NewUnguardedContext()) { raw.Add(proposal); await raw.SaveChangesAsync(); }
+                if (route == "accept")
+                    await Assert.ThrowsAsync<TimelineFactConflictException>(() => f.Service.AcceptAsync(f.Scope, proposal.Id, f.Actor.Id, false));
+                else
+                {
+                    f.Db.Attach(proposal); StageAcceptance(f, proposal);
+                    await Assert.ThrowsAsync<TimelineFactConflictException>(() => f.Db.SaveChangesAsync());
+                }
+            }
+        }
+        await using var reader = f.NewContext();
+        Assert.Equal(1, await reader.TimelineFactProposals.CountAsync(x => x.Status == "Accepted"));
+        Assert.Equal(empty ? 0 : 1, await reader.TimelineFacts.CountAsync());
+    }
+
+    private sealed class BeforeSupersession(Action action) : IQueryExpressionInterceptor
+    {
+        public bool Fired { get; private set; }
+        public Expression QueryCompilationStarting(Expression expression, QueryExpressionEventData eventData)
+        {
+            var text = expression.ToString();
+            if (!Fired && text.Contains("\"Pending\"") && text.Contains("\"Generated\""))
+            { Fired = true; action(); }
+            return expression;
+        }
+    }
+
+    [Fact]
+    public async Task Timeline_move_reserves_original_CAS_before_jobless_zero_addition_acceptance_interleaves()
+    {
+        await using var f = new Fixture(); await f.InitializeAsync();
+        var target = new Timeline { ProjectId = f.Project.Id, Code = "TARGET", Name = "Target" };
+        f.Db.Add(target); await f.Db.SaveChangesAsync();
+        var proposal = await f.PrepareAsync(new([], [], []));
+        var baseline = f.Timeline.FactRevision;
+        var gate = new BeforeSupersession(() =>
+        {
+            using var accepting = f.NewContext();
+            new TimelineFactService(accepting).AcceptAsync(f.Scope, proposal.Id, f.Actor.Id, false).GetAwaiter().GetResult();
+        });
+        await using var moving = f.NewContextWith(gate);
+        (await moving.TimelineEntries.SingleAsync()).TimelineId = target.Id;
+        var failure = await Record.ExceptionAsync(() => moving.SaveChangesAsync());
+        Assert.True(gate.Fired); // Actual interleaving, not a static assertion about source text.
+        Assert.IsType<DbUpdateConcurrencyException>(failure);
+        Assert.Equal(baseline, moving.Entry((await moving.Timelines.FindAsync(f.Timeline.Id))!).Property(x => x.FactRevision).OriginalValue);
+        await using var reader = f.NewContext();
+        Assert.Equal("Accepted", (await reader.TimelineFactProposals.SingleAsync()).Status);
+        Assert.Empty(await reader.TimelineFactJobs.ToListAsync()); Assert.Empty(await reader.TimelineFacts.ToListAsync());
+        // InMemory CAS evidence only; relational atomic rollback is covered by the gated PostgreSQL case.
+    }
+
     [Fact]
     public async Task Acceptance_applies_invalidation_and_replacement_together_once()
     {
         await using var f = new Fixture(); await f.InitializeAsync();
         var old = await f.AcceptFactAsync();
+        await f.NewSourceAsync();
+        Assert.NotEqual(old.EntryId, f.Entry.Id);
         var proposal = await f.PrepareAsync(new([new("Bob owns testing", "bob", "Person", "Bob owns testing.")], [new(old.Id, "Replaced", 0)], []));
         Assert.True(old.Valid);
         Assert.Equal(old.Id, Assert.Single(await f.Service.EffectiveAsync(f.Scope, f.Actor.Id, false)).Id);
@@ -102,7 +195,7 @@ public sealed class TimelineFactServiceTests
         await f.Service.AcceptAsync(f.Scope, second.Id, f.Actor.Id, false);
         await Assert.ThrowsAsync<TimelineFactConflictException>(() => f.Service.AcceptAsync(f.Scope, first.Id, f.Actor.Id, false));
         Assert.Single(await f.Db.TimelineFacts.ToListAsync());
-        Assert.Equal("Pending", first.Status);
+        Assert.Equal("Superseded", first.Status);
     }
 
     [Fact]
@@ -132,6 +225,7 @@ public sealed class TimelineFactServiceTests
     {
         await using var f = new Fixture(); await f.InitializeAsync();
         var fact = await f.AcceptFactAsync();
+        await f.NewSourceAsync();
         await Assert.ThrowsAsync<TimelineFactConflictException>(() => f.PrepareAsync(Draft() with { Invalidations = [new(Guid.NewGuid(), "Unknown", 0)] }));
         var foreign = new Timeline { ProjectId = f.Project.Id, Code = "OTHER", Name = "Other" };
         var foreignEntry = new TimelineEntry { TimelineId = foreign.Id, EntryNumber = 1, Title = "Other", Content = f.Entry.Content, AuthorId = f.Actor.Id };
@@ -164,15 +258,119 @@ public sealed class TimelineFactServiceTests
     [InlineData("TimelineId")]
     [InlineData("AuthorId")]
     [InlineData("Status")]
-    public async Task Pending_evidence_protects_source_edits_in_all_save_overloads(string property)
+    public async Task Pending_edits_supersede_evidence_and_restoring_source_never_revives_proposal_in_all_save_overloads(string property)
     {
-        await using var f = new Fixture(); await f.InitializeAsync(); await f.PrepareAsync();
-        f.Db.Entry(f.Entry).Property(property).CurrentValue = property switch
-        { "EntryNumber" => 9, "TimelineId" or "AuthorId" => Guid.NewGuid(), _ => "Changed" };
-        await Assert.ThrowsAsync<TimelineFactConflictException>(() => f.Db.SaveChangesAsync(true));
-        Assert.Throws<TimelineFactConflictException>(() => f.Db.SaveChanges(true));
+        foreach (var mode in SaveModes)
+        {
+            await using var f = new Fixture(); await f.InitializeAsync();
+            var otherTimeline = new Timeline { ProjectId = f.Project.Id, Code = "OTHER", Name = "Other" };
+            var otherAuthor = new User { Email = "other@example.test", DisplayName = "Other", PasswordHash = "test" };
+            f.Db.AddRange(otherTimeline, otherAuthor); await f.Db.SaveChangesAsync();
+            var proposal = await f.PrepareAsync();
+            var original = f.Db.Entry(f.Entry).Property(property).CurrentValue;
+            var changed = property switch
+            { "EntryNumber" => (object)9, "TimelineId" => otherTimeline.Id, "AuthorId" => otherAuthor.Id, _ => "Changed" };
+            f.Db.Entry(f.Entry).Property(property).CurrentValue = changed;
+            await SaveAsync(f.Db, mode);
+            await using (var restore = f.NewContext())
+            {
+                var source = await restore.TimelineEntries.SingleAsync();
+                Assert.Equal(changed, restore.Entry(source).Property(property).CurrentValue);
+                Assert.Equal("Superseded", (await restore.TimelineFactProposals.SingleAsync()).Status);
+                Assert.Empty(await restore.TimelineFacts.ToListAsync());
+                Assert.Equal("Alice owns delivery.", (await restore.TimelineFactAdditions.SingleAsync()).SourceQuote);
+                restore.Entry(source).Property(property).CurrentValue = original;
+                await SaveAsync(restore, mode);
+            }
+            await Assert.ThrowsAsync<TimelineFactConflictException>(() => f.Service.AcceptAsync(f.Scope, proposal.Id, f.Actor.Id, false));
+        }
+    }
+
+    private static readonly string[] SaveModes = ["async", "async-bool", "sync", "sync-bool"];
+    private static async Task SaveAsync(ProjectTimelineDbContext db, string mode)
+    {
+        switch (mode)
+        {
+            case "async": await db.SaveChangesAsync(); break;
+            case "async-bool": await db.SaveChangesAsync(true); break;
+            case "sync": db.SaveChanges(); break;
+            case "sync-bool": db.SaveChanges(true); break;
+            default: throw new ArgumentException("Unknown test save mode.");
+        }
+    }
+
+    [Theory]
+    [InlineData("Title")]
+    [InlineData("Content")]
+    [InlineData("EntryNumber")]
+    [InlineData("TimelineId")]
+    [InlineData("AuthorId")]
+    [InlineData("Status")]
+    public async Task Accepted_evidence_keeps_source_locked_in_all_save_overloads(string property)
+    {
+        foreach (var mode in SaveModes)
+        {
+            await using var f = new Fixture(); await f.InitializeAsync(); await f.AcceptFactAsync();
+            f.Db.Entry(f.Entry).Property(property).CurrentValue = property switch
+            { "EntryNumber" => 9, "TimelineId" or "AuthorId" => Guid.NewGuid(), _ => "Changed" };
+            await Assert.ThrowsAsync<TimelineFactConflictException>(() => SaveAsync(f.Db, mode));
+            await using var reader = f.NewContext();
+            Assert.Equal(TimelineFactEvidence.Fingerprint(await reader.TimelineEntries.SingleAsync()), (await reader.TimelineFactProposals.SingleAsync()).SourceFingerprint);
+            Assert.Single(await reader.TimelineFacts.ToListAsync());
+        }
+    }
+
+    [Theory]
+    [InlineData("async")]
+    [InlineData("async-bool")]
+    [InlineData("sync")]
+    [InlineData("sync-bool")]
+    public async Task Accepted_zero_addition_reconciliation_also_locks_source(string mode)
+    {
+        await using var f = new Fixture(); await f.InitializeAsync();
+        var proposal = await f.PrepareAsync(new([], [], []));
+        await f.Service.AcceptAsync(f.Scope, proposal.Id, f.Actor.Id, false);
+        f.Entry.Title = "Changed";
+        await Assert.ThrowsAsync<TimelineFactConflictException>(() => SaveAsync(f.Db, mode));
         await using var reader = f.NewContext();
         Assert.Equal("Original", (await reader.TimelineEntries.SingleAsync()).Title);
+        Assert.Empty(await reader.TimelineFacts.ToListAsync());
+        Assert.Equal("Accepted", (await reader.TimelineFactProposals.SingleAsync()).Status);
+    }
+
+    private sealed class EditingProvider(Func<Task> edit) : ITimelineFactProvider
+    {
+        public string ExtractionModel => "fake";
+        public async Task<IReadOnlyList<TimelineFactCandidate>> ExtractAsync(TimelineFactExtraction source, CancellationToken ct)
+        { await edit(); return Draft().Additions; }
+        public Task<float[]> EmbedAsync(string claim, CancellationToken ct) => throw new InvalidOperationException("No embeddings before acceptance.");
+    }
+
+    [Theory]
+    [InlineData("async")]
+    [InlineData("async-bool")]
+    [InlineData("sync")]
+    [InlineData("sync-bool")]
+    public async Task Pending_edit_revokes_inflight_worker_even_after_source_restoration(string mode)
+    {
+        await using var f = new Fixture(); await f.InitializeAsync();
+        var job = TimelineFactProcessing.NewExtractionJob(f.Entry);
+        f.Db.Add(job); await f.Db.SaveChangesAsync();
+        var provider = new EditingProvider(async () =>
+        {
+            await using var edit = f.NewContext();
+            var source = await edit.TimelineEntries.SingleAsync();
+            var original = source.Content;
+            source.Content = "Changed"; await SaveAsync(edit, mode);
+            source.Content = original; await SaveAsync(edit, mode);
+        });
+        var worker = new TimelineFactProcessing(f.NewContext, provider);
+        Assert.Equal("LostLease", await worker.ProcessAsync(job.Id, "old-worker"));
+        Assert.Equal("Superseded", await worker.ProcessAsync(job.Id, "restart"));
+        await using var reader = f.NewContext();
+        Assert.Equal("Superseded", (await reader.TimelineFactJobs.SingleAsync()).State);
+        Assert.Empty(await reader.TimelineFactProposals.ToListAsync());
+        Assert.Empty(await reader.TimelineFacts.ToListAsync());
     }
 
     [Fact]
@@ -265,6 +463,7 @@ public sealed class TimelineFactServiceTests
     {
         await using var f = new Fixture(); await f.InitializeAsync();
         var old = await f.AcceptFactAsync();
+        await f.NewSourceAsync();
         var draft = new TimelineFactDraft([new("Bob owns testing", "bob", "Person", "Bob owns testing.")],
             [new(old.Id, "Replaced", 0)], scenario == "unanswered" ? [new("Who approved?", null)] : []);
         var proposal = await f.PrepareAsync(draft);
@@ -282,7 +481,7 @@ public sealed class TimelineFactServiceTests
             f.Db.ChangeTracker.Entries<TimelineFact>().Single(x => x.State == EntityState.Added).Entity.SourceQuote = "Unrelated quote";
         await Assert.ThrowsAsync<TimelineFactConflictException>(() => f.Db.SaveChangesAsync());
         await using var reader = f.NewContext();
-        Assert.Equal("Pending", (await reader.TimelineFactProposals.SingleAsync(x => x.Id == proposal.Id)).Status);
+        Assert.Equal(scenario == "stale" ? "Superseded" : "Pending", (await reader.TimelineFactProposals.SingleAsync(x => x.Id == proposal.Id)).Status);
         Assert.True((await reader.TimelineFacts.SingleAsync()).Valid);
     }
 
@@ -326,9 +525,11 @@ public sealed class TimelineFactServiceTests
     {
         await using var f = new Fixture(); await f.InitializeAsync();
         var old = await f.AcceptFactAsync();
+        await f.NewSourceAsync();
         var second = await f.PrepareAsync();
         await f.Service.AcceptAsync(f.Scope, second.Id, f.Actor.Id, false);
         var unrelated = await f.Db.TimelineFacts.SingleAsync(x => x.Id != old.Id);
+        await f.NewSourceAsync();
         var proposal = await f.PrepareAsync(new([new("Bob owns testing", "bob", "Person", "Bob owns testing.")], [new(old.Id, "Replaced", 0)], []));
         StageAcceptance(f, proposal, old);
         unrelated.Valid = false; unrelated.InvalidatedAtUtc = proposal.AcceptedAtUtc; unrelated.InvalidationReviewId = proposal.Id;
@@ -342,6 +543,7 @@ public sealed class TimelineFactServiceTests
     {
         await using var f = new Fixture(); await f.InitializeAsync();
         var old = await f.AcceptFactAsync();
+        await f.NewSourceAsync();
         var proposal = await f.PrepareAsync(new([new("Bob owns testing", "bob", "Person", "Bob owns testing.")], [new(old.Id, "Replaced", 0)], []));
         StageAcceptance(f, proposal, old);
         await f.Db.SaveChangesAsync();
@@ -349,10 +551,10 @@ public sealed class TimelineFactServiceTests
     }
 
     [Fact]
-    public async Task Extraction_job_has_retry_lease_and_version_state_and_protects_source()
+    public async Task Extraction_job_retains_retry_history_and_revokes_lease_on_pending_source_edit()
     {
         await using var f = new Fixture(); await f.InitializeAsync();
-        var job = new TimelineFactJob { EntryId = f.Entry.Id, WorkKey = $"extract:{f.Entry.Id:N}", SourceFingerprint = TimelineFactEvidence.Fingerprint(f.Entry) };
+        var job = new TimelineFactJob { EntryId = f.Entry.Id, WorkKey = $"extraction:{f.Entry.Id:N}", SourceFingerprint = TimelineFactEvidence.Fingerprint(f.Entry) };
         f.Db.TimelineFactJobs.Add(job); await f.Db.SaveChangesAsync();
         var version = job.Version;
         job.Attempts = 1; job.State = "Retry"; job.NextAttemptAtUtc = DateTime.UtcNow.AddMinutes(1);
@@ -360,6 +562,10 @@ public sealed class TimelineFactServiceTests
         await f.Db.SaveChangesAsync();
         Assert.NotEqual(version, job.Version);
         f.Entry.Content = "Changed";
-        await Assert.ThrowsAsync<TimelineFactConflictException>(() => f.Db.SaveChangesAsync());
+        await f.Db.SaveChangesAsync();
+        Assert.Equal("Superseded", job.State);
+        Assert.Null(job.LeaseOwner); Assert.Null(job.LeaseExpiresAtUtc);
+        Assert.Equal(1, job.Attempts); Assert.Equal("provider_timeout", job.LastErrorCode);
+        Assert.Empty(await f.Db.TimelineFacts.ToListAsync());
     }
 }

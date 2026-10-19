@@ -1,5 +1,3 @@
-using ProjectTimeline.BusinessLogic.Agents.Tools;
-using System.ComponentModel;
 using System.Text.Json;
 
 namespace ProjectTimeline.Tests.AgentTests.Support;
@@ -38,7 +36,7 @@ internal sealed class FakeConversationRepository
     // Failure controls and read evidence are deliberately not persisted entry state.
     public string CaptureState() => JsonSerializer.Serialize(new { Entries, Snapshots });
 
-    public FakeOptimizationAgentTools SelectAnchor(Guid timelineId, Guid currentEntryId)
+    public ConversationWindow SelectAnchor(Guid timelineId, Guid currentEntryId)
         => new(this, timelineId, currentEntryId);
 
     internal List<Guid> ReadIds(Guid timelineId, Guid currentEntryId)
@@ -63,7 +61,7 @@ internal sealed class FakeConversationRepository
     {
         var current = Entries.SingleOrDefault(entry => entry.TimelineId == timelineId && entry.Id == currentEntryId)
             ?? throw new InvalidOperationException("Current entry was not found in the selected timeline.");
-        // Match the production boundary rule: ignore entire malformed/current/future snapshots.
+        // Ignore entire malformed/current/future snapshots when selecting fixture context.
         var boundary = Snapshots.Where(snapshot => snapshot.TimelineId == timelineId && snapshot.EntryIds.Count > 0)
             .Where(snapshot => snapshot.EntryIds.All(id => Entries.Any(entry => entry.Id == id && entry.TimelineId == timelineId)))
             .Select(snapshot => snapshot.EntryIds.Max(id => Entries.Single(entry => entry.Id == id).Sequence))
@@ -76,14 +74,12 @@ internal sealed class FakeConversationRepository
     }
 }
 
-/// <summary>Only context access is faked; this adapter never produces an optimized entry.</summary>
-internal sealed class FakeOptimizationAgentTools(
-    FakeConversationRepository repository, Guid timelineId, Guid currentEntryId) : IOptimizationAgentTools
+/// <summary>Read-only fixture window; not an agent tool or a production retrieval contract.</summary>
+internal sealed class ConversationWindow(
+    FakeConversationRepository repository, Guid timelineId, Guid currentEntryId)
 {
-    [Description("Returns chronological entry IDs after the latest preceding snapshot boundary, through the current entry inclusive. No future entries are available.")]
     public Task<List<Guid>> get_entry_ids() => Task.FromResult(repository.ReadIds(timelineId, currentEntryId));
 
-    [Description("Returns persisted content for an entry in the current review context. Use get_entry_ids to discover allowed IDs.")]
-    public Task<string> fetch_entry([Description("Entry ID from get_entry_ids.")] Guid entryId)
+    public Task<string> fetch_entry(Guid entryId)
         => Task.FromResult(repository.ReadEntry(timelineId, currentEntryId, entryId));
 }

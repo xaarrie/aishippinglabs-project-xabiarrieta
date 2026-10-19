@@ -1,6 +1,4 @@
 using Microsoft.Extensions.AI;
-using System.Text.Json;
-using ProjectTimeline.BusinessLogic.Agents.AgentModels;
 
 namespace ProjectTimeline.Tests.AgentTests.Support;
 
@@ -10,8 +8,7 @@ internal sealed class HarnessScriptedTransport(IReadOnlyList<FunctionCallContent
     public int Requests { get; private set; }
     public List<ChatOptions> Options { get; } = [];
     public List<IReadOnlyList<ChatMessage>> Messages { get; } = [];
-    public static EntryReviewResult WireDraft => new(Status.Ready, [],
-        new("Synthetic transport draft", "Not model quality evidence.", [], [], [], []), [], "Transport control only.");
+    private const string WireResponse = """{"message":"Synthetic transport control only; not model quality evidence."}""";
 
     public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null,
         CancellationToken cancellationToken = default)
@@ -23,7 +20,7 @@ internal sealed class HarnessScriptedTransport(IReadOnlyList<FunctionCallContent
             throw new InvalidOperationException("Unexpected follow-up model request in scripted harness control.");
         var message = index < batches.Count
             ? new ChatMessage(ChatRole.Assistant, batches[index].Cast<AIContent>().ToList())
-            : new ChatMessage(ChatRole.Assistant, JsonSerializer.Serialize(WireDraft));
+            : new ChatMessage(ChatRole.Assistant, WireResponse);
         return Task.FromResult(new ChatResponse(message) { ResponseId = $"wire-{index}" });
     }
 

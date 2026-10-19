@@ -31,8 +31,19 @@ public sealed class TimelineFactInitializerTests
     {
         private readonly string database = Guid.NewGuid().ToString();
         private readonly InMemoryDatabaseRoot root = new();
-        public ProjectTimelineDbContext NewContext() => new(new DbContextOptionsBuilder<ProjectTimelineDbContext>()
-            .UseInMemoryDatabase(database, root).Options);
+        public Func<Task>? AfterCompletion { get; set; }
+        public ProjectTimelineDbContext NewContext()
+        {
+            var db = new ProjectTimelineDbContext(new DbContextOptionsBuilder<ProjectTimelineDbContext>()
+                .UseInMemoryDatabase(database, root).Options);
+            db.SavedChanges += (_, _) =>
+            {
+                if (AfterCompletion is { } callback && db.ChangeTracker.Entries<TimelineFactJob>()
+                    .Any(x => x.Entity.Kind == "Extraction" && x.Entity.State == "Completed"))
+                { AfterCompletion = null; callback().GetAwaiter().GetResult(); }
+            };
+            return db;
+        }
         // Historical rows are deliberately seeded outside current write guards, never by weakening them.
         public DbContext Raw()
         {
@@ -77,7 +88,7 @@ public sealed class TimelineFactInitializerTests
     }
 
     [Fact]
-    public async Task Apply_saves_direct_extraction_and_repeat_never_bills_or_drains_embeddings()
+    public async Task Apply_saves_pending_candidates_and_repeat_never_bills_or_drains_embeddings()
     {
         await using var f = new Fixture();
         await f.InitializeAsync();
@@ -85,21 +96,65 @@ public sealed class TimelineFactInitializerTests
         await f.RunAsync();
         Assert.Equal("Saved", Assert.Single(f.Results).Outcome);
         await using var db = f.NewContext();
-        var fact = Assert.Single(await db.TimelineFacts.ToListAsync());
-        Assert.Empty(await db.TimelineFactProposals.ToListAsync());
-        Assert.Empty(await db.TimelineFactAdditions.ToListAsync());
-        Assert.Null(fact.CreationReviewId);
-        Assert.Null(fact.AdditionId);
-        var extraction = await db.TimelineFactJobs.SingleAsync(x => x.Kind == "Extraction");
+        Assert.Empty(await db.TimelineFacts.ToListAsync());
+        var proposal = Assert.Single(await db.TimelineFactProposals.ToListAsync());
+        var addition = Assert.Single(await db.TimelineFactAdditions.ToListAsync());
+        var extraction = await db.TimelineFactJobs.SingleAsync();
         Assert.Equal("Completed", extraction.State);
-        Assert.Equal(extraction.Id, fact.ExtractionJobId);
-        Assert.Equal(TimelineFactEvidence.Fingerprint(entry), fact.SourceFingerprint);
-        Assert.Single(await new TimelineFactService(db).EffectiveAsync(new(f.Project.Id, f.Timeline.Id, entry.Id), f.Actor.Id, false));
-        Assert.Equal("Pending", (await db.TimelineFactJobs.SingleAsync(x => x.Kind == "Embedding")).State);
+        Assert.Equal(extraction.Id, proposal.Id);
+        Assert.Equal("Generated", proposal.Status);
+        Assert.Equal(proposal.Id, addition.ProposalId);
+        Assert.Equal(TimelineFactEvidence.Fingerprint(entry), proposal.SourceFingerprint);
+        Assert.Equal(TimelineFactEvidence.ResultHash([TimelineFactEvidence.CandidateEvidence(addition)]), extraction.ExtractionResultHash);
+        Assert.Empty(await new TimelineFactService(db).EffectiveAsync(new(f.Project.Id, f.Timeline.Id, entry.Id), f.Actor.Id, false));
+        Assert.Empty(await db.TimelineFactJobs.Where(x => x.Kind == "Embedding").ToListAsync());
         Assert.Equal(entry.Content, (await db.TimelineEntries.SingleAsync()).Content);
         await f.RunAsync();
         Assert.Equal(1, f.Provider.Calls);
-        Assert.Single(await db.TimelineFacts.ToListAsync());
+        Assert.Equal("ExistingWork", f.Results[^1].Outcome);
+        Assert.Single(await db.TimelineFactAdditions.ToListAsync());
+        Assert.Empty(await db.TimelineFacts.ToListAsync());
+    }
+
+    [Theory]
+    [InlineData("source")]
+    [InlineData("proposal")]
+    [InlineData("job")]
+    [InlineData("hash")]
+    [InlineData("missing-hash")]
+    [InlineData("fingerprint")]
+    [InlineData("revision")]
+    [InlineData("accepted-zero")]
+    [InlineData("regenerated")]
+    public async Task Completion_reporting_never_counts_stale_or_superseded_candidates(string change)
+    {
+        await using var f = new Fixture(); await f.InitializeAsync();
+        var entry = await f.AddAsync(1);
+        f.AfterCompletion = () => GeneratedCompletionChanges.ApplyAsync(f.NewContext, f.Raw,
+            new(f.Project.Id, f.Timeline.Id, entry.Id), f.Actor.Id, change);
+        await f.RunAsync();
+        Assert.Equal("Stale", Assert.Single(f.Results).Outcome);
+        Assert.Equal(1, f.Provider.Calls);
+        await using var db = f.NewContext(); Assert.Empty(await db.TimelineFacts.ToListAsync());
+    }
+
+    [Fact]
+    public async Task Historical_effective_extraction_is_untouched_without_provider_calls()
+    {
+        await using var f = new Fixture(); await f.InitializeAsync();
+        var entry = await f.AddAsync(1);
+        var job = TimelineFactProcessing.NewExtractionJob(entry);
+        var fact = new TimelineFact { EntryId = entry.Id, ExtractionJobId = job.Id, SourceFingerprint = job.SourceFingerprint,
+            Claim = "Alice owns delivery", EntityKey = "alice", EntityType = "Person", SourceQuote = entry.Content };
+        fact.CandidateKey = TimelineFactEvidence.CandidateKey(fact);
+        job.State = "Completed"; job.ExtractionResultHash = TimelineFactEvidence.ResultHash([fact]);
+        await using (var historical = f.Raw()) { historical.AddRange(job, fact); await historical.SaveChangesAsync(); }
+        await f.RunAsync();
+        Assert.Empty(f.Results); Assert.Equal(0, f.ProviderCreations); Assert.Equal(0, f.Provider.Calls);
+        await using var db = f.NewContext();
+        Assert.Equal(job.Version, (await db.TimelineFactJobs.SingleAsync()).Version);
+        Assert.Equal(fact.Id, Assert.Single(await new TimelineFactService(db).EffectiveAsync(new(f.Project.Id, f.Timeline.Id, entry.Id), f.Actor.Id, false)).Id);
+        Assert.Empty(await db.TimelineFactProposals.ToListAsync());
     }
 
     [Fact]
@@ -185,6 +240,10 @@ public sealed class TimelineFactInitializerTests
         var entry = await f.AddAsync(1);
         await f.RunAsync();
         await using var db = f.NewContext();
+        var service = new TimelineFactService(db);
+        var accepted = await service.PrepareAsync(new(f.Project.Id, f.Timeline.Id, entry.Id), f.Actor.Id, false,
+            await db.Timelines.Select(x => x.FactRevision).SingleAsync(), new(f.Provider.Claims, [], []));
+        await service.AcceptAsync(new(f.Project.Id, f.Timeline.Id, entry.Id), accepted.Id, f.Actor.Id, false);
         var fact = await db.TimelineFacts.SingleAsync();
         // Put the replacement in a later entry so the original entry has ONLY an invalid
         // physical fact: a valid same-entry replacement would mask this eligibility check.
@@ -239,11 +298,12 @@ public sealed class TimelineFactInitializerTests
         await f.RunAsync();
         Assert.Equal(allowed ? "Saved" : "AccessDenied", Assert.Single(f.Results).Outcome);
         Assert.Equal(allowed ? 1 : 0, f.Provider.Calls);
-        Assert.Equal(allowed ? 1 : 0, await db.TimelineFacts.CountAsync());
+        Assert.Empty(await db.TimelineFacts.ToListAsync());
+        Assert.Equal(allowed ? 1 : 0, await db.TimelineFactAdditions.CountAsync());
     }
 
     [Fact]
-    public async Task Revoked_access_during_extraction_prevents_direct_persistence()
+    public async Task Revoked_access_during_extraction_prevents_candidate_persistence()
     {
         await using var f = new Fixture();
         await f.InitializeAsync();
@@ -320,7 +380,8 @@ public sealed class TimelineFactInitializerTests
         Assert.Equal("ExistingWork", f.Results[^1].Outcome);
         Assert.Equal(1, f.Provider.Calls);
         await using var db = f.NewContext();
-        Assert.Empty(await db.TimelineFactProposals.ToListAsync());
+        Assert.Equal("Generated", (await db.TimelineFactProposals.SingleAsync()).Status);
+        Assert.Empty(await db.TimelineFactAdditions.ToListAsync());
         Assert.Empty(await db.TimelineFacts.ToListAsync());
     }
 
@@ -337,7 +398,9 @@ public sealed class TimelineFactInitializerTests
         Assert.Equal(["ExtractionFailed", "Saved"], f.Results.Select(x => x.Outcome));
         await using var db = f.NewContext();
         Assert.Equal("Unavailable", (await db.TimelineFactJobs.SingleAsync(x => x.State == "Retry")).LastErrorCode);
-        Assert.Single(await db.TimelineFacts.ToListAsync());
+        Assert.Empty(await db.TimelineFacts.ToListAsync());
+        Assert.Single(await db.TimelineFactProposals.ToListAsync());
+        Assert.Single(await db.TimelineFactAdditions.ToListAsync());
     }
 
     [Fact]
@@ -447,7 +510,8 @@ public sealed class TimelineFactInitializerTests
         {
             Assert.Empty(await db.TimelineFacts.Where(x => x.EntryId == first.Id).ToListAsync());
             Assert.Equal("Retry", (await db.TimelineFactJobs.SingleAsync(x => x.EntryId == first.Id)).State);
-            Assert.Empty(await db.TimelineFactProposals.ToListAsync());
+            Assert.Empty(await db.TimelineFactProposals.Where(x => x.EntryId == first.Id).ToListAsync());
+            Assert.Equal(2, await db.TimelineFactProposals.CountAsync(x => x.Status == "Generated"));
         }
         await f.RunAsync();
         Assert.Equal(4, f.Provider.Calls); // New entry processed; first entry's retry is not silently resumed.
@@ -526,7 +590,9 @@ public sealed class TimelineFactInitializerTests
         output.GetStringBuilder().Clear();
         Assert.Equal(0, await InitializerProgram.ExecuteAsync(["--help"], _ => throw new Exception("Must not read environment"), output));
         Assert.Contains("WouldSave", output.ToString());
-        Assert.Contains("without proposals or acceptance", output.ToString());
+        Assert.Contains("Saved means nonempty pending evidence, not active facts", output.ToString());
+        Assert.Contains("Activation requires explicit reconciliation acceptance elsewhere", output.ToString());
+        Assert.Contains("never accepts or queues embeddings", output.ToString());
         Assert.DoesNotContain("automatic acceptance", output.ToString());
     }
 
@@ -545,5 +611,49 @@ public sealed class TimelineFactInitializerTests
         Assert.Contains("TimelineEntryFacts", entriesSql);
         Assert.Contains("NOT EXISTS", entriesSql);
         Assert.DoesNotContain("\"Valid\"", entriesSql);
+    }
+}
+
+internal static class GeneratedCompletionChanges
+{
+    // Inject after the worker's successful durable save but before the runner reads its outcome.
+    public static async Task ApplyAsync(Func<ProjectTimelineDbContext> create, Func<DbContext> raw,
+        TimelineFactScope scope, Guid actor, string change)
+    {
+        if (change == "source")
+        {
+            await using var db = create(); var source = await db.TimelineEntries.SingleAsync(x => x.Id == scope.EntryId);
+            var content = source.Content; source.Content = "Changed"; await db.SaveChangesAsync();
+            source.Content = content; await db.SaveChangesAsync();
+        }
+        else if (change == "accepted-zero")
+        {
+            await using var db = create(); var service = new TimelineFactService(db);
+            var proposal = await service.PrepareAsync(scope, actor, false,
+                await db.Timelines.Where(x => x.Id == scope.TimelineId).Select(x => x.FactRevision).SingleAsync(), new([], [], []));
+            await service.AcceptAsync(scope, proposal.Id, actor, false);
+        }
+        else if (change == "regenerated")
+        {
+            await using var db = create(); var id = await db.TimelineFactJobs.Where(x => x.EntryId == scope.EntryId).Select(x => x.Id).SingleAsync();
+            await new TimelineFactProcessing(create, new PendingGenerationProvider()).RequestGenerationAsync(scope, actor, false, true, id);
+        }
+        else
+        {
+            // Simulate inconsistent external writes without weakening production provenance guards.
+            await using var db = raw(); var job = await db.Set<TimelineFactJob>().SingleAsync(x => x.EntryId == scope.EntryId);
+            var proposal = await db.Set<TimelineFactProposal>().SingleAsync(x => x.Id == job.Id);
+            switch (change)
+            {
+                case "proposal": proposal.Status = "Superseded"; break;
+                case "job": job.State = "Superseded"; break;
+                case "hash": job.ExtractionResultHash = "wrong"; break;
+                case "missing-hash": job.ExtractionResultHash = null; break;
+                case "fingerprint": proposal.SourceFingerprint = "wrong"; break;
+                case "revision": proposal.ExpectedRevision++; break;
+                default: throw new ArgumentException("Unknown test mutation.");
+            }
+            await db.SaveChangesAsync();
+        }
     }
 }

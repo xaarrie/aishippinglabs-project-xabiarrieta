@@ -59,7 +59,8 @@ public sealed class TimelineFactRetryRunner(Func<ProjectTimelineDbContext> creat
         TimelineFactJob job;
         await using (var db = createContext())
         {
-            var jobs = await db.TimelineFactJobs.AsNoTracking().Where(x => x.EntryId == selected.Id).Take(2).ToListAsync(ct);
+            var jobs = await db.TimelineFactJobs.AsNoTracking().Where(x => x.EntryId == selected.Id && x.Kind == "Extraction"
+                && x.State != "Superseded").Take(2).ToListAsync(ct);
             if (jobs.Count != 1) return "ExistingWork";
             job = jobs[0];
         }
@@ -108,8 +109,8 @@ public sealed class TimelineFactRetryRunner(Func<ProjectTimelineDbContext> creat
         if (stored is null || stored.State != "Completed" || stored.Attempts != job.Attempts + 1
             || stored.SourceFingerprint != job.SourceFingerprint || stored.LeaseOwner is not null
             || stored.LeaseExpiresAtUtc is not null) return "Stale";
-        // The same durable retry job completed direct persistence. Embedding jobs are queued, never run here.
-        return await completed.TimelineFacts.AnyAsync(x => x.ExtractionJobId == job.Id, ct) ? "Saved" : "Empty";
+        // Saved reports only current pending candidate evidence from this invocation, never effective facts.
+        return await GeneratedExtractionOutcome.ReadAsync(completed, selected, job.Id, ct);
     }
 
     private async Task<string?> CheckAsync(TimelineEntry selected, TimelineFactJob original,
@@ -122,11 +123,11 @@ public sealed class TimelineFactRetryRunner(Func<ProjectTimelineDbContext> creat
             || TimelineFactEvidence.Fingerprint(entry) != TimelineFactEvidence.Fingerprint(selected)
             || TimelineFactEvidence.Fingerprint(entry) != original.SourceFingerprint) return "Stale";
         if (await db.TimelineFacts.AnyAsync(x => x.EntryId == entry.Id, ct)
-            || await db.TimelineFactProposals.AnyAsync(x => x.EntryId == entry.Id, ct)
-            || await db.TimelineFactJobs.AnyAsync(x => x.EntryId == entry.Id && x.Id != original.Id, ct)) return "ExistingWork";
+            || await db.TimelineFactProposals.AnyAsync(x => x.EntryId == entry.Id && x.Status != "Superseded", ct)
+            || await db.TimelineFactJobs.AnyAsync(x => x.EntryId == entry.Id && x.Id != original.Id && x.State != "Superseded", ct)) return "ExistingWork";
         var job = await db.TimelineFactJobs.AsNoTracking().SingleOrDefaultAsync(x => x.Id == original.Id, ct);
         if (job is null || job.EntryId != entry.Id || job.Kind != "Extraction" || job.FactId is not null
-            || job.WorkKey != $"extraction:{entry.Id:N}" || job.SourceFingerprint != original.SourceFingerprint) return "Stale";
+            || !TimelineFactEvidence.ExtractionKey(job) || job.SourceFingerprint != original.SourceFingerprint) return "Stale";
         if (job.Model != "unassigned" && job.Model != extractionModel) return "IncompatibleModel";
         if (job.State != stage) return stage == "Retry" ? "ExistingWork" : "Stale";
         var now = DateTime.UtcNow;
@@ -163,7 +164,7 @@ public sealed class TimelineFactRetryRunner(Func<ProjectTimelineDbContext> creat
         {
             await check(ct);
             var result = await inner.ExtractAsync(source, ct);
-            await check(ct); // Also recheck the invoking actor and eligibility before direct persistence.
+            await check(ct); // Also recheck the invoking actor and eligibility before candidate persistence.
             return result;
         }
         public Task<float[]> EmbedAsync(string claim, CancellationToken ct) => throw new InvalidOperationException("Retry never embeds.");

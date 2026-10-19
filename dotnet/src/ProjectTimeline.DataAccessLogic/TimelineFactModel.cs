@@ -8,6 +8,9 @@ public static class TimelineFactModel
     public static void Configure(ModelBuilder b, bool postgres)
     {
         b.Entity<Timeline>().Property(x => x.FactRevision).IsConcurrencyToken();
+        // Existing columns are compare-and-swap tokens; this needs no schema migration.
+        foreach (var name in new[] { "Title", "Content", "TimelineId", "EntryNumber", "AuthorId", "Status", "CreatedAtUtc" })
+            b.Entity<TimelineEntry>().Property(name).IsConcurrencyToken();
         var fact = b.Entity<TimelineFact>();
         fact.ToTable("TimelineEntryFacts", t => t.HasCheckConstraint("CK_TimelineEntryFacts_Origin",
             "(\"ExtractionJobId\" IS NULL AND \"CandidateKey\" IS NULL AND \"CreationReviewId\" IS NOT NULL AND \"AdditionId\" IS NOT NULL) OR (\"ExtractionJobId\" IS NOT NULL AND \"CandidateKey\" IS NOT NULL AND \"CreationReviewId\" IS NULL AND \"AdditionId\" IS NULL AND \"SourceKind\" = 'Entry' AND \"ClarificationEvidence\" = '')"));

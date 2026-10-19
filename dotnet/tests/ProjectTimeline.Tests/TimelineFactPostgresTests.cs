@@ -1,4 +1,5 @@
 using System.Data;
+using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -213,6 +214,14 @@ public sealed class TimelineFactPostgresTests
             await new TimelineFactService(db).AcceptAsync(seed.Scope, first, seed.Actor, false);
             old = await db.TimelineFacts.Select(x => x.Id).SingleAsync();
         }
+        await using (var db = database.Context())
+        {
+            var source = await db.TimelineEntries.SingleAsync();
+            var correction = new TimelineEntry { TimelineId = source.TimelineId, AuthorId = seed.Actor, EntryNumber = 2,
+                Title = source.Title, Content = source.Content };
+            db.Add(correction); await db.SaveChangesAsync();
+            seed = seed with { Scope = seed.Scope with { EntryId = correction.Id } };
+        }
         var replacement = await PrepareAsync(database, seed, new([new("Bob owns testing", "bob", "Person", "Bob owns testing.")], [new(old, "Replaced", 0)], []));
         long revision;
         await using (var db = database.Context()) revision = await db.Timelines.Select(x => x.FactRevision).SingleAsync();
@@ -288,7 +297,51 @@ public sealed class TimelineFactPostgresTests
         await using var reader = database.Context();
         Assert.Equal(job, (await reader.TimelineFactProposals.SingleAsync()).Id);
         Assert.Empty(await reader.TimelineFacts.ToListAsync());
-        Assert.Equal("Pending", (await reader.TimelineFactProposals.SingleAsync()).Status);
+        Assert.Equal("Generated", (await reader.TimelineFactProposals.SingleAsync()).Status);
+        Assert.Single(await reader.TimelineFactAdditions.ToListAsync());
+        Assert.Single(await reader.TimelineFactJobs.ToListAsync());
         Assert.Equal(0, provider.Embeddings);
+    });
+
+    private sealed class AcceptBeforeSupersession(Func<Task> accept) : DbCommandInterceptor
+    {
+        public bool Fired { get; private set; }
+        public override async ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command,
+            CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken ct = default)
+        {
+            if (!Fired && command.CommandText.Contains("TimelineFactProposals")
+                && command.CommandText.Contains("'Pending'") && command.CommandText.Contains("'Generated'"))
+            { Fired = true; await accept(); }
+            return result;
+        }
+    }
+
+    [TimelineFactPostgresFact]
+    public Task Timeline_move_racing_zero_addition_acceptance_rolls_back_on_original_timeline_CAS() => RunAsync(async database =>
+    {
+        var seed = await SeedAsync(database);
+        var id = await PrepareAsync(database, seed, new([], [], []));
+        Guid targetId;
+        await using (var db = database.Context())
+        {
+            var target = new Timeline { ProjectId = seed.Scope.ProjectId, Code = "TARGET", Name = "Target" };
+            db.Add(target); await db.SaveChangesAsync(); targetId = target.Id;
+        }
+        var gate = new AcceptBeforeSupersession(async () =>
+        {
+            await using var accepting = database.Context();
+            await new TimelineFactService(accepting).AcceptAsync(seed.Scope, id, seed.Actor, false);
+        });
+        await using (var moving = database.Context(gate))
+        {
+            (await moving.TimelineEntries.SingleAsync()).TimelineId = targetId;
+            await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => moving.SaveChangesAsync());
+            Assert.True(gate.Fired);
+        }
+        await using var reader = database.Context();
+        Assert.Equal(seed.Scope.TimelineId, (await reader.TimelineEntries.SingleAsync()).TimelineId);
+        Assert.Equal("Accepted", (await reader.TimelineFactProposals.SingleAsync()).Status);
+        Assert.Empty(await reader.TimelineFacts.ToListAsync()); Assert.Empty(await reader.TimelineFactJobs.ToListAsync());
+        await new TimelineFactService(reader).AcceptAsync(seed.Scope, id, seed.Actor, false);
     });
 }

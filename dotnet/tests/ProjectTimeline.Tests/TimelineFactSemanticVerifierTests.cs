@@ -438,28 +438,30 @@ public sealed class TimelineFactSemanticVerifierTests
         Assert.Equal(rejectSecond ? "Retry" : "Completed", await new TimelineFactProcessing(Db, provider, validationDiagnostic: diagnostics.Add).ProcessAsync(job.Id, "offline"));
         Assert.Equal(2, calls);
         await using var db = Db();
-        Assert.Empty(await db.TimelineFactProposals.ToListAsync());
-        Assert.Empty(await db.TimelineFactAdditions.ToListAsync());
-        var facts = await db.TimelineFacts.ToListAsync();
+        Assert.Empty(await db.TimelineFacts.ToListAsync());
+        Assert.Empty(await db.TimelineFactJobs.Where(x => x.Kind == "Embedding").ToListAsync());
+        var additions = await db.TimelineFactAdditions.ToListAsync();
         var savedJob = await db.TimelineFactJobs.SingleAsync(x => x.Id == job.Id);
         if (rejectSecond)
         {
-            Assert.Empty(facts); Assert.Single(await db.TimelineFactJobs.ToListAsync());
+            Assert.Empty(additions); Assert.Empty(await db.TimelineFactProposals.ToListAsync());
+            Assert.Single(await db.TimelineFactJobs.ToListAsync());
             Assert.Null(savedJob.ExtractionResultHash); Assert.Equal(new[] { "SemanticUnsupported" }, diagnostics);
         }
         else
         {
-            Assert.Equal(2, facts.Count);
-            Assert.All(facts, fact => {
-                Assert.Equal(Source.Content, fact.SourceQuote); Assert.Null(fact.CreationReviewId);
-                Assert.Equal(job.Id, fact.ExtractionJobId); Assert.Equal(job.SourceFingerprint, fact.SourceFingerprint);
-                Assert.Equal(TimelineFactEvidence.CandidateKey(fact), fact.CandidateKey); Assert.Null(fact.EmbeddedAtUtc);
+            var proposal = await db.TimelineFactProposals.SingleAsync();
+            Assert.Equal("Generated", proposal.Status); Assert.Equal(job.Id, proposal.Id);
+            Assert.Equal(job.SourceFingerprint, proposal.SourceFingerprint);
+            Assert.Equal(2, additions.Count);
+            Assert.All(additions, addition => {
+                Assert.Equal(Source.Content, addition.SourceQuote); Assert.Equal(proposal.Id, addition.ProposalId);
             });
-            Assert.Equal(TimelineFactEvidence.ResultHash(facts), savedJob.ExtractionResultHash);
-            var ungrounded = facts.Select(f => new TimelineFact { Claim = f.Claim, EntityKey = f.EntityKey, EntityType = f.EntityType,
+            Assert.Equal(TimelineFactEvidence.ResultHash(additions.Select(TimelineFactEvidence.CandidateEvidence)), savedJob.ExtractionResultHash);
+            var ungrounded = additions.Select(f => new TimelineFact { Claim = f.Claim, EntityKey = f.EntityKey, EntityType = f.EntityType,
                 SourceQuote = Candidates.Single(c => c.Claim == f.Claim).SourceQuote, SourceKind = f.SourceKind }).ToArray();
             Assert.NotEqual(TimelineFactEvidence.ResultHash(ungrounded), savedJob.ExtractionResultHash);
-            Assert.Equal(2, await db.TimelineFactJobs.CountAsync(x => x.Kind == "Embedding" && x.State == "Pending"));
+            Assert.Empty(await new TimelineFactService(db).EffectiveAsync(new(project.Id, timeline.Id, entry.Id), actor.Id, false));
         }
     }
 }

@@ -17,6 +17,15 @@ public static class TimelineFactEvidence
     public static string ResultHash(IEnumerable<TimelineFact> facts) => Convert.ToHexString(SHA256.HashData(
         Encoding.UTF8.GetBytes(string.Join("\n", facts.Select(CandidateKey).Order(StringComparer.Ordinal)))));
 
+    public static TimelineFact CandidateEvidence(TimelineFactAddition addition) => new()
+    {
+        Claim = addition.Claim, EntityKey = addition.EntityKey, EntityType = addition.EntityType,
+        SourceQuote = addition.SourceQuote, SourceKind = addition.SourceKind
+    };
+
+    public static bool ExtractionKey(TimelineFactJob job) => job.WorkKey == $"extraction:{job.EntryId:N}"
+        || job.WorkKey == $"extraction:{job.EntryId:N}:{job.Id:N}";
+
     // One translatable eligibility contract for chronology, search, review and embedding workers.
     public static IQueryable<TimelineFact> Effective(ProjectTimelineDbContext db, Guid timelineId, int? through = null) =>
         from fact in db.TimelineFacts
