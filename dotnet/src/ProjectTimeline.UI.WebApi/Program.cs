@@ -15,6 +15,7 @@ using ProjectTimeline.Database;
 using ProjectTimeline.UI.WebApi;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddLogfireTelemetry(builder.Configuration);
 var connection = builder.Configuration.GetConnectionString("ProjectTimeline") ?? "Host=localhost;Database=projecttimeline;Username=postgres";
 var jwtKey = builder.Configuration["Authentication:SigningKey"] ?? throw new InvalidOperationException("Authentication:SigningKey must be configured for local startup.");
 builder.Services.AddDbContext<ProjectTimelineDbContext>(o => o.UseNpgsql(connection, npgsql => npgsql.MigrationsAssembly("ProjectTimeline.Database")));

@@ -381,6 +381,60 @@ public sealed class TimelineFactInformationTests
         Assert.Equal(0, fake.HandlerCount);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task HTTP_serializes_searchable_direct_and_review_origins_on_facts_and_citations(bool direct)
+    {
+        await using var f = await TimelineFactReviewFixture.CreateAsync();
+        var role = new UserRole { RoleName = "User" };
+        f.Actor.UserRole = role; f.Actor.IDUserRole = role.Id; f.Db.Add(role); await f.Db.SaveChangesAsync();
+        TimelineFact fact;
+        if (direct)
+        {
+            // Import supported historical direct evidence; current generation creates drafts, not effective facts.
+            var job = TimelineFactProcessing.NewExtractionJob(f.Entry);
+            fact = new TimelineFact { EntryId = f.Entry.Id, ExtractionJobId = job.Id,
+                Claim = "Alice owns delivery.", EntityKey = "alice", EntityType = "Person",
+                SourceQuote = "Alice owns delivery.", SourceFingerprint = job.SourceFingerprint };
+            fact.CandidateKey = TimelineFactEvidence.CandidateKey(fact);
+            job.State = "Completed"; job.ExtractionResultHash = TimelineFactEvidence.ResultHash([fact]);
+            await using var historical = f.Unguarded();
+            historical.AddRange(job, fact); await historical.SaveChangesAsync();
+        }
+        else fact = await f.AcceptAsync("Alice owns delivery.", "alice");
+        var fake = new InformationFakeAgent { Result = new() { Content = "Alice owns delivery.", CitedFactIds = [fact.Id] } };
+        var builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions { EnvironmentName = "Testing" });
+        builder.WebHost.UseTestServer();
+        builder.Services.AddRouting(); builder.Services.AddAuthorization();
+        builder.Services.AddAuthentication("Test").AddScheme<AuthenticationSchemeOptions, HeaderAuthentication>("Test", _ => { });
+        builder.Services.AddSingleton(f.Db);
+        builder.Services.AddScoped(sp => new TimelineFactInformationApplication(sp.GetRequiredService<ProjectTimelineDbContext>(), () => fake));
+        await using var app = builder.Build();
+        app.UseRouting(); app.UseAuthentication(); app.UseAuthorization(); app.MapTimelineFactInformation();
+        await app.StartAsync(); using var client = app.GetTestClient();
+        client.DefaultRequestHeaders.Add("X-Test-Actor", f.Actor.Id.ToString());
+        var response = await client.GetAsync($"/api/timelines/{f.Timeline.Id}/entry-search?text=Alice");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = body.RootElement;
+        Assert.Equal("Alice owns delivery.", root.GetProperty("content").GetString());
+        var hit = Assert.Single(root.GetProperty("facts").EnumerateArray());
+        var citation = Assert.Single(root.GetProperty("citations").EnumerateArray());
+        Assert.Equal(fact.Id, hit.GetProperty("id").GetGuid());
+        Assert.Equal(fact.Id, citation.GetProperty("factId").GetGuid());
+        foreach (var evidence in new[] { hit, citation })
+        {
+            Assert.Equal(f.Entry.Id, evidence.GetProperty("entryId").GetGuid());
+            Assert.Equal(f.Entry.EntryNumber, evidence.GetProperty("entryNumber").GetInt32());
+            var review = evidence.GetProperty("creationReviewId");
+            var extraction = evidence.GetProperty("extractionJobId");
+            if (direct) { Assert.Equal(JsonValueKind.Null, review.ValueKind); Assert.Equal(fact.ExtractionJobId, extraction.GetGuid()); }
+            else { Assert.Equal(fact.CreationReviewId, review.GetGuid()); Assert.Equal(JsonValueKind.Null, extraction.ValueKind); }
+        }
+        Assert.Equal(1, root.GetProperty("coverage").GetProperty("acceptedValidFacts").GetInt32());
+    }
+
     [Fact]
     public async Task Actual_HTTP_contract_authorizes_before_model_uses_server_scope_and_safe_errors()
     {

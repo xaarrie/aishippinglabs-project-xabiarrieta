@@ -14,7 +14,8 @@ export default function TimelineSearchResults({ result, projectId, timelineId, L
           : <p>Clarification details were not supplied.</p>}
       </div>}
       <p><Link href={sourceEntryHref(projectId, timelineId, fact.entryId)}>Source entry {fact.entryNumber}</Link></p>
-      <p className="muted">Fact ID: {fact.id} · Creation review: {fact.creationReviewId}</p>
+      <p className="muted">Fact ID: {fact.id} · {fact.extractionJobId != null
+        ? <>Extraction job: {fact.extractionJobId}</> : <>Creation review: {fact.creationReviewId}</>}</p>
     </article>) : <p className="muted">None returned.</p>}
   </section>;
   return <div className="search-answer">

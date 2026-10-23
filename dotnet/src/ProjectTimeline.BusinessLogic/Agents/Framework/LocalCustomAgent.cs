@@ -14,6 +14,8 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
         ICustomAgentClient provider;
 
         AIAgent? agent;
+        private string? telemetryAgentName;
+        private string? telemetryModel;
         public LocalCustomAgent(ICustomAgentClient _provider)
         {
             this.provider = _provider;
@@ -23,10 +25,12 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
         {
             
             agent = provider.CreateAgent(model, agentName, instructions, tools);
+            telemetryAgentName = agentName;
+            telemetryModel = model;
            
 
         }
-        public async Task<AgentResponse> RunAsync(string message)
+        public Task<AgentResponse> RunAsync(string message) => AgentTelemetry.RunAsync(async () =>
         {
             if (agent == null)
             {
@@ -36,8 +40,9 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
             var response = await agent.RunAsync(message);
             AnalyzeContent(response.Messages);
             return response;
-        }
-        public async Task<AgentResponse<T>> RunAsync<T>(string message) where T : class
+        }, telemetryAgentName, telemetryModel, harness: false, runKind: "text");
+
+        public Task<AgentResponse<T>> RunAsync<T>(string message) where T : class => AgentTelemetry.RunAsync(async () =>
         {
             if (agent == null)
             {
@@ -46,8 +51,9 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
             var response = await agent.RunAsync<T>(message);
             AnalyzeContent(response.Messages);
             return response;
-        }
-        public async Task<AgentResponse<T>> RunAsync<T>(string message, StructuredAgentRunOptions options, CancellationToken ct) where T : class
+        }, telemetryAgentName, telemetryModel, harness: false, runKind: "typed");
+
+        public Task<AgentResponse<T>> RunAsync<T>(string message, StructuredAgentRunOptions options, CancellationToken ct) where T : class => AgentTelemetry.RunAsync(async () =>
         {
             if (agent == null) throw new Exception("agent cannot be null");
             ct.ThrowIfCancellationRequested();
@@ -74,7 +80,7 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
             ct.ThrowIfCancellationRequested();
             AnalyzeContent(response.Messages);
             return typed;
-        }
+        }, telemetryAgentName, telemetryModel, harness: false, runKind: "structured");
 
         private sealed class StructuredResponseClient(IChatClient inner, Action<ChatResponse> validate) : DelegatingChatClient(inner)
         {

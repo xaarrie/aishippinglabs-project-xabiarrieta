@@ -8,10 +8,68 @@ const fact = { id: 'f1', entryId: 'e1', entryNumber: 2, claim: '<b>Accepted clai
 const coverage = { entries: 5, entriesWithoutCompletedExtraction: 2, pendingReviews: 1, acceptedValidFacts: 3, truncated: true, warnings: ['Server warning'] };
 const citation = { factId: 'f1', entryId: 'e1', entryNumber: 2, creationReviewId: 'r1' };
 const response = () => ({ content: 'Narrative', facts: [fact, { ...fact, id: 'f2' }], citations: [citation], coverage });
+const directFact = { ...fact, id: 'direct', sourceKind: 'Entry', clarificationEvidence: '', creationReviewId: null, extractionJobId: 'job1' };
+const directCitation = { factId: directFact.id, entryId: directFact.entryId, entryNumber: directFact.entryNumber, creationReviewId: null, extractionJobId: 'job1' };
+const directResponse = () => ({ ...response(), facts: [directFact], citations: [directCitation] });
 
 test('structured evidence is mandatory, including valid counters and fact provenance', () => {
   for (const value of [{ content: 'legacy' }, { ...response(), coverage: null }, { ...response(), coverage: { ...coverage, entries: -1 } }, { ...response(), facts: [{ ...fact, claim: null }] }]) {
     assert.throws(() => normalizeTimelineSearch(value), /structured fact evidence/i);
+  }
+});
+test('direct extraction and legacy review evidence both retain grounded answers', () => {
+  for (const value of [directResponse(), response(), {
+    ...response(), facts: [directFact, fact], citations: [directCitation, citation]
+  }, {
+    ...response(), facts: [{ ...fact, extractionJobId: null }], citations: [citation]
+  }, {
+    ...directResponse(), facts: [{ ...directFact, creationReviewId: undefined }]
+  }]) {
+    const result = normalizeTimelineSearch(value);
+    assert.equal(result.content, 'Narrative');
+    assert.deepEqual(result.citations, value.citations);
+    assert.equal(result.citedFacts.length, value.citations.length);
+  }
+});
+test('facts require exactly one meaningful provenance origin and direct extraction uses entry evidence', () => {
+  for (const origin of [
+    {}, { creationReviewId: null, extractionJobId: null },
+    { creationReviewId: 'r1', extractionJobId: 'job1' },
+    ...['', '  ', 12, {}, []].flatMap(id => [
+      { creationReviewId: id }, { creationReviewId: null, extractionJobId: id },
+      { creationReviewId: 'r1', extractionJobId: id }, { creationReviewId: id, extractionJobId: 'job1' }
+    ])
+  ]) {
+    const value = { ...directFact, creationReviewId: undefined, extractionJobId: undefined, ...origin };
+    assert.throws(() => normalizeTimelineSearch({ ...directResponse(), facts: [value] }), /structured fact evidence/i);
+  }
+  for (const change of [{ sourceKind: 'Clarification' }, { clarificationEvidence: 'review answer' }]) {
+    assert.throws(() => normalizeTimelineSearch({ ...directResponse(), facts: [{ ...directFact, ...change }] }), /structured fact evidence/i);
+  }
+});
+test('direct citations must match extraction origin as well as fact identity and source', () => {
+  for (const change of [
+    { extractionJobId: undefined }, { extractionJobId: null }, { extractionJobId: '' },
+    { extractionJobId: '  ' }, { extractionJobId: 12 }, { extractionJobId: {} }, { extractionJobId: [] },
+    { extractionJobId: 'wrong' }, { creationReviewId: 'r1' }, { creationReviewId: '' },
+    { factId: 'invented' }, { entryId: 'wrong' }, { entryNumber: directFact.entryNumber + 1 }
+  ]) {
+    const result = normalizeTimelineSearch({ ...directResponse(), citations: [{ ...directCitation, ...change }] });
+    assert.equal(result.content, '');
+    assert.equal(result.citations.length, 0);
+    assert.deepEqual(result.additionalFacts, [directFact]);
+    assert.ok(result.warnings.some(x => x.includes('unverified')));
+  }
+  const duplicate = normalizeTimelineSearch({ ...directResponse(), citations: [directCitation, directCitation] });
+  assert.equal(duplicate.citations.length, 1);
+  assert.equal(duplicate.content, 'Narrative');
+  assert.throws(() => normalizeTimelineSearch({ ...directResponse(), facts: [directFact, directFact] }), /structured fact evidence/i);
+});
+test('review-only citations cannot introduce extraction provenance', () => {
+  for (const extractionJobId of ['job1', '', '  ', 12, {}, []]) {
+    const result = normalizeTimelineSearch({ ...response(), citations: [{ ...citation, extractionJobId }] });
+    assert.equal(result.content, '');
+    assert.equal(result.citations.length, 0);
   }
 });
 test('citations must belong to returned facts and agree on source/review; duplicates collapse', () => {
@@ -87,6 +145,19 @@ test('actual result rendering escapes evidence and narrative and separates cited
   assert.ok(html.includes('review answer, not original entry text'));
   assert.ok(html.includes('/projects/p/timelines/t/entries/e1?projectId=p'));
   assert.ok(html.includes('Server warning'));
+  assert.ok(html.includes('Creation review: r1'));
+  const directHtml = render(normalizeTimelineSearch({ ...directResponse(), content: '<script>direct</script>', facts: [{ ...directFact, extractionJobId: '<job1>', sourceQuote: '<img src=x onerror=bad>' }], citations: [{ ...directCitation, extractionJobId: '<job1>' }] }));
+  assert.ok(directHtml.includes('Extraction job: &lt;job1&gt;'));
+  assert.ok(!directHtml.includes('Creation review:'));
+  assert.ok(directHtml.includes('Entry (original source text)'));
+  assert.ok(!directHtml.includes('review answer, not original entry text'));
+  assert.ok(!directHtml.includes('Clarification evidence'));
+  assert.ok(directHtml.includes('&lt;script&gt;direct&lt;/script&gt;'));
+  assert.ok(directHtml.includes('&lt;img src=x onerror=bad&gt;'));
+  assert.ok(directHtml.includes('&lt;b&gt;Accepted claim&lt;/b&gt;'));
+  assert.ok(!directHtml.includes('<script>'));
+  assert.ok(!directHtml.includes('<img'));
+  assert.ok(directHtml.includes('/projects/p/timelines/t/entries/e1?projectId=p'));
   const empty = render(normalizeTimelineSearch({ ...response(), facts: [], citations: [] }));
   assert.ok(empty.includes('No accepted fact matches'));
   assert.ok(!empty.includes('Model narrative'));

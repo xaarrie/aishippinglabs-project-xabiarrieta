@@ -111,10 +111,12 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
             this.isolateHarnessFacilities = isolateHarnessFacilities;
         }
 
+        // Keep native SDK tracing disabled: 1.24.0 emits exception text even with EnableSensitiveData=false.
+        // Wrapper runs use AgentTelemetry instead; direct factory consumers have no framework run span.
         public AIAgent CreateAgent(string model, string agentName, string instructions, List<AITool> tools)
         {
             
-            var client = GetChatClient(model);
+            var client = GetTrackedChatClient(model);
             var agent = client.AsAIAgent(
             name: agentName,
             instructions: instructions,
@@ -124,7 +126,7 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
 
         public AIAgent CreateHarnessAgent(string model, string agentName, string instructions, List<AITool> tools)
         {
-            return GetChatClient(model).AsHarnessAgent(
+            return GetTrackedChatClient(model).AsHarnessAgent(
                 new HarnessAgentOptions
                 {
                     Name = agentName,
@@ -144,6 +146,14 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
                   
                 }
                 );
+        }
+
+        // Install before SDK tool aggregation, even when no session exists yet. Structured run
+        // middleware wraps this same pipeline; it must not install a second accounting decorator.
+        private IChatClient GetTrackedChatClient(string model)
+        {
+            var client = GetChatClient(model);
+            return client is UsageTrackingChatClient ? client : new UsageTrackingChatClient(client, model);
         }
 
         public IChatClient GetChatClient(string model)

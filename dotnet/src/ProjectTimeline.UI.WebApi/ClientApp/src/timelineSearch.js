@@ -1,6 +1,9 @@
 const evidenceError = () => new Error('Search response is missing valid structured fact evidence. Please retry.');
 const text = value => typeof value === 'string' && value.trim().length > 0;
 const count = value => Number.isSafeInteger(value) && value >= 0;
+// Effective facts have one origin: an accepted review or a historical direct extraction.
+const validProvenance = value => (text(value.creationReviewId) && value.extractionJobId == null) ||
+  (value.creationReviewId == null && text(value.extractionJobId));
 
 export function clarificationEvidence(value) {
   if (!text(value)) return [];
@@ -33,16 +36,19 @@ export function normalizeTimelineSearch(value) {
       typeof value.content !== 'string') throw evidenceError();
   const ids = new Set();
   for (const fact of value.facts) {
-    if (!fact || !['id', 'entryId', 'claim', 'entityKey', 'entityType', 'sourceQuote', 'sourceFingerprint', 'creationReviewId'].every(key => text(fact[key])) ||
-        !Number.isSafeInteger(fact.entryNumber) || fact.entryNumber < 1 || !['Entry', 'Clarification'].includes(fact.sourceKind) ||
-        typeof fact.clarificationEvidence !== 'string' || ids.has(fact.id)) throw evidenceError();
+    if (!fact || !['id', 'entryId', 'claim', 'entityKey', 'entityType', 'sourceQuote', 'sourceFingerprint'].every(key => text(fact[key])) ||
+        !validProvenance(fact) || !Number.isSafeInteger(fact.entryNumber) || fact.entryNumber < 1 || !['Entry', 'Clarification'].includes(fact.sourceKind) ||
+        typeof fact.clarificationEvidence !== 'string' ||
+        (fact.extractionJobId != null && (fact.sourceKind !== 'Entry' || fact.clarificationEvidence !== '')) || ids.has(fact.id)) throw evidenceError();
     ids.add(fact.id);
   }
   const facts = value.facts.map(fact => ({ ...fact }));
   const citedIds = new Set(); const citations = []; let rejected = false;
   for (const citation of value.citations) {
     const fact = facts.find(x => x.id === citation?.factId);
-    if (!fact || citation.entryId !== fact.entryId || citation.entryNumber !== fact.entryNumber || citation.creationReviewId !== fact.creationReviewId) { rejected = true; continue; }
+    if (!fact || !validProvenance(citation) || citation.entryId !== fact.entryId || citation.entryNumber !== fact.entryNumber ||
+        (citation.creationReviewId ?? null) !== (fact.creationReviewId ?? null) ||
+        (citation.extractionJobId ?? null) !== (fact.extractionJobId ?? null)) { rejected = true; continue; }
     if (!citedIds.has(fact.id)) { citedIds.add(fact.id); citations.push({ ...citation }); }
   }
   const warnings = searchWarnings(coverage);

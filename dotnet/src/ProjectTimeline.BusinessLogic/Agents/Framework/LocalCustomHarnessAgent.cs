@@ -13,6 +13,8 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
         ICustomAgentClient provider;
 
         AIAgent? agent;
+        private string? telemetryAgentName;
+        private string? telemetryModel;
         public LocalCustomHarnessAgent(ICustomAgentClient _provider)
         {
             this.provider = _provider;
@@ -24,9 +26,11 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
         {
 
             agent = provider.CreateHarnessAgent(model, agentName, instructions, tools);
+            telemetryAgentName = agentName;
+            telemetryModel = model;
 
         }
-        public async Task<AgentResponse> RunAsync(string message)
+        public Task<AgentResponse> RunAsync(string message) => AgentTelemetry.RunAsync(async () =>
         {
             if (agent != null)
             {
@@ -36,8 +40,9 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
             }
 
             throw new Exception("agent cannot be null");
-        }
-        public async Task<AgentResponse<T>> RunAsync<T>(string message) where T : class
+        }, telemetryAgentName, telemetryModel, harness: true, runKind: "text");
+
+        public Task<AgentResponse<T>> RunAsync<T>(string message) where T : class => AgentTelemetry.RunAsync(async () =>
         {
             if (agent != null)
             {
@@ -47,7 +52,8 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
 
             }
             throw new Exception("agent cannot be null");
-        }
+        }, telemetryAgentName, telemetryModel, harness: true, runKind: "typed");
+
         protected void AnalyzeContent(IList<ChatMessage> messages)
         {
             foreach (var item in messages)
