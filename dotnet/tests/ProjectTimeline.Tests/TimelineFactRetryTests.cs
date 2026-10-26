@@ -275,6 +275,7 @@ public sealed class TimelineFactRetryTests
     [InlineData("Superseded")]
     [InlineData("Failed")]
     [InlineData("Skipped")]
+    [InlineData("AwaitingClarification")]
     [InlineData("Pending")]
     [InlineData("Running")]
     [InlineData("lease")]

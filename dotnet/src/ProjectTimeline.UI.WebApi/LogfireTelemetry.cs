@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -14,7 +15,7 @@ public static class LogfireTelemetry
         var token = configuration["Logfire:Token"];
         var hasEndpoint = !string.IsNullOrWhiteSpace(endpointSetting);
         var hasToken = !string.IsNullOrWhiteSpace(token);
-        if (!hasEndpoint && !hasToken) return services;
+        if (!hasEndpoint && !hasToken) return services.AddAgentTelemetryOptions(configuration);
         if (!hasEndpoint || !hasToken)
             throw new InvalidOperationException("Configure both Logfire:Endpoint and Logfire:Token to enable agent tracing.");
 
@@ -30,6 +31,7 @@ public static class LogfireTelemetry
         if (token!.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not ('_' or '-' or '.')))
             throw new InvalidOperationException("Logfire:Token must be a write token containing only ASCII letters, digits, underscores, hyphens or dots; do not add Bearer.");
 
+        services.AddAgentTelemetryOptions(configuration);
         var serviceName = configuration["Logfire:ServiceName"];
         if (string.IsNullOrWhiteSpace(serviceName)) serviceName = "ProjectTimeline.WebApi";
         services.AddOpenTelemetry()
@@ -45,7 +47,7 @@ public static class LogfireTelemetry
                 })
                 // Keep default ParentBased sampling; sanitize before batch/exporter enqueue.
                 .AddProcessor(new LogfireHttpPrivacyProcessor())
-                .AddProcessor(new LogfireAgentPrivacyProcessor())
+                .AddProcessor(sp => new LogfireAgentPrivacyProcessor(sp.GetRequiredService<AgentTelemetryOptions>()))
                 .AddOtlpExporter(options =>
                 {
                     // Programmatic HTTP/protobuf endpoints are used as-is, including /v1/traces.
@@ -53,6 +55,14 @@ public static class LogfireTelemetry
                     options.Protocol = OtlpExportProtocol.HttpProtobuf;
                     options.Headers = $"Authorization={token}";
                 }));
+        return services;
+    }
+
+    // One immutable host snapshot, shared by factory creation and the export boundary.
+    // Register even with export disabled; capture does not enable an exporter/listener.
+    internal static IServiceCollection AddAgentTelemetryOptions(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.TryAddSingleton(new AgentTelemetryOptions(configuration.GetValue("Logfire:CaptureAgentContent", true)));
         return services;
     }
 }

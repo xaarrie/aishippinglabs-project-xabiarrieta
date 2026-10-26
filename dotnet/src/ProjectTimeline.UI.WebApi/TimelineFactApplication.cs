@@ -12,6 +12,15 @@ namespace ProjectTimeline.UI.WebApi;
 public sealed record TimelineFactPlanRequest(Guid? PreviousProposalId, IReadOnlyList<TimelineFactAnswer>? Answers);
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed record TimelineFactGenerationRequest(bool Regenerate = false, Guid? ExpectedGenerationId = null);
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed record TimelineEntryClarificationAnswerRequest(Guid ExpectedGenerationId, string Answer);
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed record TimelineEntryClarificationResumeRequest(Guid ExpectedGenerationId);
+public sealed record TimelineEntryClarificationDto(Guid Id, Guid GenerationId, string QuestionKey, string Question,
+    string? Answer, Guid? AnsweredById, DateTime? AnsweredAtUtc, DateTime CreatedAtUtc, string Binding, bool CanAnswer);
+public sealed record TimelineEntryClarificationStateDto(Guid EntryId, Guid? GenerationId, string LifecycleState,
+    IReadOnlyList<TimelineEntryClarificationDto> Current, IReadOnlyList<TimelineEntryClarificationDto> History,
+    bool Truncated, bool CanAnswer, bool CanResume, bool RefreshRequired = false);
 public sealed record TimelineFactInvalidationDto(Guid FactId, string Claim, string SourceQuote, string SourceKind, string Reason,
     Guid? InvalidatingAdditionId = null, int? InvalidatingAdditionIndex = null, string? InvalidatingClaim = null);
 public sealed record TimelineFactProposalDto(Guid? ProposalId, string State, string Status, bool Ready,
@@ -35,6 +44,8 @@ public sealed class TimelineFactApplication(ProjectTimelineDbContext db, Func<IC
         TimelineFactGenerationRequest request, CancellationToken ct = default)
     {
         var scope = await ScopeAsync(entryId, actor, admin, true, ct);
+        if (await db.TimelineFactJobs.AnyAsync(x => x.EntryId == entryId && x.Kind == "Extraction" && x.State == "AwaitingClarification", ct))
+            throw new TimelineFactConflictException("Use explicit clarification resume.");
         var worker = processing ?? throw new TimelineFactProviderException("Unavailable");
         var jobId = await worker.RequestGenerationAsync(scope, actor, admin, request.Regenerate, request.ExpectedGenerationId, ct);
         await worker.ProcessAsync(jobId, "fact-request:" + Guid.NewGuid().ToString("N"), ct);
@@ -42,10 +53,50 @@ public sealed class TimelineFactApplication(ProjectTimelineDbContext db, Func<IC
         return await ReadAsync(entryId, actor, admin, ct);
     }
 
+    public async Task<TimelineEntryClarificationStateDto> ReadClarificationsAsync(Guid entryId, Guid actor, bool admin, CancellationToken ct = default)
+    {
+        var scope = await ScopeAsync(entryId, actor, admin, false, ct);
+        var state = await new TimelineEntryClarificationService(db).ReadStateAsync(scope, actor, admin, ct);
+        TimelineEntryClarificationDto Map(TimelineEntryClarification row, string binding, bool canAnswer) =>
+            new(row.Id, row.GenerationId, row.QuestionKey, row.Question, row.Answer, row.AnsweredById, row.AnsweredAtUtc,
+                row.CreatedAtUtc, binding, canAnswer && row.Answer is null);
+        return new(entryId, state.GenerationId, state.State,
+            state.Current.Select(x => Map(x, state.CarriedIds.Contains(x.Id) ? "CarriedAnswer" : "CurrentQuestion", state.CanAnswer)).ToArray(),
+            state.History.Select(x => Map(x, "History", false)).ToArray(), state.Truncated, state.CanAnswer, state.CanResume);
+    }
+
+    public async Task<TimelineEntryClarificationStateDto> AnswerClarificationAsync(Guid entryId, Guid questionId, Guid actor, bool admin,
+        TimelineEntryClarificationAnswerRequest request, CancellationToken ct = default)
+    {
+        var scope = await ScopeAsync(entryId, actor, admin, true, ct);
+        if (request.ExpectedGenerationId == Guid.Empty || string.IsNullOrWhiteSpace(request.Answer) || request.Answer.Length > 4000)
+            throw new ArgumentException("A generation and bounded actual answer are required.");
+        var state = await new TimelineEntryClarificationService(db).ReadStateAsync(scope, actor, admin, ct);
+        if (state.GenerationId != request.ExpectedGenerationId || !state.CanAnswer)
+            throw new TimelineFactConflictException("Generation changed or is not waiting.");
+        await new TimelineEntryClarificationService(db).AnswerAsync(scope, request.ExpectedGenerationId, questionId, actor, admin, request.Answer, ct);
+        return await ReadClarificationsAsync(entryId, actor, admin, ct);
+    }
+
+    public async Task<TimelineFactStateDto> ResumeClarificationsAsync(Guid entryId, Guid actor, bool admin,
+        TimelineEntryClarificationResumeRequest request, CancellationToken ct = default)
+    {
+        var scope = await ScopeAsync(entryId, actor, admin, true, ct);
+        var state = await new TimelineEntryClarificationService(db).ReadStateAsync(scope, actor, admin, ct);
+        if (request.ExpectedGenerationId == Guid.Empty || state.GenerationId != request.ExpectedGenerationId || !state.CanResume)
+            throw new TimelineFactConflictException("Generation changed or required answers are missing.");
+        var worker = processing ?? throw new TimelineFactProviderException("Unavailable");
+        var id = await worker.RequestGenerationAsync(scope, actor, admin, regenerate: true, expectedGenerationId: request.ExpectedGenerationId, ct: ct);
+        await worker.ProcessAsync(id, "clarification-resume:" + Guid.NewGuid().ToString("N"), ct);
+        return await ReadAsync(entryId, actor, admin, ct);
+    }
+
     public async Task<TimelineFactProposalDto> PlanAsync(Guid entryId, Guid actor, bool admin,
         TimelineFactPlanRequest request, CancellationToken ct = default)
     {
         var scope = await ScopeAsync(entryId, actor, admin, true, ct);
+        if (await db.TimelineFactJobs.AnyAsync(x => x.EntryId == entryId && x.Kind == "Extraction" && x.State == "AwaitingClarification", ct))
+            throw new TimelineFactConflictException("Resolve extraction questions before reconciliation.");
         if (await db.TimelineFactProposals.AnyAsync(x => x.EntryId == entryId && x.Status == "Accepted", ct)
             || await db.TimelineFacts.AnyAsync(x => x.EntryId == entryId, ct))
             throw new TimelineFactConflictException("Accepted reconciliation locks this entry; corrections require a new entry.");
@@ -75,6 +126,8 @@ public sealed class TimelineFactApplication(ProjectTimelineDbContext db, Func<IC
     public async Task<TimelineFactProposalDto> AcceptAsync(Guid entryId, Guid proposalId, Guid actor, bool admin, CancellationToken ct = default)
     {
         var scope = await ScopeAsync(entryId, actor, admin, true, ct);
+        if (await db.TimelineFactJobs.AnyAsync(x => x.EntryId == entryId && x.Kind == "Extraction" && x.State == "AwaitingClarification", ct))
+            throw new TimelineFactConflictException("Resolve extraction questions before acceptance.");
         var accepted = await new TimelineFactService(db).AcceptAsync(scope, proposalId, actor, admin, ct);
         return await ProposalAsync(accepted, await new TimelineFactSearch(db, scope, actor, admin).CoverageAsync(ct), "Accepted", ct);
     }
@@ -109,6 +162,7 @@ public sealed class TimelineFactApplication(ProjectTimelineDbContext db, Func<IC
         var empty = current is not null && !await db.TimelineFactAdditions.AnyAsync(x => x.ProposalId == current.Id, ct);
         var state = locked ? "Reconciled" : current?.State switch
         {
+            "AwaitingClarification" => "AwaitingClarification",
             "Running" => "Loading", "Pending" => "Loading", "Retry" => "Retry", "Failed" => "Failed",
             "Completed" => empty ? "Empty" : "Pending", _ => "NotGenerated"
         };
@@ -122,8 +176,14 @@ public sealed class TimelineFactApplication(ProjectTimelineDbContext db, Func<IC
         var refresh = revision != finalRevision || TimelineFactEvidence.Fingerprint(before) != fingerprint || before.Status != source.Status
             || current is not null && current.SourceFingerprint != fingerprint
             || current?.State == "Completed" && generated is null;
+        var waiting = current?.State == "AwaitingClarification";
+        if (current is not null && (waiting || current.ExtractionInputJson is not null || current.EffectiveInputFingerprint is not null))
+        {
+            try { await new TimelineEntryClarificationService(db).ReadStateAsync(scope, actor, admin, ct); }
+            catch (TimelineFactConflictException) { refresh = true; }
+        }
         return new(facts.Take(500).ToArray(), dtos, jobs.Take(100).ToArray(), coverage, facts.Count > 500 || proposals.Count > 50 || jobs.Count > 100,
-            state, current?.Id, writable && !locked, writable && !locked, writable && !locked && current is not null,
+            state, current?.Id, writable && !locked, writable && !locked && !waiting && !refresh, writable && !locked && !waiting && !refresh && current is not null,
             new(source.Id, source.TimelineId, source.Title, source.Content, source.Status, fingerprint), refresh);
     }
 

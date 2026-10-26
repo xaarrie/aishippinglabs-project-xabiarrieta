@@ -38,9 +38,9 @@ public sealed class TimelineFactSemanticVerifierTests
     private static CustomOpenAIClient Client(Func<HttpRequestMessage, HttpResponseMessage> reply) =>
         new("fake-offline-credential", new HttpClient(new Handler(reply)));
 
-    private static JsonObject Valid(TimelineFactExtraction? source = null)
+    private static JsonObject Valid(TimelineFactExtraction? source = null, string? evidenceId = null)
     {
-        var id = TimelineFactSourceEvidence.Create(source ?? Source).Last().Id;
+        var id = evidenceId ?? TimelineFactSourceEvidence.Create(source ?? Source).Last().Id;
         return JsonSerializer.SerializeToNode(new { assessments = new[] {
             new { candidateIndex = 0, supported = true, supportScore = 0.0, issues = Array.Empty<string>(), evidenceIds = new[] { id } },
             new { candidateIndex = 1, supported = true, supportScore = 1.0, issues = Array.Empty<string>(), evidenceIds = new[] { id } }
@@ -426,10 +426,18 @@ public sealed class TimelineFactSemanticVerifierTests
         var client = Client(request =>
         {
             Assert.EndsWith("/chat/completions", request.RequestUri!.AbsolutePath); // An embedding call fails this fixture.
+            using var body = JsonDocument.Parse(request.Content!.ReadAsStringAsync().GetAwaiter().GetResult());
+            using var input = JsonDocument.Parse(body.RootElement.GetProperty("messages")[1].GetProperty("content").GetString()!);
+            var source = input.RootElement.GetProperty("source");
+            Assert.Equal(entry.Content, source.GetProperty("content").GetString());
+            Assert.Equal(job.Id, source.GetProperty("input").GetProperty("jobId").GetGuid());
+            Assert.Equal(job.EffectiveInputFingerprint, source.GetProperty("input").GetProperty("effectiveFingerprint").GetString());
             calls++;
             if (calls == 1) return Completion(JsonSerializer.Serialize(new { claims = Candidates.Select(c => new { c.Claim, c.EntityKey, c.EntityType, c.SourceQuote }) }, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
             Assert.Equal(2, calls);
-            var result = Valid();
+            var id = Assert.Single(input.RootElement.GetProperty("sourceSpans").EnumerateArray(),
+                x => x.GetProperty("source").GetString() == "Content").GetProperty("id").GetString()!;
+            var result = Valid(evidenceId: id);
             if (rejectSecond) result["assessments"]![1]!["supported"] = false;
             return Completion(result.ToJsonString());
         });

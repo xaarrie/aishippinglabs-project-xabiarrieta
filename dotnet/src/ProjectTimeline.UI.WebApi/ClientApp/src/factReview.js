@@ -41,7 +41,7 @@ export function factReviewActions(state, { canWrite = false, dirty = false, busy
   return {
     edit,
     generate: !!(mutate && state.canGenerate === true && !state.generationId && state.lifecycleState === 'NotGenerated'),
-    regenerate: !!(mutate && state.canRegenerate === true && state.generationId),
+    regenerate: !!(mutate && state.lifecycleState !== 'AwaitingClarification' && state.canRegenerate === true && state.generationId),
     reconcile: !!(mutate && completed)
   };
 }

@@ -8,7 +8,7 @@ internal sealed class HarnessScriptedTransport(IReadOnlyList<FunctionCallContent
     public int Requests { get; private set; }
     public List<ChatOptions> Options { get; } = [];
     public List<IReadOnlyList<ChatMessage>> Messages { get; } = [];
-    private const string WireResponse = """{"message":"Synthetic transport control only; not model quality evidence."}""";
+    internal const string WireResponse = """{"message":"Synthetic transport control only; not model quality evidence."}""";
 
     public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null,
         CancellationToken cancellationToken = default)

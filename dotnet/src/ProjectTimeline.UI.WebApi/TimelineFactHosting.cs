@@ -18,18 +18,21 @@ public static class TimelineFactHosting
 {
     public static IServiceCollection AddTimelineFacts(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddAgentTelemetryOptions(configuration);
         services.AddScoped<ITimelineFactProvider>(sp =>
         {
             var key = configuration["OPENAI_API_KEY"] ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY");
             if (string.IsNullOrWhiteSpace(key)) throw new TimelineFactProviderException("Unavailable");
-            var client = new CustomOpenAIClient(key);
+            var client = new CustomOpenAIClient(key, transport: null, isolateHarnessFacilities: false,
+                telemetryOptions: sp.GetRequiredService<AgentTelemetryOptions>());
             var model = configuration["TimelineFacts:ExtractionModel"] ?? "gpt-4o-mini";
             return new TimelineFactOpenAIProvider(new TimelineFactExtractionAgent(client, model),
                 new TimelineFactSemanticVerifierAgent(client, model), client);
         });
         services.AddScoped<TimelineFactService>();
         services.AddScoped(sp => new TimelineFactApplication(sp.GetRequiredService<ProjectTimelineDbContext>(),
-            () => new LocalCustomHarnessAgent(new CustomOpenAIClient(isolateHarnessFacilities: true)),
+            () => new LocalCustomHarnessAgent(new CustomOpenAIClient(isolateHarnessFacilities: true,
+                telemetryOptions: sp.GetRequiredService<AgentTelemetryOptions>())),
             sp.GetRequiredService<TimelineFactProcessing>()));
         services.AddScoped(sp => new TimelineFactProcessing(
             () => new ProjectTimelineDbContext(sp.GetRequiredService<DbContextOptions<ProjectTimelineDbContext>>()),
@@ -43,6 +46,7 @@ public static class TimelineFactHosting
     {
         public string ExtractionModel => resolve().ExtractionModel;
         public Task<IReadOnlyList<TimelineFactCandidate>> ExtractAsync(TimelineFactExtraction source, CancellationToken ct) => resolve().ExtractAsync(source, ct);
+        public Task<TimelineFactExtractionOutcome> ExtractOutcomeAsync(TimelineFactExtraction source, CancellationToken ct) => resolve().ExtractOutcomeAsync(source, ct);
         public Task<float[]> EmbedAsync(string claim, CancellationToken ct) => resolve().EmbedAsync(claim, ct);
     }
 }

@@ -31,6 +31,10 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
         void Init(string agentName, string model, string instructions, List<AITool> tools);
         Task<AgentResponse> RunAsync(string message);
         Task<AgentResponse<T>> RunAsync<T>(string message) where T : class;
+        Task<AgentResponse> RunAsync(string message, CancellationToken ct)
+            => throw new NotSupportedException("Cancellable agent runs are not supported.");
+        Task<AgentResponse<T>> RunAsync<T>(string message, CancellationToken ct) where T : class
+            => throw new NotSupportedException("Cancellable typed agent runs are not supported.");
         // Older implementations remain compatible, but must explicitly support bounded structured runs.
         Task<AgentResponse<T>> RunAsync<T>(string message, StructuredAgentRunOptions options, CancellationToken ct) where T : class
             => throw new NotSupportedException("Structured agent runs are not supported.");

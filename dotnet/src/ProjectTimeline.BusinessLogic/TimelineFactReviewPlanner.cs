@@ -34,17 +34,18 @@ public sealed class TimelineFactReviewPlanner(ProjectTimelineDbContext db, Timel
         var revision = await RevisionAsync(ct);
         var coverage = await search.CoverageAsync(ct);
         var (previous, questions) = await PreviousAsync(previousProposalId, answers ?? [], fingerprint, revision, ct);
-        var candidates = await (from addition in db.TimelineFactAdditions.AsNoTracking()
-                                join proposal in db.TimelineFactProposals on addition.ProposalId equals proposal.Id
-                                join job in db.TimelineFactJobs on proposal.Id equals job.Id
-                                where proposal.EntryId == source.Id && proposal.Status == "Generated"
-                                    && proposal.SourceFingerprint == fingerprint && job.Kind == "Extraction" && job.State == "Completed"
-                                    && job.EntryId == source.Id && job.SourceFingerprint == fingerprint && job.ExtractionResultHash != null
-                                orderby addition.Id
-                                select new TimelineFactCandidate(addition.Claim, addition.EntityKey, addition.EntityType,
-                                    addition.SourceQuote, addition.SourceKind)).Take(201).ToListAsync(ct);
+        var (candidates, extractionQuestions) = await VerifiedCandidatesAsync(source, fingerprint, ct);
+        foreach (var question in extractionQuestions)
+        {
+            var existing = questions.SingleOrDefault(x => x.ExtractionAnswerId == question.ExtractionAnswerId);
+            if (existing is not null && existing != question) throw InvalidGeneration();
+            if (existing is null) questions.Add(question);
+        }
+        await TimelineFactReconciliationEvidence.ValidateAsync(db, source, questions, ct);
         var terms = Seed(source, candidates);
         var seeds = await search.SearchAsync(terms, 50, ct);
+        var tools = new TimelineFactReviewTools(search, ct, db);
+        var contexts = await tools.fetch_fact_contexts(seeds.Select(x => x.Id).ToArray());
         var result = await agent.RunAsync(new
         {
             original_entry = new { source.Id, source.Title, source.Content },
@@ -55,10 +56,16 @@ public sealed class TimelineFactReviewPlanner(ProjectTimelineDbContext db, Timel
             user_answers = answers ?? [],
             clarification_evidence = questions,
             seed_terms = terms,
-            seed_facts = seeds
-        }, new TimelineFactReviewTools(search, ct), ct);
-        var draft = await ValidateAsync(result, source, questions, ct);
+            seed_facts = seeds,
+            seed_contexts = contexts
+        }, tools, ct);
+        // Bind assessments to the evidence the model actually selected, not to a later canonical citation.
+        var originalAdditions = result.Additions?.ToArray() ?? [];
+        ReuseCanonicalQuotes(result, candidates);
+        var draft = await ValidateAsync(result, originalAdditions, source, questions, tools.DeliveredContexts, ct);
         var current = await search.AuthorizeAsync(ct);
+        await VerifiedCandidatesAsync(current, fingerprint, ct);
+        await TimelineFactReconciliationEvidence.ValidateAsync(db, current, draft.Questions, ct);
         if (await RevisionAsync(ct) != revision || TimelineFactEvidence.Fingerprint(current) != fingerprint)
             throw new TimelineFactConflictException("Timeline/source changed during planning; regenerate.");
         var status = draft.Questions.Any(x => string.IsNullOrWhiteSpace(x.Answer)) ? "NeedsClarification"
@@ -66,6 +73,38 @@ public sealed class TimelineFactReviewPlanner(ProjectTimelineDbContext db, Timel
         if (coverage.EntriesWithoutCompletedExtraction > 0 || coverage.CurrentExtractionState != "Completed")
             status = "IncompleteHistory:" + status;
         return new(draft, revision, fingerprint, coverage, status, previousProposalId);
+    }
+
+    private async Task<(List<TimelineFactCandidate> Candidates, List<TimelineFactQuestion> Questions)> VerifiedCandidatesAsync(TimelineEntry source, string fingerprint,
+        CancellationToken ct)
+    {
+        var proposals = await db.TimelineFactProposals.AsNoTracking().Where(x => x.EntryId == source.Id
+            && x.Status == "Generated" && x.SourceFingerprint == fingerprint).ToListAsync(ct);
+        // Missing/stale extraction must not impose a new generation prerequisite on ordinary reviews.
+        if (proposals.Count == 0) return ([], []);
+        if (proposals.Count != 1) throw InvalidGeneration();
+        var (snapshot, additions) = await db.ReadReconciliationEvidenceAsync(source, proposals[0].Id, ct);
+        var questions = snapshot?.Input.Answers.Select(x => new TimelineFactQuestion(x.Question, x.Answer,
+            snapshot.Input.JobId, x.Id)).ToList() ?? [];
+        return (additions.Select(x => new TimelineFactCandidate(x.Claim, x.EntityKey, x.EntityType,
+            x.SourceQuote, x.SourceKind)).ToList(), questions);
+    }
+
+    private static TimelineFactConflictException InvalidGeneration() => new("Generated extraction evidence is invalid.");
+
+    private static void ReuseCanonicalQuotes(TimelineFactReviewResult result, IReadOnlyList<TimelineFactCandidate> candidates)
+    {
+        if (result.Additions is null || result.Additions.Count > 200) return; // Ordinary schema validation still owns rejection.
+        for (var i = 0; i < result.Additions.Count; i++)
+        {
+            var addition = result.Additions[i];
+            if (addition is null || addition.SourceKind is not ("Entry" or "Clarification")) continue;
+            var matches = candidates.Where(x => x.SourceKind == addition.SourceKind
+                && string.Equals(x.Claim, addition.Claim, StringComparison.Ordinal)
+                && string.Equals(x.EntityKey, addition.EntityKey, StringComparison.Ordinal)
+                && string.Equals(x.EntityType, addition.EntityType, StringComparison.Ordinal)).ToArray();
+            if (matches.Length == 1) result.Additions[i] = addition with { SourceQuote = matches[0].SourceQuote };
+        }
     }
 
     private Task<long> RevisionAsync(CancellationToken ct) => db.Timelines.AsNoTracking()
@@ -85,8 +124,12 @@ public sealed class TimelineFactReviewPlanner(ProjectTimelineDbContext db, Timel
         var questions = (JsonSerializer.Deserialize<TimelineFactQuestion[]>(previous.QuestionsJson)
             ?? throw new TimelineFactConflictException("Stored questions missing.")).ToList();
         if (questions.Count > 100 || previous.QuestionsJson.Length > 20000
-            || questions.Any(x => x is null) || questions.Select(x => x.Question).Distinct(StringComparer.Ordinal).Count() != questions.Count)
+            || questions.Any(x => x is null)
+            || questions.Where(x => x.ExtractionAnswerId is null).Select(x => x.Question).Distinct(StringComparer.Ordinal).Count()
+                != questions.Count(x => x.ExtractionAnswerId is null))
             throw new TimelineFactConflictException("Stored questions are invalid or ambiguous.");
+        await TimelineFactReconciliationEvidence.ValidateAsync(db,
+            await search.AuthorizeAsync(ct), questions, ct);
         foreach (var question in questions)
         {
             Require(question.Question, 2000);
@@ -126,9 +169,15 @@ public sealed class TimelineFactReviewPlanner(ProjectTimelineDbContext db, Timel
         return terms.Length <= 300 ? terms : terms[..300];
     }
 
-    private async Task<TimelineFactDraft> ValidateAsync(TimelineFactReviewResult result, TimelineEntry source,
-        List<TimelineFactQuestion> questions, CancellationToken ct)
+    private async Task<TimelineFactDraft> ValidateAsync(TimelineFactReviewResult result,
+        IReadOnlyList<TimelineFactCandidate> originalAdditions, TimelineEntry source,
+        List<TimelineFactQuestion> questions, IReadOnlyDictionary<Guid, TimelineFactSourceContext> contexts, CancellationToken ct)
     {
+        if (result.InvalidationAssessments is null || result.InvalidationAssessments.Count > 50
+            || result.InvalidationAssessments.Any(x => x is null)
+            || result.InvalidationAssessments.Count != result.Invalidations?.Count
+            || result.InvalidationAssessments.Select(x => x.FactId).Distinct().Count() != result.InvalidationAssessments.Count)
+            throw new TimelineFactConflictException("Each invalidation requires exactly one semantic assessment.");
         if (result.Additions is null || result.Invalidations is null || result.Questions is null
             || result.Additions.Count > 200 || result.Invalidations.Count > 50 || result.Questions.Count > 100)
             throw new TimelineFactConflictException("Fact review exceeds bounded schema.");
@@ -139,10 +188,13 @@ public sealed class TimelineFactReviewPlanner(ProjectTimelineDbContext db, Timel
             if (question is null) throw new TimelineFactConflictException("Missing question.");
             Require(question.Question, 2000);
             if (!seen.Add(question.Question)) throw new TimelineFactConflictException("Duplicate question.");
-            var trusted = questions.SingleOrDefault(x => x.Question == question.Question);
-            if (question.Answer is not null && (trusted?.Answer is null || trusted.Answer != question.Answer))
+            var trusted = questions.Where(x => x.Question == question.Question).ToArray();
+            if ((question.ExtractionGenerationId is not null || question.ExtractionAnswerId is not null)
+                && !trusted.Contains(question))
+                throw new TimelineFactConflictException("Model supplied extraction provenance.");
+            if (question.Answer is not null && !trusted.Any(x => x.Answer == question.Answer))
                 throw new TimelineFactConflictException("Model supplied an answer without actual user evidence.");
-            if (trusted is null) merged.Add(new(question.Question, null));
+            if (trusted.Length == 0) merged.Add(new(question.Question, null));
         }
         if (merged.Count > 100 || JsonSerializer.Serialize(merged).Length > 20000)
             throw new TimelineFactConflictException("Clarification evidence is too large.");
@@ -151,14 +203,7 @@ public sealed class TimelineFactReviewPlanner(ProjectTimelineDbContext db, Timel
             if (addition is null) throw new TimelineFactConflictException("Missing addition.");
             Require(addition.Claim, 4000); Require(addition.EntityKey, 300);
             Require(addition.EntityType, 100); Require(addition.SourceQuote, 20000);
-            var supported = addition.SourceKind switch
-            {
-                "Entry" => source.Title.Contains(addition.SourceQuote, StringComparison.Ordinal)
-                    || source.Content.Contains(addition.SourceQuote, StringComparison.Ordinal),
-                "Clarification" => questions.Any(x => x.Answer?.Contains(addition.SourceQuote, StringComparison.Ordinal) == true),
-                _ => false
-            };
-            if (!supported) throw new TimelineFactConflictException("Addition quote is not in source or actual user answers.");
+            if (!QuoteSupported(addition, source, questions)) throw new TimelineFactConflictException("Addition quote is not in source or actual user answers.");
         }
         foreach (var invalidation in result.Invalidations)
         {
@@ -173,9 +218,56 @@ public sealed class TimelineFactReviewPlanner(ProjectTimelineDbContext db, Timel
         if (facts.Count != ids.Length) throw new TimelineFactConflictException("Invalidation IDs are not in authorized effective scope.");
         var sourceIds = facts.Select(x => x.EntryId).Distinct().ToArray();
         var evidence = await db.TimelineEntries.AsNoTracking().Where(x => sourceIds.Contains(x.Id)).ToListAsync(ct);
-        if (facts.Any(x => TimelineFactEvidence.Fingerprint(evidence.Single(e => e.Id == x.EntryId)) != x.SourceFingerprint))
+        if (facts.Any(x => evidence.SingleOrDefault(e => e.Id == x.EntryId) is not { } entry
+            || TimelineFactEvidence.Fingerprint(entry) != x.SourceFingerprint))
             throw new TimelineFactConflictException("Invalidation source fingerprint changed.");
+        foreach (var invalidation in result.Invalidations)
+        {
+            var fact = facts.Single(x => x.Id == invalidation.FactId);
+            var assessment = result.InvalidationAssessments.SingleOrDefault(x => x.FactId == fact.Id);
+            var addition = originalAdditions[invalidation.InvalidatingAdditionIndex!.Value];
+            Require(addition.SourceQuote, 20000);
+            if (!QuoteSupported(addition, source, questions))
+                throw new TimelineFactConflictException("Original replacement quote is not in source or actual user answers.");
+            if (!contexts.TryGetValue(fact.Id, out var context) || context.Fact != fact
+                || assessment is null || assessment.InvalidatingAdditionIndex != invalidation.InvalidatingAdditionIndex
+                || assessment.HistoricalClaim != fact.Claim || assessment.HistoricalSourceFingerprint != fact.SourceFingerprint
+                || assessment.ReplacementClaim != addition.Claim || assessment.ReplacementQuote != addition.SourceQuote
+                || !assessment.SameScope || assessment.Relationship is not ("Contradiction" or "ExplicitSupersession"))
+                throw new TimelineFactConflictException("Invalidation lacks a bound same-scope semantic assessment and delivered context.");
+            Require(assessment.SharedScope, 2000); Require(assessment.Explanation, 4000);
+            Require(assessment.HistoricalQuote, 20000);
+            // Entry evidence and clarification evidence are distinct sources; never substitute one for the other.
+            var historicalSupported = fact.SourceKind switch
+            {
+                "Entry" => context.Title.Contains(assessment.HistoricalQuote, StringComparison.Ordinal)
+                    || context.Content.Contains(assessment.HistoricalQuote, StringComparison.Ordinal),
+                "Clarification" => HistoricalAnswerContains(fact.ClarificationEvidence, assessment.HistoricalQuote),
+                _ => false
+            };
+            if (!historicalSupported)
+                throw new TimelineFactConflictException("Historical comparison quote is not in original context.");
+        }
         return new(result.Additions.ToArray(), result.Invalidations.ToArray(), merged.ToArray());
+    }
+
+    private static bool QuoteSupported(TimelineFactCandidate addition, TimelineEntry source,
+        IReadOnlyList<TimelineFactQuestion> questions) => addition.SourceKind switch
+    {
+        "Entry" => source.Title.Contains(addition.SourceQuote, StringComparison.Ordinal)
+            || source.Content.Contains(addition.SourceQuote, StringComparison.Ordinal),
+        "Clarification" => questions.Any(x => x.Answer?.Contains(addition.SourceQuote, StringComparison.Ordinal) == true),
+        _ => false
+    };
+
+    private static bool HistoricalAnswerContains(string evidence, string quote)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<TimelineFactQuestion[]>(evidence)?
+                .Any(x => x?.Answer?.Contains(quote, StringComparison.Ordinal) == true) == true;
+        }
+        catch (JsonException) { return false; }
     }
 
     private static void Require(string value, int max)

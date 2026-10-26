@@ -115,4 +115,7 @@ public sealed class TimelineFactJob : AuditedEntity
     public Guid Version { get; set; } = Guid.NewGuid();
     public long? ExtractionRevision { get; set; }
     public string? ExtractionResultHash { get; set; }
+    public string? ExtractionInputJson { get; set; }
+    public string? EffectiveInputFingerprint { get; set; }
+    public string? ExtractionSupportJson { get; set; }
 }

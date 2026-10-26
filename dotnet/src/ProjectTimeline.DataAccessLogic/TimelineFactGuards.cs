@@ -26,7 +26,19 @@ public sealed partial class ProjectTimelineDbContext
             throw new TimelineFactConflictException("Accepted reconciliation locks this source; corrections require a new entry.");
     }
 
-    private sealed record AcceptanceQuestion(string Question, string? Answer);
+    private sealed record AcceptanceQuestion(string Question, string? Answer,
+        [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)] Guid? ExtractionGenerationId = null,
+        [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)] Guid? ExtractionAnswerId = null);
+
+    private async Task ValidateReviewQuestionsAsync(TimelineEntry source, string json, CancellationToken ct)
+    {
+        AcceptanceQuestion[] questions;
+        try { questions = JsonSerializer.Deserialize<AcceptanceQuestion[]>(json) ?? throw new JsonException(); }
+        catch (JsonException) { throw new TimelineFactConflictException("Invalid clarification evidence."); }
+        if (questions.Any(x => x is null)) throw new TimelineFactConflictException("Invalid clarification evidence.");
+        await ValidateExtractionReviewReferencesAsync(source, questions.Select(x => new TimelineExtractionReviewReference(
+            x.ExtractionGenerationId, x.ExtractionAnswerId, x.Question, x.Answer)), ct);
+    }
 
     // Validate the whole persisted proposal, not merely whichever changed facts the caller happened to attach.
     private async Task ValidateAcceptanceAsync(TimelineFactProposal proposal, CancellationToken ct)
@@ -64,6 +76,7 @@ public sealed partial class ProjectTimelineDbContext
             || stored.QuestionsJson.Length > 20000 || stored.ClarificationEvidence != JsonSerializer.Serialize(questions))
             throw new TimelineFactConflictException("Acceptance requires complete, unchanged clarification evidence.");
 
+        await ValidateReviewQuestionsAsync(source, stored.QuestionsJson, ct);
         var additions = await TimelineFactAdditions.AsNoTracking().Where(x => x.ProposalId == stored.Id).ToListAsync(ct);
         var invalidations = await TimelineFactInvalidations.AsNoTracking().Where(x => x.ProposalId == stored.Id).ToListAsync(ct);
         if (additions.Count > 200 || invalidations.Count > 200
@@ -172,7 +185,7 @@ public sealed partial class ProjectTimelineDbContext
                 || Users.Any(u => u.Id == source.AuthorId && u.UserRole.RoleName == "Admin")), ct))
             throw new TimelineFactConflictException("Extraction author cannot write this project.");
         if (change.Properties.Any(p => p.IsModified && p.Metadata.Name is not
-            ("State" or "LeaseOwner" or "LeaseExpiresAtUtc" or "LastErrorCode" or "ExtractionResultHash" or "UpdatedAtUtc")))
+            ("State" or "LeaseOwner" or "LeaseExpiresAtUtc" or "LastErrorCode" or "ExtractionResultHash" or "ExtractionSupportJson" or "UpdatedAtUtc")))
             throw new TimelineFactConflictException("Extraction completion cannot rewrite its lease evidence.");
         var proposal = ChangeTracker.Entries<TimelineFactProposal>().SingleOrDefault(x => x.State == EntityState.Added && x.Entity.Id == job.Id)?.Entity;
         if (proposal is null || proposal.EntryId != source.Id || proposal.Status != "Generated"
@@ -187,10 +200,22 @@ public sealed partial class ProjectTimelineDbContext
             || facts.Select(TimelineFactEvidence.CandidateKey).Distinct().Count() != facts.Count
             || job.ExtractionResultHash != TimelineFactEvidence.ResultHash(facts))
             throw new TimelineFactConflictException("Extraction result identity is invalid.");
+        if (stored.ExtractionInputJson is not null)
+        {
+            var snapshot = await ReadExtractionInputAsync(stored, source, ct);
+            IReadOnlyList<TimelineExtractionSupport> support;
+            try { support = JsonSerializer.Deserialize<TimelineExtractionSupport[]>(job.ExtractionSupportJson ?? "[]") ?? throw new JsonException(); }
+            catch (JsonException) { throw new TimelineFactConflictException("Invalid extraction support."); }
+            TimelineExtractionEvidence.Validate(source, snapshot.Input, facts, support);
+            if (support.Any(x => x.AdditionId != additions[x.CandidateIndex].Id))
+                throw new TimelineFactConflictException("Supporting evidence addition identity changed.");
+        }
+        else if (job.ExtractionSupportJson is not null)
+            throw new TimelineFactConflictException("Legacy completion cannot forge support.");
         foreach (var fact in facts)
-            if (fact.SourceKind != "Entry" || !FactText(fact.Claim, 4000) || !FactText(fact.EntityKey, 300)
+            if ((stored.ExtractionInputJson is null && fact.SourceKind != "Entry") || !FactText(fact.Claim, 4000) || !FactText(fact.EntityKey, 300)
                 || !FactText(fact.EntityType, 100) || !FactText(fact.SourceQuote, 20000)
-                || !(source.Title.Contains(fact.SourceQuote, StringComparison.Ordinal) || source.Content.Contains(fact.SourceQuote, StringComparison.Ordinal)))
+                || (fact.SourceKind == "Entry" && !(source.Title.Contains(fact.SourceQuote, StringComparison.Ordinal) || source.Content.Contains(fact.SourceQuote, StringComparison.Ordinal))))
                 throw new TimelineFactConflictException("Extraction candidate does not match grounded provenance.");
         var tracked = await Timelines.FindAsync([timeline.Id], ct);
         if (Entry(tracked!).Property(x => x.FactRevision).OriginalValue != stored.ExtractionRevision)
@@ -202,6 +227,7 @@ public sealed partial class ProjectTimelineDbContext
     private async Task ValidateFactsAsync(CancellationToken ct)
     {
         ChangeTracker.DetectChanges();
+        await ValidateEntryClarificationsAsync(ct);
         foreach (var completion in ChangeTracker.Entries<TimelineFactJob>().Where(x => x.State == EntityState.Modified
             && x.Entity.Kind == "Extraction" && x.Entity.State == "Completed").ToList())
             await ValidateExtractionCompletionAsync(completion.Entity, ct);
@@ -294,6 +320,8 @@ public sealed partial class ProjectTimelineDbContext
                     ?? throw new TimelineFactConflictException("Proposal source missing.");
                 await Timelines.FindAsync([source.TimelineId], ct);
                 if (change.State == EntityState.Added) await RequireUnreconciledFactSourceAsync(source.Id, ct);
+                if (change.State == EntityState.Added && change.Entity.Status == "Pending")
+                    await ValidateReviewQuestionsAsync(source, change.Entity.QuestionsJson, ct);
                 if (TimelineFactEvidence.Fingerprint(source) != change.Entity.SourceFingerprint)
                     throw new TimelineFactConflictException("Proposal source changed.");
                 if (change.State == EntityState.Modified) await ValidateAcceptanceAsync(change.Entity, ct);
@@ -362,6 +390,33 @@ public sealed partial class ProjectTimelineDbContext
         {
             if (change.State == EntityState.Deleted) throw new TimelineFactConflictException("Processing evidence cannot be deleted.");
             if (change.State is not (EntityState.Added or EntityState.Modified)) continue;
+            if (change.Entity.Kind == "Extraction")
+            {
+                var inputChanged = change.State == EntityState.Added || change.Property(x => x.ExtractionInputJson).IsModified
+                    || change.Property(x => x.EffectiveInputFingerprint).IsModified;
+                if (inputChanged)
+                {
+                    var source = await TimelineEntries.FindAsync([change.Entity.EntryId], ct)
+                        ?? throw new TimelineFactConflictException("Job source missing.");
+                    if (change.State == EntityState.Added && change.Entity.ExtractionInputJson is null)
+                        await StageExtractionInputAsync(change.Entity, source, ct: ct);
+                    if (!stagedExtractionInputs.Contains(change.Entity.Id)
+                        || change.State == EntityState.Modified && (change.Property(x => x.ExtractionInputJson).OriginalValue is not null
+                            || change.Entity.State != "Running" || change.Property(x => x.State).OriginalValue == "AwaitingClarification"))
+                        throw new TimelineFactConflictException("Extraction input is immutable and server captured.");
+                    await ReadExtractionInputAsync(change.Entity, source, ct);
+                }
+                if (change.State == EntityState.Modified && change.Property(x => x.State).OriginalValue == "AwaitingClarification"
+                    && (change.Entity.State is not ("AwaitingClarification" or "Superseded")
+                        || change.Entity.State == "AwaitingClarification" && change.Properties.Any(p => p.IsModified
+                            && p.Metadata.Name is not ("Version" or "UpdatedAtUtc"))))
+                    throw new TimelineFactConflictException("Waiting generations require an explicit successor.");
+            }
+            else if (change.Entity.ExtractionInputJson is not null || change.Entity.EffectiveInputFingerprint is not null || change.Entity.ExtractionSupportJson is not null)
+                throw new TimelineFactConflictException("Embedding jobs cannot carry extraction input.");
+            if (change.Entity.ExtractionSupportJson is not null && (change.State == EntityState.Added
+                || change.Property(x => x.ExtractionSupportJson).IsModified && change.Entity.State != "Completed"))
+                throw new TimelineFactConflictException("Supporting evidence requires generated completion.");
             if (change.State == EntityState.Modified && change.Properties.Any(p => p.IsModified
                 && p.Metadata.Name is "EntryId" or "FactId" or "WorkKey" or "Kind" or "SourceFingerprint"))
                 throw new TimelineFactConflictException("Job identity and source are immutable.");
@@ -392,6 +447,10 @@ public sealed partial class ProjectTimelineDbContext
                 await Timelines.FindAsync([source.TimelineId], ct);
                 var currentIds = await TimelineFactJobs.Where(x => x.EntryId == job.EntryId && x.Kind == "Extraction"
                     && x.State != "Superseded").Select(x => x.Id).ToListAsync(ct);
+                var snapshot = await ReadExtractionInputAsync(job, source, ct);
+                if (await TimelineFactJobs.AnyAsync(x => currentIds.Contains(x.Id) && x.SourceFingerprint == job.SourceFingerprint
+                    && x.Id != snapshot.PredecessorId, ct))
+                    throw new TimelineFactConflictException("Current generation evidence must be carried before supersession.");
                 if (!TimelineFactEvidence.ExtractionKey(job) || job.FactId is not null
                     || currentIds.Any(id => !ChangeTracker.Entries<TimelineFactJob>().Any(x => x.Entity.Id == id && x.Entity.State == "Superseded"))
                     || ChangeTracker.Entries<TimelineFactJob>().Count(x => x.State == EntityState.Added && x.Entity.EntryId == job.EntryId && x.Entity.Kind == "Extraction") != 1

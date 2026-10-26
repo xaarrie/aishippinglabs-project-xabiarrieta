@@ -45,6 +45,14 @@ public static class TimelineFactEndpoints
     {
         app.MapGet("/api/entries/{entryId:guid}/facts", (Guid entryId, ClaimsPrincipal user, TimelineFactApplication service, CancellationToken ct) =>
             RespondAsync(user, (actor, admin) => service.ReadAsync(entryId, actor, admin, ct))).RequireAuthorization();
+        app.MapGet("/api/entries/{entryId:guid}/fact-clarifications", (Guid entryId, ClaimsPrincipal user, TimelineFactApplication service, CancellationToken ct) =>
+            RespondAsync(user, (actor, admin) => service.ReadClarificationsAsync(entryId, actor, admin, ct))).RequireAuthorization();
+        app.MapPost("/api/entries/{entryId:guid}/fact-clarifications/{questionId:guid}/answer", (Guid entryId, Guid questionId,
+            TimelineEntryClarificationAnswerRequest request, ClaimsPrincipal user, TimelineFactApplication service, CancellationToken ct) =>
+            RespondAsync(user, (actor, admin) => service.AnswerClarificationAsync(entryId, questionId, actor, admin, request, ct))).RequireAuthorization();
+        app.MapPost("/api/entries/{entryId:guid}/fact-clarifications/resume", (Guid entryId,
+            TimelineEntryClarificationResumeRequest request, ClaimsPrincipal user, TimelineFactApplication service, CancellationToken ct) =>
+            RespondAsync(user, (actor, admin) => service.ResumeClarificationsAsync(entryId, actor, admin, request, ct))).RequireAuthorization();
         app.MapPost("/api/entries/{entryId:guid}/fact-generation", (Guid entryId, TimelineFactGenerationRequest request, ClaimsPrincipal user, TimelineFactApplication service, CancellationToken ct) =>
             RespondAsync(user, (actor, admin) => service.GenerateAsync(entryId, actor, admin, request, ct))).RequireAuthorization();
         app.MapPost("/api/entries/{entryId:guid}/fact-proposals", (Guid entryId, TimelineFactPlanRequest request, ClaimsPrincipal user, TimelineFactApplication service, CancellationToken ct) =>

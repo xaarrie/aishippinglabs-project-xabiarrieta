@@ -650,6 +650,9 @@ namespace ProjectTimeline.Database.Migrations
                 });
             DirectTimelineFactSnapshotModel.Configure(modelBuilder);
             FactInvalidationCauseSnapshotModel.Configure(modelBuilder);
+            TimelineFactFullTextSnapshotModel.Configure(modelBuilder);
+            EntryExtractionClarificationsSnapshotModel.Configure(modelBuilder);
+            ClarificationExtractionInputsSnapshotModel.Configure(modelBuilder);
 #pragma warning restore 612, 618
         }
     }

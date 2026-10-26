@@ -414,9 +414,9 @@ public sealed class AgentCostSessionTests
     }
 
     [Fact]
-    public async Task Missing_catalog_never_makes_zero_usage_free_and_equal_cache_rate_needs_no_subset_count()
+    public async Task Empty_catalog_never_makes_zero_usage_free_and_equal_cache_rate_needs_no_subset_count()
     {
-        using (var unpriced = AgentCostSession.Start())
+        using (var unpriced = AgentCostSession.Start(new Dictionary<string, AgentTokenPricing>()))
         {
             using var zero = Client(Response(input: 0, output: 0, total: 0)); await Call(zero);
             Assert.Null(unpriced.GetSnapshot().Totals.EstimatedTotalCost);

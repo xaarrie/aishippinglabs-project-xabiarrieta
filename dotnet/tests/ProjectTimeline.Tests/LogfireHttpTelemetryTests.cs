@@ -23,6 +23,7 @@ namespace ProjectTimeline.Tests;
 public sealed class LogfireHttpTelemetryTests
 {
     private const string Secret = "PRIVATE_HTTP_PAYLOAD_SENTINEL";
+    private const string AgentContent = "DISCLOSED_AGENT_CONTENT_SENTINEL";
     private const string Trace = "12345678901234567890123456789012";
     private const string Parent = "1234567890123456";
 
@@ -38,7 +39,13 @@ public sealed class LogfireHttpTelemetryTests
         var root = Assert.Single(spans, span => Name(span) == "HTTP request");
         var session = Assert.Single(spans, span => Name(span) == "agent.session");
         var agent = Assert.Single(spans, span => Name(span) == "agent.harness.run");
-        Assert.Equal(3, spans.Length);
+        var invoke = Assert.Single(spans, span => Name(span) == "invoke_agent");
+        var chat = Assert.Single(spans, span => Name(span) == "chat");
+        Assert.Equal(5, spans.Length);
+        Assert.Equal(Messages(agent, 1).Single(), Messages(invoke, 1).Single());
+        Assert.Equal(Messages(agent, 1).Single(), Messages(chat, 1).Single());
+        Assert.Equal(Messages(agent, 2).Single(), Messages(invoke, 4).Single());
+        Assert.Equal(Messages(invoke, 2).Single(), Messages(chat, 4).Single());
         Assert.True(app.Chat.Recorded);
         Assert.Equal(Messages(root, 1).Single(), Messages(session, 1).Single());
         Assert.Equal(Messages(root, 1).Single(), Messages(agent, 1).Single());
@@ -77,14 +84,19 @@ public sealed class LogfireHttpTelemetryTests
     }
 
     [Theory]
-    [InlineData("normal")]
-    [InlineData("error")]
-    [InlineData("event")]
-    [InlineData("link")]
-    [InlineData("method")]
-    public async Task Final_OTLP_excludes_all_request_payloads_and_contaminated_HTTP_data(string scenario)
+    [InlineData("normal", false)]
+    [InlineData("error", false)]
+    [InlineData("event", false)]
+    [InlineData("link", false)]
+    [InlineData("method", false)]
+    [InlineData("normal", true)]
+    [InlineData("error", true)]
+    [InlineData("event", true)]
+    [InlineData("link", true)]
+    [InlineData("method", true)]
+    public async Task Final_OTLP_excludes_all_request_payloads_and_contaminated_HTTP_data(string scenario, bool capture)
     {
-        using var app = await Fixture.Start(scenario: scenario);
+        using var app = await Fixture.Start(scenario: scenario, capture: capture);
         if (scenario == "error")
             await Assert.ThrowsAsync<InvalidOperationException>(() => app.Send());
         else await app.Send();
@@ -124,14 +136,33 @@ public sealed class LogfireHttpTelemetryTests
     {
         Assert.NotEmpty(app.Transport.Bodies);
         foreach (var body in app.Transport.Bodies)
+        {
             Assert.DoesNotContain(Secret, Encoding.UTF8.GetString(body));
+            if (!app.Capture) Assert.DoesNotContain(AgentContent, Encoding.UTF8.GetString(body));
+        }
         foreach (var span in spans)
         {
             Assert.Empty(Messages(span, 3)); // No untrusted tracestate header.
             Assert.Empty(Messages(span, 11)); // Events, including exception details.
             Assert.Empty(Messages(span, 13)); // Links can carry untrusted attributes too.
             foreach (var status in Messages(span, 15)) Assert.Empty(Messages(status, 2)); // Description.
-            Assert.Contains(Name(span), new[] { "HTTP request", "agent.session", "agent.harness.run" });
+            Assert.Contains(Name(span), new[] { "HTTP request", "agent.session", "agent.harness.run", "invoke_agent", "chat" });
+            if (Name(span) is "invoke_agent" or "chat")
+            {
+                var tags = Tags(span);
+                Assert.Equal(Name(span), tags["gen_ai.operation.name"]);
+                Assert.All(tags.Keys, key => Assert.Contains(key, app.Capture ? new[]
+                {
+                    "gen_ai.operation.name", "gen_ai.agent.name", "gen_ai.agent.id", "gen_ai.request.model",
+                    "gen_ai.response.model", "gen_ai.provider.name", "gen_ai.usage.input_tokens", "gen_ai.usage.output_tokens",
+                    "gen_ai.input.messages", "gen_ai.output.messages", "gen_ai.system_instructions", "gen_ai.tool.definitions"
+                } : new[]
+                {
+                    "gen_ai.operation.name", "gen_ai.agent.name", "gen_ai.request.model", "gen_ai.response.model",
+                    "gen_ai.provider.name", "gen_ai.usage.input_tokens", "gen_ai.usage.output_tokens"
+                }));
+                if (tags.TryGetValue("gen_ai.response.model", out var model)) Assert.Equal(app.Capture ? AgentContent : "other", model);
+            }
             if (Name(span) == "HTTP request")
                 Assert.All(Tags(span).Keys, key => Assert.Contains(key,
                     new[] { "http.request.method", "http.response.status_code" }));
@@ -144,8 +175,9 @@ public sealed class LogfireHttpTelemetryTests
         public IHost Host { get; } = host;
         public Transport Transport { get; } = transport;
         public Chat Chat { get; } = chat;
+        public bool Capture { get; init; }
 
-        public static async Task<Fixture> Start(bool enabled = true, string scenario = "normal")
+        public static async Task<Fixture> Start(bool enabled = true, string scenario = "normal", bool capture = false)
         {
             // Model the real host's local, unrecorded HTTP activity without sampling it on.
             var stopped = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -157,8 +189,9 @@ public sealed class LogfireHttpTelemetryTests
             };
             var transport = new Transport();
             var chat = new Chat();
-            var agent = new LocalCustomHarnessAgent(new CustomOpenAIClient(chat, isolateHarnessFacilities: true));
-            agent.Init("timelineFactExtraction", "gpt-4o-mini", Secret, []);
+            var agent = new LocalCustomHarnessAgent(new CustomOpenAIClient(chat, isolateHarnessFacilities: true,
+                telemetryOptions: new(capture)));
+            agent.Init("timelineFactExtraction", "gpt-4o-mini", AgentContent, []);
             var host = new HostBuilder().ConfigureWebHost(web => web.UseTestServer()
                 .ConfigureServices(services =>
                 {
@@ -167,7 +200,8 @@ public sealed class LogfireHttpTelemetryTests
                         enabled ? new Dictionary<string, string?>
                         {
                             ["Logfire:Endpoint"] = "https://logfire-eu.pydantic.dev/v1/traces",
-                            ["Logfire:Token"] = "dummy_offline_only"
+                            ["Logfire:Token"] = "dummy_offline_only",
+                            ["Logfire:CaptureAgentContent"] = capture.ToString()
                         } : []).Build());
                     // Sealed transport: every exporter request terminates in memory, never on the network.
                     services.PostConfigureAll<OtlpExporterOptions>(options =>
@@ -189,7 +223,7 @@ public sealed class LogfireHttpTelemetryTests
                             tags: new ActivityTagsCollection { [Secret] = Secret }));
                         if (scenario == "link") root.AddLink(new ActivityLink(default,
                             new ActivityTagsCollection { [Secret] = Secret }));
-                        using (AgentCostSession.Start()) await agent.RunAsync(Secret);
+                        await agent.RunAsync(AgentContent); // Ordinary wrapper owns the session beneath HTTP.
                         if (scenario == "error")
                         {
                             context.Response.StatusCode = 500;
@@ -201,7 +235,7 @@ public sealed class LogfireHttpTelemetryTests
             await host.StartAsync();
             // Register after the provider so completion follows its processor/exporter callbacks.
             ActivitySource.AddActivityListener(hostingListener);
-            return new Fixture(host, transport, chat, hostingListener, stopped) { Scenario = scenario };
+            return new Fixture(host, transport, chat, hostingListener, stopped) { Scenario = scenario, Capture = capture };
         }
 
         private string Scenario { get; init; } = "normal";
@@ -254,8 +288,8 @@ public sealed class LogfireHttpTelemetryTests
         {
             Calls++;
             Recorded = Activity.Current?.Recorded == true;
-            return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, Secret))
-                { ModelId = Secret, Usage = new() { InputTokenCount = 1, OutputTokenCount = 1, TotalTokenCount = 2 } });
+            return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, AgentContent))
+                { ModelId = AgentContent, Usage = new() { InputTokenCount = 1, OutputTokenCount = 1, TotalTokenCount = 2 } });
         }
         public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages,
             ChatOptions? options = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();

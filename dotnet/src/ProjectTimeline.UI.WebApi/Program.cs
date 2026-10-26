@@ -21,7 +21,8 @@ var jwtKey = builder.Configuration["Authentication:SigningKey"] ?? throw new Inv
 builder.Services.AddDbContext<ProjectTimelineDbContext>(o => o.UseNpgsql(connection, npgsql => npgsql.MigrationsAssembly("ProjectTimeline.Database")));
 builder.Services.AddScoped<TimelineService>();
 builder.Services.AddTimelineFacts(builder.Configuration);
-builder.Services.AddScoped<TimelineFactInformationApplication>(sp => new(sp.GetRequiredService<ProjectTimelineDbContext>()));
+builder.Services.AddScoped<TimelineFactInformationApplication>(sp => new(sp.GetRequiredService<ProjectTimelineDbContext>(),
+    telemetryOptions: sp.GetRequiredService<ProjectTimeline.BusinessLogic.Agents.Framework.AgentTelemetryOptions>()));
 builder.Services.AddScoped<ProjectService>();
 builder.Services.AddScoped<RecoveryService>();
 builder.Services.AddScoped<ProjectAuthorization>();

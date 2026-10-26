@@ -102,6 +102,7 @@ public sealed class TimelineFactRetryRunner(Func<ProjectTimelineDbContext> creat
         var state = await new TimelineFactProcessing(ProcessingContext, guarded, validationDiagnostic: diagnostic).ProcessAsync(job.Id, owner, ct);
         ct.ThrowIfCancellationRequested();
         if (blocked is not null) return blocked;
+        if (state == "AwaitingClarification") return invoked ? state : "Stale";
         if (state != "Completed") return state is "NotDue" or "LostLease" ? "Stale" : "ExtractionFailed";
         if (!invoked) return "Stale"; // Another invocation's completion is never reported as our save.
         await using var completed = createContext();
@@ -165,6 +166,13 @@ public sealed class TimelineFactRetryRunner(Func<ProjectTimelineDbContext> creat
             await check(ct);
             var result = await inner.ExtractAsync(source, ct);
             await check(ct); // Also recheck the invoking actor and eligibility before candidate persistence.
+            return result;
+        }
+        public async Task<TimelineFactExtractionOutcome> ExtractOutcomeAsync(TimelineFactExtraction source, CancellationToken ct)
+        {
+            await check(ct);
+            var result = await inner.ExtractOutcomeAsync(source, ct);
+            await check(ct);
             return result;
         }
         public Task<float[]> EmbedAsync(string claim, CancellationToken ct) => throw new InvalidOperationException("Retry never embeds.");

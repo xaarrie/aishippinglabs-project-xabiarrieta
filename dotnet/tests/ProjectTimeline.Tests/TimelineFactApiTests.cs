@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using ProjectTimeline.BusinessLogic;
+using ProjectTimeline.BusinessLogic.Agents.AgentModels;
 using ProjectTimeline.DataAccessLogic;
 using ProjectTimeline.UI.WebApi;
 using Xunit;
@@ -47,7 +48,8 @@ public sealed class TimelineFactApiTests
         await f.Db.SaveChangesAsync();
         var options = (DbContextOptions<ProjectTimelineDbContext>)f.Db.GetService<IDbContextOptions>();
         var fake = new FactReviewFakeAgent { Result = new() { Additions = [candidate],
-            Questions = [new(clarification.GetProperty("question").GetString()!, null)], Invalidations = [new(target.Id, "Explicit correction", 0)] } };
+            Questions = [new(clarification.GetProperty("question").GetString()!, null)], Invalidations = [new(target.Id, "Explicit correction", 0)],
+            InvalidationAssessments = [TimelineFactContextReconciliationTests.Assessment(target, candidate)] } };
         var api = new TimelineFactApplication(f.Db, () => fake, new(() => new(options), new BrowserCandidates(candidate)));
         var generated = await api.GenerateAsync(f.Entry.Id, f.Actor.Id, false, new());
         Assert.Equal("Pending", generated.LifecycleState); // Rejects the old browser's EntryContent/missing-entity fixtures.
@@ -175,14 +177,17 @@ public sealed class TimelineFactApiTests
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var fact = await f.AcceptAsync("Alice owns delivery.", "alice");
+        const string correctionClaim = "Bob now owns delivery instead of Alice.";
         var correction = new TimelineEntry { TimelineId = f.Timeline.Id, AuthorId = f.Actor.Id, EntryNumber = 3,
-            Title = f.Entry.Title, Content = f.Entry.Content };
+            Title = f.Entry.Title, Content = f.Entry.Content + "\n" + correctionClaim };
         f.Db.Add(correction); await f.Db.SaveChangesAsync();
         await PendingGenerationProvider.GenerateAsync(f.Db, correction, f.Actor.Id, f.Project.Id);
         var fake = new FactReviewFakeAgent { Result = new() {
             Additions = [new("Alice owns delivery.", "alice", "Person", "Alice owns delivery."),
-                new("Bob owns testing.", "bob", "Person", "Bob owns testing.")],
-            Invalidations = [new(fact.Id, "Responsibility changed", 1)] } };
+                new(correctionClaim, "bob", "Person", correctionClaim)],
+            Invalidations = [new(fact.Id, "Responsibility changed", 1)],
+            InvalidationAssessments = [TimelineFactContextReconciliationTests.Assessment(fact,
+                new(correctionClaim, "bob", "Person", correctionClaim), "ExplicitSupersession", 1)] } };
         var service = new TimelineFactApplication(f.Db, () => fake);
         var result = await service.PlanAsync(correction.Id, f.Actor.Id, false, new(null, []));
         var invalidation = Assert.Single(result.Invalidations);
@@ -196,8 +201,8 @@ public sealed class TimelineFactApiTests
         Assert.True(preview.RootElement.TryGetProperty("invalidatingAdditionId", out var additionId), "Preview must expose the stored cause addition ID.");
         Assert.Equal(storedCause.InvalidatingAdditionId, additionId.GetGuid());
         Assert.Equal(causeIndex, preview.RootElement.GetProperty("invalidatingAdditionIndex").GetInt32());
-        Assert.Equal("Bob owns testing.", preview.RootElement.GetProperty("invalidatingClaim").GetString());
-        Assert.Equal("Bob owns testing.", result.Additions[causeIndex].Claim);
+        Assert.Equal(correctionClaim, preview.RootElement.GetProperty("invalidatingClaim").GetString());
+        Assert.Equal(correctionClaim, result.Additions[causeIndex].Claim);
         Assert.True(fact.Valid);
         Assert.False(preview.RootElement.TryGetProperty("invalidatedByFactId", out _)); // Pending intent is not persisted causality.
         await service.AcceptAsync(correction.Id, result.ProposalId!.Value, f.Actor.Id, false);
@@ -207,10 +212,14 @@ public sealed class TimelineFactApiTests
         Assert.Equal(additionId.GetGuid(), old.RootElement.GetProperty("invalidatedByFactId").GetGuid());
 
         // The original link must remain readable when the cause itself is later invalidated.
-        fake.Result = new() { Additions = [new("Alice owns delivery.", "alice", "Person", "Alice owns delivery.")],
-            Invalidations = [new(additionId.GetGuid(), "Later correction", 0)] };
+        var cause = await f.Db.TimelineFacts.SingleAsync(x => x.Id == additionId.GetGuid());
+        var laterReplacement = new TimelineFactCandidate("Alice owns delivery again instead of Bob.", "alice", "Person",
+            "Alice owns delivery again instead of Bob.");
+        fake.Result = new() { Additions = [laterReplacement],
+            Invalidations = [new(additionId.GetGuid(), "Later correction", 0)],
+            InvalidationAssessments = [TimelineFactContextReconciliationTests.Assessment(cause, laterReplacement, "ExplicitSupersession")] };
         var laterEntry = new TimelineEntry { TimelineId = f.Timeline.Id, AuthorId = f.Actor.Id, EntryNumber = 4,
-            Title = f.Entry.Title, Content = f.Entry.Content };
+            Title = f.Entry.Title, Content = f.Entry.Content + "\n" + laterReplacement.Claim };
         f.Db.Add(laterEntry); await f.Db.SaveChangesAsync();
         await PendingGenerationProvider.GenerateAsync(f.Db, laterEntry, f.Actor.Id, f.Project.Id);
         var later = await service.PlanAsync(laterEntry.Id, f.Actor.Id, false, new(null, []));
@@ -220,7 +229,7 @@ public sealed class TimelineFactApiTests
         using var history = JsonDocument.Parse(JsonSerializer.Serialize(state, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
         var historical = history.RootElement.GetProperty("facts").EnumerateArray().Single(x => x.GetProperty("id").GetGuid() == fact.Id);
         Assert.Equal(additionId.GetGuid(), historical.GetProperty("invalidatedByFactId").GetGuid());
-        Assert.Equal("Bob owns testing.", laterState.Facts.Single(x => x.Id == additionId.GetGuid()).Claim);
+        Assert.Equal(correctionClaim, laterState.Facts.Single(x => x.Id == additionId.GetGuid()).Claim);
         Assert.False(laterState.Facts.Single(x => x.Id == additionId.GetGuid()).Valid);
     }
 

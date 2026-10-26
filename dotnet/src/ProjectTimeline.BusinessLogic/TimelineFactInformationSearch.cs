@@ -11,7 +11,7 @@ public sealed record TimelineFactInformationCoverage(int Entries, int EntriesWit
 public sealed record TimelineFactInformationEvidence(IReadOnlyList<TimelineFactSearchHit> Facts,
     TimelineFactInformationCoverage Coverage, long Revision);
 
-/// <summary>Latest valid extracted or accepted-review state across the timeline. No source-content or vector search.</summary>
+/// <summary>Latest valid extracted or accepted-review state across the timeline. Fact-only lexical full-text search.</summary>
 public sealed class TimelineFactInformationSearch(ProjectTimelineDbContext db, TimelineFactInformationScope scope,
     Guid actorId, bool administrator)
 {
@@ -28,6 +28,23 @@ public sealed class TimelineFactInformationSearch(ProjectTimelineDbContext db, T
         ValidateQuestion(question);
         if (limit is < 1 or > MaximumResults) throw new ArgumentOutOfRangeException(nameof(limit));
         var rows = await SearchQuery(TimelineFactSearch.Terms(question), limit + 1).ToListAsync(ct);
+        var coverage = await CoverageAsync(rows.Count > limit, ct);
+        await EnsureRevisionAsync(revision, ct);
+        return new(rows.Take(limit).ToArray(), coverage, revision);
+    }
+
+    /// <summary>Coverage only: no lexical search outside the operation's counted tools.</summary>
+    public async Task<TimelineFactInformationEvidence> CaptureCoverageAsync(string question, CancellationToken ct = default)
+    {
+        var revision = await AuthorizeAsync(ct);
+        ValidateQuestion(question);
+        var coverage = await CoverageAsync(false, ct);
+        await EnsureRevisionAsync(revision, ct);
+        return new([], coverage, revision);
+    }
+
+    private async Task<TimelineFactInformationCoverage> CoverageAsync(bool truncated, CancellationToken ct)
+    {
         var entries = db.TimelineEntries.AsNoTracking().Where(x => x.TimelineId == scope.TimelineId);
         // Latest extraction job, not any historical completion, determines coverage.
         var missing = await entries.CountAsync(x => db.TimelineFactJobs.Where(j => j.EntryId == x.Id && j.Kind == "Extraction")
@@ -37,16 +54,14 @@ public sealed class TimelineFactInformationSearch(ProjectTimelineDbContext db, T
             where review.Status == "Pending" select review.Id).CountAsync(ct);
         var warnings = new List<string> {
             "Timeline-wide latest-valid extracted or accepted-review facts only; lexical/entity matching is not exhaustive or contradiction detection.",
-            "Matching uses any of the first 12 distinct searchable terms (at least two characters each), not semantic similarity.",
-            "Grounded direct extraction is effective immediately. Pending review proposals and original entry content are never search evidence."
+            "Matching uses PostgreSQL simple whole lexemes from any of the first 12 distinct searchable terms (at least two characters each), ranked by relevance; no stemming, typo tolerance, synonyms or accent folding.",
+            "Grounded direct extraction is effective immediately. Pending reviews are excluded. Fact search is facts-only; separately verified source-entry context is not fact proof."
         };
         if (missing > 0) warnings.Add("Extraction is absent, pending or failed for some entries; explicit processing/backfill may be required.");
         if (pending > 0) warnings.Add("Pending reviews are excluded until accepted.");
-        if (rows.Count > limit) warnings.Add("Matching facts were truncated to the result limit.");
-        var coverage = new TimelineFactInformationCoverage(await entries.CountAsync(ct), missing, pending,
-            await Effective().CountAsync(ct), rows.Count > limit, warnings);
-        await EnsureRevisionAsync(revision, ct);
-        return new(rows.Take(limit).ToArray(), coverage, revision);
+        if (truncated) warnings.Add("Matching facts were truncated to the result limit.");
+        return new TimelineFactInformationCoverage(await entries.CountAsync(ct), missing, pending,
+            await Effective().CountAsync(ct), truncated, warnings);
     }
 
     public async Task EnsureRevisionAsync(long revision, CancellationToken ct = default)
@@ -55,7 +70,7 @@ public sealed class TimelineFactInformationSearch(ProjectTimelineDbContext db, T
             throw new TimelineFactConflictException("Fact state changed during information search.");
     }
 
-    private async Task<long> AuthorizeAsync(CancellationToken ct)
+    internal async Task<long> AuthorizeAsync(CancellationToken ct)
     {
         // Re-read persisted identity on every check: the captured flag is only an upper bound,
         // never authority to retain administrative access after demotion or deactivation.
@@ -80,24 +95,27 @@ public sealed class TimelineFactInformationSearch(ProjectTimelineDbContext db, T
         where entry.Timeline.ProjectId == scope.ProjectId
         select new Row { Fact = fact, Entry = entry };
 
-    private IQueryable<TimelineFactSearchHit> SearchQuery(string[] tokens, int take)
-    {
-        Expression<Func<Row, bool>> predicate = x => false;
-        foreach (var token in tokens)
-        {
-            var word = token;
-            Expression<Func<Row, bool>> match = x => x.Fact.Claim.ToLower().Contains(word)
-                || x.Fact.EntityKey.ToLower().Contains(word) || x.Fact.EntityType.ToLower().Contains(word);
-            var body = new ReplaceParameter(match.Parameters[0], predicate.Parameters[0]).Visit(match.Body)!;
-            predicate = Expression.Lambda<Func<Row, bool>>(Expression.OrElse(predicate.Body, body), predicate.Parameters);
-        }
-        return Effective().Where(predicate).OrderByDescending(x => x.Entry.EntryNumber).ThenBy(x => x.Fact.Id)
-            .Take(take).Select(x => new TimelineFactSearchHit(x.Fact.Id, x.Entry.Id, x.Entry.EntryNumber,
-                x.Fact.Claim, x.Fact.EntityKey, x.Fact.EntityType, x.Fact.SourceQuote, x.Fact.SourceKind,
-                x.Fact.SourceFingerprint, x.Fact.ClarificationEvidence, x.Fact.CreationReviewId, x.Fact.ExtractionJobId));
-    }
-    private sealed class ReplaceParameter(ParameterExpression from, ParameterExpression to) : ExpressionVisitor
-    {
-        protected override Expression VisitParameter(ParameterExpression node) => node == from ? to : node;
-    }
+    private IQueryable<TimelineFactSearchHit> SearchQuery(string[] tokens, int take) =>
+        TimelineFactFullTextSearch.Rank(db, Effective(), x => x.Fact, tokens)
+            .ThenByDescending(x => x.Entry.EntryNumber).ThenBy(x => x.Fact.Id).Take(take).Select(ResearchHit);
+
+    // Both timeline-wide paths share relevance and stable tie-breaks; counted-tool and citation APIs stay intact.
+    private IQueryable<TimelineFactSearchHit> ResearchQuery(string[] tokens, int take) => SearchQuery(tokens, take);
+
+    private static readonly Expression<Func<Row, TimelineFactSearchHit>> ResearchHit = x => new(
+        x.Fact.Id, x.Entry.Id, x.Entry.EntryNumber, x.Fact.Claim, x.Fact.EntityKey, x.Fact.EntityType,
+        x.Fact.SourceQuote, x.Fact.SourceKind, x.Fact.SourceFingerprint, x.Fact.ClarificationEvidence,
+        x.Fact.CreationReviewId, x.Fact.ExtractionJobId);
+
+    internal Task<List<TimelineFactSearchHit>> ResearchSearchAsync(string query, int take, CancellationToken ct)
+        => ResearchQuery(TimelineFactSearch.Terms(query), take).ToListAsync(ct);
+
+    internal Task<List<TimelineFactSearchHit>> ResearchFetchAsync(Guid[] ids, CancellationToken ct)
+        => Effective().Where(x => ids.Contains(x.Fact.Id)).OrderBy(x => x.Fact.Id).Select(ResearchHit).ToListAsync(ct);
+
+    // Only the operation toolset calls this, after resolving a previously returned, currently effective fact.
+    internal Task<TimelineEntry?> ResearchSourceAsync(Guid entryId, CancellationToken ct)
+        => db.TimelineEntries.AsNoTracking().SingleOrDefaultAsync(x => x.Id == entryId
+            && x.TimelineId == scope.TimelineId && x.Timeline.ProjectId == scope.ProjectId, ct);
+
 }

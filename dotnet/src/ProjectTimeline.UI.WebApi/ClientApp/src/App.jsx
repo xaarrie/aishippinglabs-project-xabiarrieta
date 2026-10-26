@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { api, clearToken, download, setToken } from "./api.js";
 import FactReview from "./FactReview.jsx";
+import EntryClarifications from "./EntryClarifications.jsx";
 import TimelineSearchResults from "./TimelineSearchResults.jsx";
 import { createSearchRequestFence, searchTimelineFacts } from "./timelineSearch.js";
 import { hasEntryWriteAccess } from "./entryAccess.js";
@@ -413,9 +414,11 @@ function EntryDetail({ id, projectId, timelineId, user }) {
   const canWrite = hasEntryWriteAccess(user, project.data, participants.data);
   const [facts, setFacts] = useState(null);
   const [reviewActive, setReviewActive] = useState(false);
+  const [clarificationActive, setClarificationActive] = useState(false);
+  const [factRefreshKey, setFactRefreshKey] = useState(0);
   const source = savedFactSource(facts, id);
   const receipt = history.state?.entrySave;
-  const editable = factReviewActions(facts, { canWrite, busy: reviewActive }).edit && !reviewActive;
+  const editable = factReviewActions(facts, { canWrite, busy: reviewActive || clarificationActive }).edit && !reviewActive && !clarificationActive;
   const { data: entry, loading, error, reload } = useResource(`/api/entries/${id}?projectId=${projectId}&timelineId=${timelineId}`, null);
   const timeline = useResource(`/api/timelines/${timelineId}`, null);
   const contextError = timeline.data && timeline.data.projectId !== projectId ? "The timeline does not belong to this project." : entry && entry.timelineId !== timelineId ? "The entry does not belong to this timeline." : "";
@@ -424,7 +427,8 @@ function EntryDetail({ id, projectId, timelineId, user }) {
     <LoadFeedback label="entry" loading={loading || timeline.loading} error={error || timeline.error || contextError} onRetry={() => { reload(); timeline.reload(); }} hasData={!!entry} />
     {receipt?.id === id && <p className={`request-feedback ${receipt.generationError ? "request-error" : "request-success"}`} role={receipt.generationError ? "alert" : "status"}>{receipt.generationError || "Entry saved. Review the generation status and pending facts below; nothing was automatically accepted."}</p>}
     {verified && <><ActionBar label="Entry source actions"><Link className="secondary" aria-disabled={!editable} href={`/projects/${projectId}/timelines/${timelineId}/entries/${id}/edit`}>Edit source</Link>{facts?.lifecycleState === "Reconciled" && <Link className="primary" href={`/projects/${projectId}/timelines/${timelineId}/entries/new`}>New correction entry</Link>}</ActionBar><section className="workspace-section" aria-label="Saved entry source">{source ? <><div className="entry-metadata"><StatusBadge>{source.status}</StatusBadge><span>By {entry.author.displayName}</span><span>Entry {entry.entryNumber}</span></div><h2>Entry content</h2><p className="entry-content">{source.content}</p><p className="context-field"><span>Entry identifier</span><strong>{entry.id}</strong></p></> : <p role="status">Loading authoritative saved source...</p>}</section>
-      <FactReview key={id} entry={entry} canWrite={canWrite} onActiveChange={setReviewActive} onStateChange={setFacts} />
+      <EntryClarifications key={`clarifications-${id}`} entryId={id} canWrite={canWrite} blocked={reviewActive} refreshKey={`${facts?.generationId ?? ''}:${facts?.lifecycleState ?? ''}`} onResume={() => setFactRefreshKey(value => value + 1)} onActiveChange={setClarificationActive} />
+      <FactReview key={id} entry={entry} canWrite={canWrite} onActiveChange={setReviewActive} onStateChange={setFacts} refreshKey={factRefreshKey} />
       <section className="workspace-section"><h2>Artifacts</h2><ArtifactLinks artifacts={entry.artifacts} />{canWrite && <UploadForm key={id} entryId={entry.id} onUploaded={reload} />}</section></>}
   </section>;
 }

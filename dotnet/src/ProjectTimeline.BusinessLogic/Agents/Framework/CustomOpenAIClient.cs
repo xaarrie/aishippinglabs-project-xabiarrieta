@@ -13,12 +13,18 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
         private readonly string? openaikey;
         private readonly IChatClient? injectedClient;
         private readonly bool isolateHarnessFacilities;
+        private readonly AgentTelemetryOptions telemetryOptions;
         private readonly OpenAIClient? sdkClient;
         private static readonly HttpClient BoundedTransport = new(new BoundedResponseHandler(null));
 
         // Caller owns an injected transport; SDK retries are explicitly disabled for bounded billing.
         public CustomOpenAIClient(string apiKey, HttpClient? transport = null, bool isolateHarnessFacilities = false)
+            : this(apiKey, transport, isolateHarnessFacilities, new()) { }
+
+        public CustomOpenAIClient(string apiKey, HttpClient? transport, bool isolateHarnessFacilities,
+            AgentTelemetryOptions? telemetryOptions)
         {
+            this.telemetryOptions = telemetryOptions ?? new();
             if (string.IsNullOrWhiteSpace(apiKey)) throw new ArgumentException("Provider credential required.");
             this.isolateHarnessFacilities = isolateHarnessFacilities;
             var bounded = transport is null ? BoundedTransport : new HttpClient(new BoundedResponseHandler(transport));
@@ -38,11 +44,26 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
             {
                 var sdk = sdkClient ?? (openaikey is not null ? new CustomOpenAIClient(openaikey).sdkClient : null);
                 if (sdk is null) throw new TimelineFactProviderException("Unavailable");
-                var response = await sdk.GetEmbeddingClient("text-embedding-3-small").GenerateEmbeddingsAsync(
-                    new[] { input }, new OpenAI.Embeddings.EmbeddingGenerationOptions { Dimensions = 1536 }, token);
-                if (response.Value.Model != "text-embedding-3-small" || response.Value.Count != 1 || response.Value[0].Index != 0)
+                const string model = "text-embedding-3-small";
+                using var ownedSession = AgentCostSession.Current is null ? AgentCostSession.Start() : null;
+                var session = AgentCostSession.Current;
+                var admitted = session?.BeginCall(model) == true;
+                OpenAI.Embeddings.OpenAIEmbeddingCollection? embeddings = null;
+                try
+                {
+                    var result = await sdk.GetEmbeddingClient(model).GenerateEmbeddingsAsync(
+                        new[] { input }, new OpenAI.Embeddings.EmbeddingGenerationOptions { Dimensions = 1536 }, token);
+                    embeddings = result.Value;
+                }
+                finally
+                {
+                    // Actual provider usage may be billed even when subsequent vector validation fails.
+                    if (admitted) session!.CompleteEmbeddingCall(model, embeddings);
+                }
+                var response = embeddings!;
+                if (response.Model != model || response.Count != 1 || response[0].Index != 0)
                     throw new TimelineFactProviderException("InvalidResponse");
-                var vector = response.Value[0].ToFloats().ToArray();
+                var vector = response[0].ToFloats().ToArray();
                 TimelineFactProcessing.ValidateVector(vector);
                 return vector;
             }, ct);
@@ -96,8 +117,11 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
         public CustomOpenAIClient() : this(isolateHarnessFacilities: false) { }
 
         // Opt-in only: existing callers retain the SDK's local facilities and key validation.
-        public CustomOpenAIClient(bool isolateHarnessFacilities)
+        public CustomOpenAIClient(bool isolateHarnessFacilities) : this(isolateHarnessFacilities, new()) { }
+
+        public CustomOpenAIClient(bool isolateHarnessFacilities, AgentTelemetryOptions? telemetryOptions)
         {
+            this.telemetryOptions = telemetryOptions ?? new();
             this.isolateHarnessFacilities = isolateHarnessFacilities;
             openaikey = Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? "";
             if (string.IsNullOrWhiteSpace(openaikey))
@@ -106,13 +130,18 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
 
         // Infrastructure seam: all factories use this transport; no environment credentials needed.
         public CustomOpenAIClient(IChatClient chatClient, bool isolateHarnessFacilities = false)
+            : this(chatClient, isolateHarnessFacilities, new()) { }
+
+        public CustomOpenAIClient(IChatClient chatClient, bool isolateHarnessFacilities,
+            AgentTelemetryOptions? telemetryOptions)
         {
+            this.telemetryOptions = telemetryOptions ?? new();
             injectedClient = chatClient ?? throw new ArgumentNullException(nameof(chatClient));
             this.isolateHarnessFacilities = isolateHarnessFacilities;
         }
 
-        // Keep native SDK tracing disabled: 1.24.0 emits exception text even with EnableSensitiveData=false.
-        // Wrapper runs use AgentTelemetry instead; direct factory consumers have no framework run span.
+        // Content capture defaults on. Hosts still need an egress privacy boundary: even
+        // sensitive=false does not suppress SDK exception text. Web API sanitizes this source.
         public AIAgent CreateAgent(string model, string agentName, string instructions, List<AITool> tools)
         {
             
@@ -121,15 +150,23 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
             name: agentName,
             instructions: instructions,
             tools: tools);
-            return agent;
+            return WithNativeTelemetry(agent);
         }
 
         public AIAgent CreateHarnessAgent(string model, string agentName, string instructions, List<AITool> tools)
         {
-            return GetTrackedChatClient(model).AsHarnessAgent(
+            // Harness supplies its own chat pipeline with no deferred auto-wiring slot.
+            // Instrument the leaf explicitly, below its function-invocation loop.
+            var client = new OpenTelemetryChatClient(GetTrackedChatClient(model), sourceName: AgentTelemetry.NativeSourceName)
+            {
+                EnableSensitiveData = telemetryOptions.CaptureAgentContent
+            };
+            var agent = client.AsHarnessAgent(
                 new HarnessAgentOptions
                 {
                     Name = agentName,
+                    // Replace the default-source wrapper, rather than nesting a second agent span.
+                    DisableOpenTelemetry = true,
                     HarnessInstructions = "Use tools deliberately and report verified results.",
                     ChatOptions = new ChatOptions
                     {
@@ -146,14 +183,23 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
                   
                 }
                 );
+            return WithNativeTelemetry(agent);
         }
+
+        private AIAgent WithNativeTelemetry(AIAgent agent) => agent.AsBuilder()
+            // Plain agents expose the SDK slot below tool aggregation. Harness has no slot
+            // and is explicitly instrumented above; auto-wiring does not add a second client.
+            .UseOpenTelemetry(AgentTelemetry.NativeSourceName, configure: telemetry => telemetry.EnableSensitiveData = telemetryOptions.CaptureAgentContent)
+            .Build();
 
         // Install before SDK tool aggregation, even when no session exists yet. Structured run
         // middleware wraps this same pipeline; it must not install a second accounting decorator.
         private IChatClient GetTrackedChatClient(string model)
         {
             var client = GetChatClient(model);
-            return client is UsageTrackingChatClient ? client : new UsageTrackingChatClient(client, model);
+            var tracked = client is UsageTrackingChatClient ? client : new UsageTrackingChatClient(client, model);
+            // Call-time ambient admission stays above accounting, even for already initialized agents.
+            return new ExecutionBudgetChatClient(tracked);
         }
 
         public IChatClient GetChatClient(string model)

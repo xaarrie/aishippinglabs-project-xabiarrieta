@@ -5,12 +5,63 @@ using Pgvector;
 
 namespace ProjectTimeline.BusinessLogic;
 
-public sealed record TimelineFactExtraction(string Title, string Content);
+[method: System.Text.Json.Serialization.JsonConstructor]
+public sealed record TimelineFactExtraction(string Title, string Content)
+{
+    // Trusted server seam only. Never bind this input from a client request.
+    public Guid EntryId { get; private init; }
+    public TimelineEntryExtractionInput? Input { get; private init; }
+    // Value-only source identity: retained by record copies, never serialized into model context.
+    private readonly Guid timelineId;
+    private readonly int entryNumber;
+    private readonly Guid authorId;
+    public TimelineFactExtraction(TimelineEntry entry, TimelineEntryExtractionInput input) : this(entry.Title, entry.Content)
+    {
+        if (entry.Id == Guid.Empty || input is null || input.JobId == Guid.Empty || input.Answers is null)
+            throw new TimelineFactProviderException("InvalidResponse", "InvalidEvidence");
+        try
+        {
+            var answers = TimelineEntryClarificationEvidence.Snapshot(entry, input.Answers);
+            if (input.SourceFingerprint != TimelineFactEvidence.Fingerprint(entry)
+                || input.EffectiveFingerprint != TimelineEntryClarificationEvidence.EffectiveFingerprint(entry, answers))
+                throw new TimelineFactConflictException("Input identity changed.");
+            EntryId = entry.Id;
+            timelineId = entry.TimelineId;
+            entryNumber = entry.EntryNumber;
+            authorId = entry.AuthorId;
+            Input = input with { Answers = answers };
+        }
+        catch (TimelineFactConflictException) { throw new TimelineFactProviderException("InvalidResponse", "InvalidEvidence"); }
+    }
+    public TimelineFactExtraction Freeze() => Input is null ? this : new(new TimelineEntry
+        { Id = EntryId, TimelineId = timelineId, EntryNumber = entryNumber, AuthorId = authorId,
+            Title = Title, Content = Content }, Input);
+}
+
+// C2b must consume this outcome, not the legacy list API. Citations retain all supporting identities;
+// PrimarySpanId deterministically selects the literal SourceQuote/SourceKind used on the candidate.
+public sealed record TimelineFactCandidateEvidence(int CandidateIndex, string PrimarySpanId,
+    IReadOnlyList<Agents.TimelineFactSourceSpan> Spans);
+public sealed record TimelineFactExtractionOutcome(IReadOnlyList<TimelineFactCandidate> Candidates,
+    IReadOnlyList<TimelineEntryQuestion> Questions, IReadOnlyList<TimelineFactCandidateEvidence> Evidence);
+public sealed class TimelineFactClarificationRequiredException(TimelineFactExtractionOutcome outcome)
+    : Exception("Extraction requires clarification; consume ExtractOutcomeAsync.")
+{
+    public TimelineFactExtractionOutcome Outcome { get; } = outcome;
+}
 public interface ITimelineFactProvider
 {
     string ExtractionModel { get; }
     Task<IReadOnlyList<TimelineFactCandidate>> ExtractAsync(TimelineFactExtraction source, CancellationToken ct);
     Task<float[]> EmbedAsync(string claim, CancellationToken ct);
+    async Task<TimelineFactExtractionOutcome> ExtractOutcomeAsync(TimelineFactExtraction source, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        source = source.Freeze();
+        if (source.Input?.Answers.Count > 0)
+            throw new TimelineFactProviderException("InvalidResponse", "ClarificationInputUnsupported");
+        return new(await ExtractAsync(source, ct), [], []);
+    }
 }
 public sealed class TimelineFactProviderException : Exception
 {
@@ -23,7 +74,7 @@ public sealed class TimelineFactProviderException : Exception
         DiagnosticCode = diagnosticCode is "InputLimit" or "ResponseLimit" or "ResponseEnvelope" or "ResponseSchema"
             or "ResponseTruncated" or "ResponseRefused" or "CandidateLimit" or "CandidateShape"
             or "UnsupportedQuote" or "DuplicateCandidate" or "SemanticUnsupported" or "MalformedAssessment"
-            or "InvalidEvidence" ? diagnosticCode : null;
+            or "InvalidEvidence" or "ClarificationInputUnsupported" or "InvalidQuestions" ? diagnosticCode : null;
         if (DiagnosticCode is not null) Data["DiagnosticCode"] = DiagnosticCode;
     }
 }
@@ -92,8 +143,9 @@ public sealed class TimelineFactProcessing(Func<ProjectTimelineDbContext> create
         if (regenerate && (expectedGenerationId is null || !await db.TimelineFactJobs.AnyAsync(x => x.Id == expectedGenerationId
             && x.EntryId == entry.Id && x.Kind == "Extraction", ct) || current is not null && current.Id != expectedGenerationId))
             throw new TimelineFactConflictException("Generation changed; refresh before regenerating.");
-        await db.SupersedeFactProposalsAsync(entry.Id, includeGeneration: true, ct);
         var job = NewExtractionJob(entry);
+        await db.StageExtractionInputAsync(job, entry, current?.Id, ct);
+        await db.SupersedeFactProposalsAsync(entry.Id, includeGeneration: true, ct);
         job.WorkKey = $"extraction:{entry.Id:N}:{job.Id:N}";
         db.TimelineFactJobs.Add(job);
         await db.SaveChangesAsync(ct);
@@ -111,12 +163,18 @@ public sealed class TimelineFactProcessing(Func<ProjectTimelineDbContext> create
         {
             var job = await db.TimelineFactJobs.SingleOrDefaultAsync(x => x.Id == jobId, ct);
             if (job is null) return "NotDue";
-            if (job.State is "Completed" or "Skipped" or "Failed" or "Superseded") return job.State;
+            if (job.State is "Completed" or "Skipped" or "Failed" or "Superseded" or "AwaitingClarification") return job.State;
             if (job.NextAttemptAtUtc > Now || job.State == "Running" && job.LeaseExpiresAtUtc > Now) return "NotDue";
             if (job.Kind == "Extraction")
             {
                 var entry = await db.TimelineEntries.AsNoTracking().SingleAsync(x => x.Id == job.EntryId, ct);
                 job.ExtractionRevision = await db.Timelines.Where(x => x.Id == entry.TimelineId).Select(x => x.FactRevision).SingleAsync(ct);
+                try
+                {
+                    if (job.ExtractionInputJson is null) await db.StageExtractionInputAsync(job, entry, ct: ct);
+                    await db.ReadExtractionInputAsync(job, entry, ct);
+                }
+                catch (TimelineFactConflictException) { acquisitionFailure = new TimelineFactProviderException("InvalidResponse", "InvalidEvidence"); }
                 if (job.Model == "unassigned")
                 {
                     try { job.Model = provider.ExtractionModel; }
@@ -155,17 +213,17 @@ public sealed class TimelineFactProcessing(Func<ProjectTimelineDbContext> create
                     if (!await db.Users.AnyAsync(x => x.Id == entry.AuthorId && x.IsActive, ct)
                         || !await new ProjectAuthorization(db).CanWriteAsync(projectId, entry.AuthorId, admin, ct))
                         throw new TimelineFactProviderException("Unavailable");
-                    source = new(entry.Title, entry.Content);
+                    source = new(entry, (await db.ReadExtractionInputAsync(job, entry, ct)).Input);
                 }
                 else if (kind == "Embedding") claim = await EligibleClaimAsync(db, job, ct);
                 else throw new TimelineFactProviderException("InvalidResponse");
             }
-            IReadOnlyList<TimelineFactCandidate>? candidates = null;
+            TimelineFactExtractionOutcome? outcome = null;
             float[]? vector = null;
             if (source is not null)
             {
-                candidates = await provider.ExtractAsync(source, ct);
-                ValidateCandidates(candidates, source);
+                outcome = await provider.ExtractOutcomeAsync(source, ct);
+                ValidateOutcome(outcome, source);
             }
             else if (claim is not null)
             {
@@ -179,7 +237,19 @@ public sealed class TimelineFactProcessing(Func<ProjectTimelineDbContext> create
             var leased = await completion.TimelineFactJobs.SingleAsync(x => x.Id == jobId, ct);
             if (!Owns(leased, owner, version)) return "LostLease";
             if (kind == "Extraction")
-                await new TimelineFactService(completion).CompleteExtractionAsync(leased, new(candidates!, [], []), ct);
+            {
+                var entry = await completion.TimelineEntries.AsNoTracking().SingleAsync(x => x.Id == leased.EntryId, ct);
+                await completion.ReadExtractionInputAsync(leased, entry, ct);
+                if (outcome!.Questions.Count > 0)
+                {
+                    // Generation-qualified stable keys avoid ambiguity when valid rounds reuse provider keys.
+                    var questions = outcome.Questions.Select(x => new TimelineEntryQuestion(Convert.ToHexString(
+                        System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"{leased.Id:N}:{x.Key}"))), x.Text)).ToArray();
+                    await completion.StageEntryQuestionsForLeaseAsync(leased.Id, owner, version, questions, ct);
+                    await completion.SaveChangesAsync(ct);
+                }
+                else await new TimelineFactService(completion).CompleteGeneratedExtractionAsync(leased, outcome, ct);
+            }
             else
             {
                 if (kind == "Embedding")
@@ -201,9 +271,12 @@ public sealed class TimelineFactProcessing(Func<ProjectTimelineDbContext> create
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            await RecordFailureAsync(jobId, owner, version, "Cancelled"); return "Cancelled";
+            var state = await RecordFailureAsync(jobId, owner, version, "Cancelled");
+            return state == "LostLease" ? state : "Cancelled";
         }
         catch (DbUpdateConcurrencyException) { return "LostLease"; }
+        catch (TimelineFactConflictException)
+        { return await RecordFailureAsync(jobId, owner, version, "InvalidResponse"); }
         catch (Exception ex)
         {
             // Do not propagate or log provider exception messages/payloads, including unexpected SDK errors.
@@ -212,6 +285,34 @@ public sealed class TimelineFactProcessing(Func<ProjectTimelineDbContext> create
             if (failure?.DiagnosticCode is { } diagnostic) validationDiagnostic?.Invoke(diagnostic);
             return state;
         }
+    }
+
+    private static void ValidateOutcome(TimelineFactExtractionOutcome outcome, TimelineFactExtraction source)
+    {
+        if (outcome is null || outcome.Questions is null || outcome.Evidence is null || outcome.Candidates is null
+            || outcome.Questions.Count + source.Input!.Answers.Count > 20 || outcome.Questions.Any(x => x is null
+                || !TimelineEntryClarificationEvidence.Text(x.Key, 100) || !TimelineEntryClarificationEvidence.Text(x.Text, 2000)
+                || !x.Text.TrimEnd().EndsWith('?'))
+            || outcome.Questions.Select(x => x.Key).Distinct(StringComparer.Ordinal).Count() != outcome.Questions.Count)
+            throw new TimelineFactProviderException("InvalidResponse", "InvalidQuestions");
+        var candidates = outcome.Candidates;
+        if (source.Input!.Answers.Count == 0) ValidateCandidates(candidates, source);
+        else
+        {
+            if (candidates.Any(x => x is null || x.SourceKind is not ("Entry" or "Clarification")))
+                throw new TimelineFactProviderException("InvalidResponse", "CandidateShape");
+            ValidateCandidateShape(candidates.Select(x => x with { SourceKind = "Entry" }).ToArray());
+        }
+        Agents.TimelineFactStructuredResponse.ValidateSource(source);
+        try
+        {
+            var entry = new TimelineEntry { Id = source.EntryId, Title = source.Title, Content = source.Content };
+            TimelineExtractionEvidence.Validate(entry, source.Input!, candidates.Select(x => new TimelineFact
+                { Claim = x.Claim, EntityKey = x.EntityKey, EntityType = x.EntityType, SourceQuote = x.SourceQuote, SourceKind = x.SourceKind }).ToArray(),
+                outcome.Evidence.Select(x => x is null || x.Spans is null ? null! : new TimelineExtractionSupport(x.CandidateIndex,
+                    x.PrimarySpanId, x.Spans.Select(s => s is null ? null! : Agents.TimelineFactSourceEvidence.ToStored(s)).ToArray())).ToArray());
+        }
+        catch (TimelineFactConflictException) { throw new TimelineFactProviderException("InvalidResponse", "InvalidEvidence"); }
     }
 
     private bool Owns(TimelineFactJob job, string owner, Guid version) => job.State == "Running"

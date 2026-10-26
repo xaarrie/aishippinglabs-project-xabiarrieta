@@ -306,7 +306,7 @@ public sealed class AgentCostIntegrationTests
         if (kind == "missing") response.Usage = null;
         if (kind == "partial") { response.Usage!.InputTokenCount = null; response.Usage.TotalTokenCount = null; }
         var agent = Agent(new CustomOpenAIClient(new Chat((_, _) => kind == "failure" ? throw new InvalidDataException(Secret) : Task.FromResult(response)), true));
-        var session = AgentCostSession.Start(kind == "unpriced" ? null : Prices());
+        var session = AgentCostSession.Start(kind == "unpriced" ? new Dictionary<string, AgentTokenPricing>() : Prices());
         try { await Record.ExceptionAsync(() => agent.RunAsync(Secret)); }
         finally { session.Dispose(); }
         var summary = Assert.Single(capture.Stopped, span => span.OperationName == "agent.session");

@@ -30,28 +30,38 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
            
 
         }
-        public Task<AgentResponse> RunAsync(string message) => AgentTelemetry.RunAsync(async () =>
+        public Task<AgentResponse> RunAsync(string message) => RunAsync(message, CancellationToken.None);
+
+        public Task<AgentResponse> RunAsync(string message, CancellationToken ct) => AgentTelemetry.RunAsync(() =>
+            AgentExecutionBudget.RunAsync(async token =>
         {
             if (agent == null)
             {
                 throw new Exception("agent cannot be null");
             }
 
-            var response = await agent.RunAsync(message);
+            token.ThrowIfCancellationRequested();
+            var response = await agent.RunAsync(message, cancellationToken: token);
+            token.ThrowIfCancellationRequested();
             AnalyzeContent(response.Messages);
             return response;
-        }, telemetryAgentName, telemetryModel, harness: false, runKind: "text");
+        }, ct), telemetryAgentName, telemetryModel, harness: false, runKind: "text");
 
-        public Task<AgentResponse<T>> RunAsync<T>(string message) where T : class => AgentTelemetry.RunAsync(async () =>
+        public Task<AgentResponse<T>> RunAsync<T>(string message) where T : class => RunAsync<T>(message, CancellationToken.None);
+
+        public Task<AgentResponse<T>> RunAsync<T>(string message, CancellationToken ct) where T : class => AgentTelemetry.RunAsync(() =>
+            AgentExecutionBudget.RunAsync(async token =>
         {
             if (agent == null)
             {
                 throw new Exception("agent cannot be null");
             }
-            var response = await agent.RunAsync<T>(message);
+            token.ThrowIfCancellationRequested();
+            var response = await agent.RunAsync<T>(message, cancellationToken: token);
+            token.ThrowIfCancellationRequested();
             AnalyzeContent(response.Messages);
             return response;
-        }, telemetryAgentName, telemetryModel, harness: false, runKind: "typed");
+        }, ct), telemetryAgentName, telemetryModel, harness: false, runKind: "typed");
 
         public Task<AgentResponse<T>> RunAsync<T>(string message, StructuredAgentRunOptions options, CancellationToken ct) where T : class => AgentTelemetry.RunAsync(async () =>
         {

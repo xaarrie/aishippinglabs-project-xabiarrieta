@@ -30,6 +30,7 @@ public sealed class AgentCostSession : IDisposable
         if (currency is null || currency.Length != 3 || currency.Any(c => c is < 'A' or > 'Z'))
             throw new ArgumentException("Use one three-letter uppercase currency code.", nameof(currency));
         this.prices = new(StringComparer.Ordinal);
+        prices ??= currency == "USD" ? AgentModelPricing.Usd : null;
         if (prices is not null)
             foreach (var pair in prices)
             {
@@ -86,13 +87,22 @@ public sealed class AgentCostSession : IDisposable
         }
     }
 
-    internal void CompleteCall(string? requestedModel, ChatResponse? response)
+    internal void CompleteCall(string? requestedModel, ChatResponse? response) =>
+        CompleteCall(requestedModel, response?.ModelId, Counts.Read(response?.Usage));
+
+    internal void CompleteEmbeddingCall(string requestedModel, OpenAI.Embeddings.OpenAIEmbeddingCollection? response) =>
+        CompleteCall(requestedModel, response?.Model, Counts.Read(response?.Usage is { } usage ? new UsageDetails
+        {
+            InputTokenCount = usage.InputTokenCount, TotalTokenCount = usage.TotalTokenCount,
+            OutputTokenCount = 0 // Embedding vectors are not generated text tokens.
+        } : null));
+
+    private void CompleteCall(string? requestedModel, string? responseModel, Counts counts)
     {
         lock (gate)
         {
             if (disposed) return;
-            var counts = Counts.Read(response?.Usage);
-            var model = string.IsNullOrEmpty(response?.ModelId) ? requestedModel : response.ModelId;
+            var model = string.IsNullOrEmpty(responseModel) ? requestedModel : responseModel;
             prices.TryGetValue(model ?? "", out var price); // Exact response ID wins; no alias/fuzzy fallback.
             decimal? inputCost = null, outputCost = null;
             if (price is not null)

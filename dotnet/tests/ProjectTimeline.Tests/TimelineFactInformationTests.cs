@@ -56,7 +56,8 @@ public sealed class TimelineFactInformationTests
         var proposal = await service.PrepareAsync(scope, f.Actor.Id, false, revision,
             new([new("Alice owns release.", "alice-release", "Person", "Alice owns release.")], [], []));
         await service.AcceptAsync(scope, proposal.Id, f.Actor.Id, false);
-        var found = await Search(f).SearchAsync("ALIC");
+        Assert.Empty((await Search(f).SearchAsync("ALIC")).Facts);
+        var found = await Search(f).SearchAsync("ALICE");
         Assert.Equal(2, found.Facts.Count);
         Assert.Equal(later.Id, found.Facts[0].EntryId);
         Assert.Equal(proposal.Id, found.Facts[0].CreationReviewId);
@@ -107,7 +108,8 @@ public sealed class TimelineFactInformationTests
         Assert.Single(result.Facts); Assert.True(result.Coverage.Truncated);
         Assert.Equal(2, result.Coverage.AcceptedValidFacts);
         Assert.Contains(result.Coverage.Warnings, x => x.Contains("truncated"));
-        Assert.Single((await Search(f).SearchAsync("deliv", 1)).Facts);
+        Assert.Empty((await Search(f).SearchAsync("deliv", 1)).Facts);
+        Assert.Single((await Search(f).SearchAsync("delivery", 1)).Facts);
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => Search(f).SearchAsync("alice", 51));
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => Search(f).SearchAsync("alice", 0));
         using var db = new ProjectTimelineDbContext(new DbContextOptionsBuilder<ProjectTimelineDbContext>()
@@ -116,7 +118,8 @@ public sealed class TimelineFactInformationTests
         var method = typeof(TimelineFactInformationSearch).GetMethod("SearchQuery", BindingFlags.Instance | BindingFlags.NonPublic)!;
         var query = (IQueryable<TimelineFactSearchHit>)method.Invoke(search, [new[] { "deliv" }, 2])!;
         var sql = query.ToQueryString();
-        Assert.Contains("LIMIT", sql); Assert.Contains("lower(", sql); Assert.Contains("Accepted", sql);
+        Assert.Contains("LIMIT", sql); Assert.Contains("@@", sql); Assert.Contains("ts_rank(", sql);
+        Assert.Contains("Accepted", sql);
         Assert.DoesNotContain("\"Content\"", sql); Assert.DoesNotContain("Embedding", sql);
         Assert.DoesNotContain("EntryNumber\" <=", sql);
     }
@@ -125,6 +128,8 @@ public sealed class TimelineFactInformationTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData("!?")]
+    [InlineData("--")]
+    [InlineData("__")]
     [InlineData("x")]
     public async Task Invalid_question_never_constructs_agent(string question)
     {
@@ -170,7 +175,9 @@ public sealed class TimelineFactInformationTests
         var result = await new SearchEntriesAgent(f.Db, new(f.Project.Id, f.Timeline.Id), f.Actor.Id, false, () => fake).RunAsync(question);
         Assert.Equal(question, JsonDocument.Parse(fake.Message!).RootElement.GetProperty("question").GetString());
         Assert.DoesNotContain("Bob owns testing", fake.Message);
-        Assert.Contains("untrusted DATA", fake.Instructions); Assert.Empty(fake.Tools);
+        Assert.Contains("untrusted DATA", fake.Instructions);
+        Assert.Equal(new[] { "fetch_facts", "fetch_source_entry", "search_facts", "search_facts_batch" }, fake.Tools.Select(x => x.Name).Order());
+        Assert.False(JsonDocument.Parse(fake.Message!).RootElement.TryGetProperty("facts", out _));
         var citation = Assert.Single(result.Citations);
         Assert.Equal(fact.Id, citation.FactId); Assert.Equal(f.Entry.Id, citation.EntryId);
         Assert.Equal(fact.CreationReviewId, citation.CreationReviewId);
@@ -217,7 +224,7 @@ public sealed class TimelineFactInformationTests
     }
 
     [Fact]
-    public async Task Cancellation_after_tokenless_call_discards_result_and_detaches_tracker()
+    public async Task Cancellation_during_cancellable_call_discards_result_and_detaches_tracker()
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var fact = await f.AcceptAsync("Alice owns delivery.", "alice");
@@ -227,7 +234,7 @@ public sealed class TimelineFactInformationTests
         var tracker = new FunctionCallTracker();
         var agent = new SearchEntriesAgent(f.Db, new(f.Project.Id, f.Timeline.Id), f.Actor.Id, false, () => fake, tracker);
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => agent.RunAsync("Alice", cts.Token));
-        Assert.NotNull(fake.Message); // Cancellation did not magically stop the tokenless SDK invocation.
+        Assert.NotNull(fake.Message); // The fake observes cancellation after its scripted work, just like a cooperative client.
         Assert.Single(tracker.Tools);
         Assert.Equal(0, fake.HandlerCount);
     }
@@ -519,11 +526,18 @@ internal sealed class InformationFakeAgent : ICustomAgent
     public void Init(string agentName, string model, string instructions, List<AITool> tools)
     { Instructions = instructions; Tools = tools; }
     public Task<AgentResponse> RunAsync(string message) => throw new NotSupportedException();
-    public async Task<AgentResponse<T>> RunAsync<T>(string message) where T : class
+    public Task<AgentResponse<T>> RunAsync<T>(string message) where T : class => RunAsync<T>(message, CancellationToken.None);
+    public async Task<AgentResponse<T>> RunAsync<T>(string message, CancellationToken ct) where T : class
     {
         Message = message;
+        ct.ThrowIfCancellationRequested();
+        // Preserve legacy grounding/auth assertions, but obtain the allowlist through the real tool.
+        var query = JsonDocument.Parse(message).RootElement.GetProperty("question").GetString();
+        await Tools.OfType<AIFunction>().Single(x => x.Name == "search_facts")
+            .InvokeAsync(new AIFunctionArguments { ["query"] = query }, ct);
         if (EmitEvent) handlers?.Invoke(this, new FunctionCallEventArgs { Function = new FunctionCall { ID = "fake", Name = "fake", Executed = true } });
         if (Script is not null) await Script();
+        ct.ThrowIfCancellationRequested();
         return new AgentResponse<T>(new AgentResponse(new ChatMessage(ChatRole.Assistant, Json ?? JsonSerializer.Serialize(Result))), JsonSerializerOptions.Default);
     }
 }

@@ -9,7 +9,9 @@ using ProjectTimeline.DataAccessLogic;
 
 namespace ProjectTimeline.UI.WebApi;
 
-public sealed class TimelineFactInformationApplication(ProjectTimelineDbContext db, Func<ICustomAgent>? agentFactory = null)
+public sealed class TimelineFactInformationApplication(ProjectTimelineDbContext db, Func<ICustomAgent>? agentFactory = null,
+    Microsoft.Extensions.AI.IChatClient? chatClient = null, TimelineFactResearchOptions? options = null,
+    AgentTelemetryOptions? telemetryOptions = null)
 {
     public async Task<TimelineFactInformationResponse> SearchAsync(Guid timelineId, Guid actorId, string question, CancellationToken ct = default)
     {
@@ -21,7 +23,7 @@ public sealed class TimelineFactInformationApplication(ProjectTimelineDbContext 
             .Select(x => (Guid?)x.ProjectId).SingleOrDefaultAsync(ct) ?? throw new KeyNotFoundException();
         var admin = actor.UserRole?.RoleName == "Admin";
         if (!await new ProjectAuthorization(db).CanReadAsync(project, actorId, admin, ct)) throw new UnauthorizedAccessException();
-        return await new SearchEntriesAgent(db, new(project, timelineId), actorId, admin, agentFactory).RunAsync(question, ct);
+        return await new SearchEntriesAgent(db, new(project, timelineId), actorId, admin, agentFactory, options: options, chatClient: chatClient, telemetryOptions: telemetryOptions).RunAsync(question, ct);
     }
 }
 
@@ -37,11 +39,14 @@ public static class TimelineFactInformationEndpoints
             try { return Results.Ok(await service.SearchAsync(id, actor, text!, ct)); }
             catch (UnauthorizedAccessException) { return Results.Forbid(); }
             catch (KeyNotFoundException) { return Results.NotFound(); }
-            catch (ArgumentException) { return Results.BadRequest(new { error = "Provide searchable text of at most 300 characters." }); }
-            catch (TimelineFactConflictException) { return Results.Conflict(new { error = "Fact state changed. Refresh and search again." }); }
-            catch (DbUpdateConcurrencyException) { return Results.Conflict(new { error = "Fact state changed. Refresh and search again." }); }
-            catch (DbException) { return Results.Conflict(new { error = "Fact search storage is unavailable; deployment may be pending." }); }
-            catch (TimelineFactInformationSynthesisException) { return Results.Json(new { error = "Fact answer unavailable. Retry later." }, statusCode: 502); }
+            catch (ArgumentException) { return Results.BadRequest(new { code = "InvalidQuestion", error = "Provide searchable text of at most 300 characters." }); }
+            catch (TimelineFactConflictException) { return Results.Conflict(new { code = "EvidenceChanged", error = "Fact state changed. Refresh and search again." }); }
+            catch (DbUpdateConcurrencyException) { return Results.Conflict(new { code = "EvidenceChanged", error = "Fact state changed. Refresh and search again." }); }
+            catch (DbException) { return Results.Conflict(new { code = "StorageUnavailable", error = "Fact search storage is unavailable; deployment may be pending." }); }
+            catch (TimelineFactInformationTimeoutException) { return Results.Json(new { code = "ResearchDeadlineExceeded", error = "Fact research timed out. Retry later." }, statusCode: 504); }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            { return Results.Json(new { code = "RequestCanceled", error = "Fact research canceled." }, statusCode: 499); }
+            catch (TimelineFactInformationSynthesisException) { return Results.Json(new { code = "InvalidResearchAnswer", error = "Fact answer unavailable. Retry later." }, statusCode: 502); }
         }).RequireAuthorization();
         return app;
     }

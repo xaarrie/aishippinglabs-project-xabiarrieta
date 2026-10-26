@@ -12,6 +12,24 @@ const directFact = { ...fact, id: 'direct', sourceKind: 'Entry', clarificationEv
 const directCitation = { factId: directFact.id, entryId: directFact.entryId, entryNumber: directFact.entryNumber, creationReviewId: null, extractionJobId: 'job1' };
 const directResponse = () => ({ ...response(), facts: [directFact], citations: [directCitation] });
 
+// Small fixture overlays merge research metadata; arrays replace rather than concatenate.
+const fixtures = JSON.parse(readFileSync(new URL('../tests/timelineFactResearch.fixtures.json', import.meta.url), 'utf8'));
+const researchResponse = (name = 'mixed') => {
+  const base = structuredClone(fixtures.mixed);
+  const patch = structuredClone(fixtures.cases[name] ?? {});
+  return { ...base, ...patch, research: { ...base.research, ...patch.research } };
+};
+function renderResult(result) {
+  const require = createRequire(import.meta.url);
+  const React = require('react');
+  const { renderToStaticMarkup } = require('react-dom/server');
+  const { transformSync } = require('esbuild');
+  const code = transformSync(readFileSync(new URL('./TimelineSearchResults.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs' }).code;
+  const module = { exports: {} };
+  new Function('require', 'module', 'exports', code)(require, module, module.exports);
+  return renderToStaticMarkup(React.createElement(module.exports.default, { result, projectId: 'p', timelineId: 't', Link: 'a' }));
+}
+
 test('structured evidence is mandatory, including valid counters and fact provenance', () => {
   for (const value of [{ content: 'legacy' }, { ...response(), coverage: null }, { ...response(), coverage: { ...coverage, entries: -1 } }, { ...response(), facts: [{ ...fact, claim: null }] }]) {
     assert.throws(() => normalizeTimelineSearch(value), /structured fact evidence/i);
@@ -128,14 +146,7 @@ test('request fence rejects abort-ignorant late resolutions after replacement, c
   assert.equal(fence.isCurrent(third), false);
 });
 test('actual result rendering escapes evidence and narrative and separates cited/context cards', () => {
-  const require = createRequire(import.meta.url);
-  const React = require('react');
-  const { renderToStaticMarkup } = require('react-dom/server');
-  const { transformSync } = require('esbuild'); // Already supplied by Vite; no added dependency.
-  const code = transformSync(readFileSync(new URL('./TimelineSearchResults.jsx', import.meta.url), 'utf8'), { loader: 'jsx', format: 'cjs' }).code;
-  const module = { exports: {} };
-  new Function('require', 'module', 'exports', code)(require, module, module.exports);
-  const render = result => renderToStaticMarkup(React.createElement(module.exports.default, { result, projectId: 'p', timelineId: 't', Link: 'a' }));
+  const render = renderResult;
   const html = render(normalizeTimelineSearch({ ...response(), content: '<script>alert(1)</script>' }));
   assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
   assert.ok(html.includes('&lt;b&gt;Accepted claim&lt;/b&gt;'));
@@ -162,6 +173,222 @@ test('actual result rendering escapes evidence and narrative and separates cited
   assert.ok(empty.includes('No accepted fact matches'));
   assert.ok(!empty.includes('Model narrative'));
 });
+test('new DTO supports mixed and context-only citations without promoting anchors into cited facts', () => {
+  for (const name of ['mixed', 'contextOnly']) {
+    const value = researchResponse(name);
+    const result = normalizeTimelineSearch(value);
+    assert.equal(result.content, value.content);
+    assert.deepEqual(result.sourceContexts, value.sourceContexts);
+    assert.deepEqual(result.contextCitations, value.contextCitations);
+    assert.deepEqual(result.citedSourceContexts, value.sourceContexts);
+    assert.deepEqual(result.additionalSourceContexts, []);
+    assert.equal(result.citedFacts.length, name === 'mixed' ? 1 : 0);
+    assert.equal(result.additionalFacts.length, name === 'mixed' ? 0 : 1);
+    const html = renderResult(result);
+    assert.ok(html.includes(value.content));
+    assert.ok(html.includes('Source-entry context cited in answer'));
+    assert.ok(html.includes('Source-entry context — not accepted fact proof'));
+    assert.ok(html.includes('Anchor fact IDs:'));
+    assert.ok(html.includes(value.facts[0].id));
+    assert.ok(html.includes(sourceEntryHref('p', 't', value.facts[0].entryId)));
+  }
+});
+test('retrieved but uncited context cannot ground a narrative', () => {
+  const value = researchResponse('contextOnly'); value.contextCitations = [];
+  const result = normalizeTimelineSearch(value);
+  assert.equal(result.content, '');
+  assert.deepEqual(result.citedSourceContexts, []);
+  assert.deepEqual(result.additionalSourceContexts, value.sourceContexts);
+  const html = renderResult(result);
+  assert.ok(!html.includes(value.content));
+  assert.ok(html.includes('Additional source-entry context'));
+  assert.ok(html.includes(value.sourceContexts[0].text));
+  assert.ok(result.warnings.some(x => x.includes('No verified answer citations')));
+});
+test('context evidence rejects malformed, duplicate, orphaned and contradictory anchors', () => {
+  const invalid = [
+    null, {}, { evidenceId: 'entry-id-is-not-evidence' }, { entryId: 'unknown' }, { entryNumber: 8 },
+    { entryNumber: 0 }, { sourceFingerprint: 'stale' }, { evidenceKind: 'Entry' },
+    { text: null }, { text: '' }, { truncated: 'false' }, { anchorFactIds: null },
+    { anchorFactIds: [] }, { anchorFactIds: ['unknown'] }, { anchorFactIds: [null] }
+  ];
+  for (const change of invalid) {
+    const value = researchResponse();
+    value.sourceContexts = [change === null ? null : Object.keys(change).length ? { ...value.sourceContexts[0], ...change } : {}];
+    assert.throws(() => normalizeTimelineSearch(value), /structured fact evidence/i, JSON.stringify(change));
+  }
+  for (const field of ['sourceContexts', 'contextCitations']) {
+    for (const bad of [null, {}, 'context']) {
+      assert.throws(() => normalizeTimelineSearch({ ...researchResponse(), [field]: bad }), /structured fact evidence/i);
+    }
+  }
+  for (const evidenceId of [researchResponse().sourceContexts[0].evidenceId, '55555555-5555-4555-8555-555555555555']) {
+    const duplicate = researchResponse(); duplicate.sourceContexts.push({ ...duplicate.sourceContexts[0], evidenceId });
+    assert.throws(() => normalizeTimelineSearch(duplicate), /structured fact evidence/i);
+  }
+  for (const key of Object.keys(researchResponse().sourceContexts[0])) {
+    const missing = researchResponse(); delete missing.sourceContexts[0][key];
+    assert.throws(() => normalizeTimelineSearch(missing), /structured fact evidence/i, key);
+  }
+  const anchors = researchResponse(); anchors.sourceContexts[0].anchorFactIds.push(anchors.facts[0].id);
+  assert.throws(() => normalizeTimelineSearch(anchors), /structured fact evidence/i);
+  for (const change of [{ entryId: 'foreign' }, { entryNumber: 99 }, { sourceFingerprint: 'changed' }]) {
+    const value = researchResponse(); value.facts[0] = { ...value.facts[0], ...change };
+    assert.throws(() => normalizeTimelineSearch(value), /structured fact evidence/i);
+  }
+  const orphan = researchResponse(); orphan.facts = []; orphan.citations = [];
+  assert.throws(() => normalizeTimelineSearch(orphan), /structured fact evidence/i);
+});
+test('context citations require exact membership and provenance; tampering suppresses even mixed narrative', () => {
+  const changes = [null, {}, { evidenceId: '55555555-5555-4555-8555-555555555555' },
+    { entryId: 'foreign' }, { entryNumber: 99 }, { sourceFingerprint: 'wrong' },
+    { evidenceKind: 'FactProof' }, { anchorFactIds: [] }, { anchorFactIds: ['unknown'] },
+    { anchorFactIds: null }, { anchorFactIds: ['11111111-1111-4111-8111-111111111111', 'unknown'] }];
+  for (const name of ['mixed', 'contextOnly']) for (const change of changes) {
+    const value = researchResponse(name);
+    value.contextCitations = [change === null ? null : change && Object.keys(change).length
+      ? { ...value.contextCitations[0], ...change } : {}];
+    const result = normalizeTimelineSearch(value);
+    assert.equal(result.content, '', `${name}: ${JSON.stringify(change)}`);
+    assert.equal(result.contextCitations.length, 0);
+    assert.ok(result.warnings.some(x => x.includes('unverified')));
+    assert.ok(!renderResult(result).includes(value.content));
+  }
+  for (const duplicateKind of ['citation', 'anchor']) {
+    const value = researchResponse('contextOnly');
+    if (duplicateKind === 'citation') value.contextCitations.push(structuredClone(value.contextCitations[0]));
+    else value.contextCitations[0].anchorFactIds.push(value.facts[0].id);
+    assert.equal(normalizeTimelineSearch(value).content, '');
+  }
+  for (const key of Object.keys(researchResponse().contextCitations[0])) {
+    const missing = researchResponse('contextOnly'); delete missing.contextCitations[0][key];
+    assert.equal(normalizeTimelineSearch(missing).content, '', key);
+  }
+  const unseen = normalizeTimelineSearch(researchResponse('malformed'));
+  assert.equal(unseen.content, '');
+  const rawEntry = researchResponse('contextOnly'); rawEntry.contextCitations[0].evidenceId = rawEntry.facts[0].entryId;
+  assert.equal(normalizeTimelineSearch(rawEntry).content, '');
+});
+test('a character-truncated whitespace prefix remains a valid server context', () => {
+  const value = researchResponse('contextOnly');
+  // The server slices title + newline + body by characters, not trimmed text.
+  value.sourceContexts[0].text = '\n'; value.sourceContexts[0].truncated = true;
+  Object.assign(value.research, { status: 'Partial', stopReason: 'EvidenceTruncated', evidenceTruncated: true });
+  assert.equal(normalizeTimelineSearch(value).content, value.content);
+  assert.ok(renderResult(normalizeTimelineSearch(value)).includes('Truncated source-entry text'));
+});
+test('multiple anchors are set-matched and each must match source entry and fingerprint', () => {
+  const value = researchResponse('contextOnly');
+  const second = { ...value.facts[0], id: '66666666-6666-4666-8666-666666666666' };
+  value.facts.push(second); value.sourceContexts[0].anchorFactIds.push(second.id);
+  value.contextCitations[0].anchorFactIds.unshift(second.id);
+  assert.equal(normalizeTimelineSearch(value).content, value.content);
+  value.facts[1].sourceFingerprint = 'other';
+  assert.throws(() => normalizeTimelineSearch(value), /structured fact evidence/i);
+});
+test('research metadata exposes partial evidence and attempt counts without speculative cross-counter caps', () => {
+  const value = researchResponse('partial');
+  const result = normalizeTimelineSearch(value);
+  assert.equal(result.content, value.content);
+  assert.deepEqual(result.research, value.research);
+  assert.ok(result.warnings.includes(value.research.warnings[0]));
+  const html = renderResult(result);
+  for (const label of ['Partial', 'ToolOrEvidenceLimit', 'Model calls', '4 / 6', 'Tool attempts', '9 / 8', 'Search attempts', '5 / 4', 'Budget exhausted', 'Evidence truncated']) assert.ok(html.includes(label), label);
+  const truncated = researchResponse();
+  Object.assign(truncated.research, { status: 'Partial', stopReason: 'EvidenceTruncated', evidenceTruncated: true });
+  truncated.sourceContexts[0].truncated = true;
+  const rendered = renderResult(normalizeTimelineSearch(truncated));
+  assert.ok(rendered.includes(truncated.content));
+  assert.ok(rendered.includes('Truncated source-entry text'));
+  assert.ok(rendered.includes('EvidenceTruncated'));
+});
+test('empty, insufficient and provider-limit outcomes suppress narrative but retain available evidence', () => {
+  for (const [status, stopReason] of [['Empty', 'NoEligibleFacts'], ['InsufficientEvidence', 'NoEvidence'], ['Partial', 'ProviderCallLimit']]) {
+    const value = researchResponse(); Object.assign(value.research, { status, stopReason });
+    const result = normalizeTimelineSearch(value);
+    assert.equal(result.content, '');
+    assert.equal(result.sourceContexts.length, 1);
+    assert.equal(result.citedFacts.length, 0);
+    assert.equal(result.citedSourceContexts.length, 0);
+    const html = renderResult(result);
+    assert.ok(html.includes(status)); assert.ok(html.includes(stopReason));
+    assert.ok(!html.includes(value.content));
+    assert.ok(html.includes(value.sourceContexts[0].text));
+  }
+  const empty = researchResponse(); empty.facts = []; empty.citations = []; empty.sourceContexts = []; empty.contextCitations = [];
+  Object.assign(empty.research, { status: 'InsufficientEvidence', stopReason: 'NoEvidence' });
+  const html = renderResult(normalizeTimelineSearch(empty));
+  assert.ok(html.includes('InsufficientEvidence')); assert.ok(!html.includes('Model narrative'));
+});
+test('research shape validates known statuses, nonnegative counters, limits and boolean metadata', () => {
+  for (const change of [
+    { status: 'Done' }, { stopReason: 'Deadline' }, { modelCalls: -1 }, { toolCalls: 1.5 },
+    { searchQueries: '1' }, { evidenceTruncated: null }, { budgetExhausted: 'false' },
+    { warnings: [1] }, { warnings: null }, { limits: null }
+  ]) {
+    const value = researchResponse(); Object.assign(value.research, change);
+    assert.throws(() => normalizeTimelineSearch(value), /structured fact evidence/i, JSON.stringify(change));
+  }
+  const limits = researchResponse().research.limits;
+  for (const key of Object.keys(limits)) for (const invalid of [-1, '6', null, ...(key === 'deadlineSeconds' ? [] : [1.5])]) {
+    const value = researchResponse(); value.research.limits[key] = invalid;
+    assert.throws(() => normalizeTimelineSearch(value), /structured fact evidence/i, key);
+  }
+  const value = researchResponse(); value.research.limits.deadlineSeconds = 0.5;
+  assert.equal(normalizeTimelineSearch(value).research.limits.deadlineSeconds, 0.5);
+});
+test('legacy optional fields and research null normalize safely without sharing mutable state', () => {
+  for (const value of [response(), { ...response(), research: null }]) {
+    const result = normalizeTimelineSearch(value);
+    assert.equal(result.research, null);
+    for (const field of ['sourceContexts', 'contextCitations', 'citedSourceContexts', 'additionalSourceContexts']) assert.deepEqual(result[field], []);
+    assert.equal(result.content, 'Narrative');
+  }
+  const nullable = researchResponse('contextOnly'); nullable.research = null;
+  assert.equal(normalizeTimelineSearch(nullable).content, nullable.content);
+  const noContextCitations = researchResponse(); delete noContextCitations.contextCitations;
+  assert.deepEqual(normalizeTimelineSearch(noContextCitations).contextCitations, []);
+  const noContexts = researchResponse(); delete noContexts.sourceContexts;
+  assert.equal(normalizeTimelineSearch(noContexts).content, '');
+  assert.deepEqual(normalizeTimelineSearch(noContexts).sourceContexts, []);
+  const value = researchResponse(); const result = normalizeTimelineSearch(value);
+  result.sourceContexts[0].anchorFactIds.push('mutated');
+  result.contextCitations[0].anchorFactIds.push('mutated');
+  result.coverage.warnings.push('mutated'); result.research.warnings.push('mutated');
+  result.research.limits.maxToolCalls = 0; result.facts[0].claim = 'mutated';
+  assert.deepEqual(value, researchResponse());
+});
+test('clarification anchors keep review answers distinct from separately fetched entry text', () => {
+  const value = researchResponse('contextOnly');
+  Object.assign(value.facts[0], { sourceKind: 'Clarification', sourceQuote: 'Review answer only', clarificationEvidence: JSON.stringify([{ Question: 'Owner?', Answer: 'Review answer only' }]) });
+  const html = renderResult(normalizeTimelineSearch(value));
+  assert.ok(html.includes('review answer, not original entry text'));
+  assert.ok(html.includes('Question: Owner? — Answer: Review answer only'));
+  assert.ok(html.includes('Source-entry context — not accepted fact proof'));
+  assert.ok(html.includes(value.sourceContexts[0].text));
+});
+test('fact checks still reject invalid origins and unknown fact citations when context exists', () => {
+  const value = researchResponse(); value.facts[0].extractionJobId = 'another-origin';
+  assert.throws(() => normalizeTimelineSearch(value), /structured fact evidence/i);
+  const unknownFact = researchResponse(); unknownFact.contextCitations = [];
+  unknownFact.citations[0].factId = unknownFact.sourceContexts[0].evidenceId;
+  const result = normalizeTimelineSearch(unknownFact);
+  assert.equal(result.content, ''); assert.equal(result.citations.length, 0);
+  assert.equal(result.additionalFacts.length, 1);
+});
+test('source context, provenance and research warnings render as escaped plain React text', () => {
+  const value = researchResponse('contextOnly');
+  value.content = '<script>narrative</script>';
+  value.sourceContexts[0].text = '<script>context</script><img src=x onerror=bad>';
+  value.research.warnings = ['<script>warning</script>'];
+  value.sourceContexts[0].sourceFingerprint = '<fingerprint>';
+  value.contextCitations[0].sourceFingerprint = '<fingerprint>';
+  value.facts[0].sourceFingerprint = '<fingerprint>';
+  const html = renderResult(normalizeTimelineSearch(value));
+  for (const escaped of ['&lt;script&gt;narrative', '&lt;script&gt;context', '&lt;img', '&lt;script&gt;warning', '&lt;fingerprint&gt;']) assert.ok(html.includes(escaped), escaped);
+  assert.ok(!html.includes('<script>')); assert.ok(!html.includes('<img'));
+});
+
 test('UI separates narrative/evidence, uses plain content and existing source routes, preserves action lifecycle', () => {
   const app = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
   const search = app.slice(app.indexOf('function TimelineSearch('), app.indexOf('function TimelineEntries('));

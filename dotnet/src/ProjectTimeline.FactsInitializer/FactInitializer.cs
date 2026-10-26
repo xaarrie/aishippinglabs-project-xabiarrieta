@@ -118,6 +118,7 @@ public sealed class FactInitializer(Func<ProjectTimelineDbContext> createContext
         var state = await new TimelineFactProcessing(createContext, guarded, validationDiagnostic: diagnostic).ProcessAsync(jobId, $"initializer:{jobId:N}", ct);
         ct.ThrowIfCancellationRequested();
         if (blocked is not null) return blocked;
+        if (state == "AwaitingClarification") return state;
         if (state != "Completed")
         {
             await using var db = createContext();
@@ -167,6 +168,13 @@ public sealed class FactInitializer(Func<ProjectTimelineDbContext> createContext
             await check(ct);
             var result = await inner.ExtractAsync(source, ct);
             await check(ct); // Recheck the invoking actor and eligibility after HTTP, before candidate completion.
+            return result;
+        }
+        public async Task<TimelineFactExtractionOutcome> ExtractOutcomeAsync(TimelineFactExtraction source, CancellationToken ct)
+        {
+            await check(ct);
+            var result = await inner.ExtractOutcomeAsync(source, ct);
+            await check(ct);
             return result;
         }
         public Task<float[]> EmbedAsync(string claim, CancellationToken ct) => throw new InvalidOperationException("Initializer never embeds.");

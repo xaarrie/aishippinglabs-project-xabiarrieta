@@ -54,6 +54,9 @@ public static class AgentTelemetry
 
     internal static async Task<T> RunAsync<T>(Func<Task<T>> run, string? agentName, string? model, bool harness, string runKind)
     {
+        // Caller/outer scopes own aggregation; only the outermost unscoped wrapper owns disposal.
+        // Declared before the wrapper so its summary is published after the awaited run and span stop.
+        using var ownedSession = AgentCostSession.Current is null ? AgentCostSession.Start() : null;
         using var activity = Source.StartActivity(harness ? "agent.harness.run" : "agent.run", ActivityKind.Internal,
             parentContext: default(ActivityContext), tags: new ActivityTagsCollection
             {

@@ -25,7 +25,8 @@ public sealed class LogfireTelemetryTests
         {
             ["Logfire:Endpoint"] = endpoint,
             ["Logfire:Token"] = token,
-            ["Logfire:ServiceName"] = service
+            ["Logfire:ServiceName"] = service,
+            ["Logfire:CaptureAgentContent"] = "false"
         }).Build();
 
     [Theory]
@@ -37,8 +38,9 @@ public sealed class LogfireTelemetryTests
     {
         var services = new ServiceCollection();
         Assert.Same(services, services.AddLogfireTelemetry(Configuration(endpoint, token, service)));
-        Assert.Empty(services);
+        Assert.Equal(typeof(AgentTelemetryOptions), Assert.Single(services).ServiceType);
         using var provider = services.BuildServiceProvider();
+        Assert.False(provider.GetRequiredService<AgentTelemetryOptions>().CaptureAgentContent);
         Assert.Null(provider.GetService<TracerProvider>());
     }
 

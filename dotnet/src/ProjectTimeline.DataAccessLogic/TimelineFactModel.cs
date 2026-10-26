@@ -34,7 +34,12 @@ public static class TimelineFactModel
         Text(fact.Property(x => x.SourceFingerprint), 64);
         Text(fact.Property(x => x.ClarificationEvidence), 20000);
         Text(fact.Property(x => x.EmbeddingModel), 100);
-        if (postgres) fact.Property(x => x.Embedding).HasColumnType("vector(1536)");
+        if (postgres)
+        {
+            fact.Property(x => x.Embedding).HasColumnType("vector(1536)");
+            fact.HasIndex(x => new { x.Claim, x.EntityKey, x.EntityType }).HasDatabaseName("IX_TimelineEntryFacts_FullText")
+                .HasMethod("gin").IsTsVectorExpressionIndex("simple");
+        }
         else fact.Ignore(x => x.Embedding); // Explicitly no vector support on SQLite/InMemory.
 
         var proposal = b.Entity<TimelineFactProposal>();
@@ -71,6 +76,9 @@ public static class TimelineFactModel
         job.HasIndex(x => new { x.State, x.NextAttemptAtUtc, x.LeaseExpiresAtUtc });
         job.Property(x => x.Version).IsConcurrencyToken();
         job.Property(x => x.ExtractionResultHash).HasMaxLength(64);
+        job.Property(x => x.EffectiveInputFingerprint).HasMaxLength(64);
+        job.Property(x => x.ExtractionInputJson).HasColumnType("text");
+        job.Property(x => x.ExtractionSupportJson).HasColumnType("text");
         Text(job.Property(x => x.WorkKey), 300);
         Text(job.Property(x => x.Kind), 30);
         Text(job.Property(x => x.SourceFingerprint), 64);

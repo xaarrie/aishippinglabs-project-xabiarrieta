@@ -7,13 +7,14 @@ const lifecycleText = {
   NotGenerated: 'Not generated. Save or explicitly generate pending candidates.',
   Loading: 'Generation in progress. Candidates are not active facts.',
   Retry: 'Generation is waiting for retry/backoff. Check processing details or explicitly regenerate.',
+  AwaitingClarification: 'Extraction is waiting for entry clarification answers. Save answers in Entry extraction clarifications, then explicitly extract using answers.',
   Failed: 'Generation failed. The saved entry is retained; explicitly regenerate to try again.',
   Empty: 'Generation completed with no candidates. Nothing has been activated. Reconcile explicitly even for empty evidence.',
   Pending: 'Pending candidates. Nothing is active until you reconcile and explicitly accept.',
   Reconciled: 'Reconciliation accepted. Source editing is locked, including empty accepted evidence. Corrections require a new entry.'
 };
 
-export default function FactReview({ entry, canWrite, dirty = false, onActiveChange = () => {}, onStateChange = () => {} }) {
+export default function FactReview({ entry, canWrite, dirty = false, onActiveChange = () => {}, onStateChange = () => {}, refreshKey = 0 }) {
   const [state, setState] = useState(null);
   const [proposal, setProposal] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -48,6 +49,11 @@ export default function FactReview({ entry, canWrite, dirty = false, onActiveCha
     const timer = setInterval(() => refresh(), 8000);
     return () => { fence.cancel(); clearInterval(timer); callbacks.current.onActiveChange(false); };
   }, [entry.id, dirty]);
+
+  useEffect(() => {
+    if (refreshKey) refresh();
+    // Optional read-only invalidation; do not remount or reset proposal drafts.
+  }, [refreshKey]);
 
   const actions = factReviewActions(state, { canWrite, dirty, busy, conflict });
   const run = async action => {

@@ -54,14 +54,18 @@ public sealed class TimelineFactModelTests
         Assert.Contains("\"FK_TimelineFactInvalidations_TimelineEntryFacts_FactId\" REFERENCES \"TimelineEntryFacts\"", forward);
         Assert.Contains("\"FK_TimelineFactJobs_TimelineEntryFacts_FactId\" REFERENCES \"TimelineEntryFacts\"", forward);
         Assert.Contains("DROP TABLE \"TimelineEntryFacts\"", reverse);
-        var fact = db.Model.FindEntityType(typeof(TimelineFact))!;
-        foreach (var foreignKey in fact.GetForeignKeys().Concat(fact.GetReferencingForeignKeys()).Where(x => !x.Properties.Any(p => p.Name is "ExtractionJobId" or "InvalidatedByFactId")))
+        var target = new ProjectTimeline.Database.Migrations.TimelineFacts().TargetModel;
+        var fact = target.FindEntityType(typeof(TimelineFact).FullName!)!;
+        foreach (var foreignKey in fact.GetForeignKeys().Concat(fact.GetReferencingForeignKeys()))
             Assert.Contains($"CONSTRAINT \"{foreignKey.GetConstraintName()}\"", forward);
-        foreach (var index in fact.GetIndexes().Where(x => !x.Properties.Any(p => p.Name is "ExtractionJobId" or "InvalidatedByFactId")))
+        foreach (var index in fact.GetIndexes())
             Assert.Contains($"INDEX \"{index.GetDatabaseName()}\" ON \"TimelineEntryFacts\"", forward);
         foreach (var sql in new[] { forward, reverse })
+        {
+            Assert.DoesNotContain("IX_TimelineEntryFacts_FullText", sql);
             foreach (var obsolete in new[] { "\"TimelineFacts\"", "PK_TimelineFacts", "IX_TimelineFacts_", "FK_TimelineFacts_", "_TimelineFacts_FactId" })
                 Assert.DoesNotContain(obsolete, sql);
+        }
     }
 
     [Fact]
@@ -75,7 +79,7 @@ public sealed class TimelineFactModelTests
         Assert.True(vector.IsNullable);
         Assert.Equal(typeof(Pgvector.Vector), vector.ClrType);
         Assert.False(db.Database.HasPendingModelChanges());
-        var target = new ProjectTimeline.Database.Migrations.FactInvalidationCause().TargetModel;
+        var target = new ProjectTimeline.Database.Migrations.ClarificationExtractionInputs().TargetModel;
         var snapshot = db.GetService<IMigrationsAssembly>().ModelSnapshot!.Model;
         Assert.Equal(snapshot.GetEntityTypes().Select(x => x.Name).Order(), target.GetEntityTypes().Select(x => x.Name).Order());
         foreach (var entity in snapshot.GetEntityTypes())

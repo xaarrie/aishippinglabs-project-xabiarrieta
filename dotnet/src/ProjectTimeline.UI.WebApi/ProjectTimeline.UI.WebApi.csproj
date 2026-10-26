@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup><RootNamespace>ProjectTimeline.UI.WebApi</RootNamespace><InvariantGlobalization>true</InvariantGlobalization>  <UserSecretsId>5a72656d-d094-4840-8507-00612447bf7a</UserSecretsId>
   </PropertyGroup>
-  <Target Name="BuildClientApp" BeforeTargets="BeforeBuild" Condition="'$(DesignTimeBuild)' != 'true'">
+  <Target Name="BuildClientApp" BeforeTargets="BeforeBuild" Condition="'$(DesignTimeBuild)' != 'true' and '$(SkipClientBuild)' != 'true'">
     <Exec Command="npm run build --prefix ClientApp" />
   </Target>
   <ItemGroup>

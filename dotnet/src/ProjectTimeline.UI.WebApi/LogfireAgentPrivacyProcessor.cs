@@ -5,7 +5,7 @@ using ProjectTimeline.BusinessLogic.Agents.Framework;
 namespace ProjectTimeline.UI.WebApi;
 
 /// <summary>Native SDK egress boundary, ordered before batch/exporter enqueue.</summary>
-internal sealed class LogfireAgentPrivacyProcessor : BaseProcessor<Activity>
+internal sealed class LogfireAgentPrivacyProcessor(AgentTelemetryOptions options) : BaseProcessor<Activity>
 {
     private static bool IsNative(Activity activity) => activity.Source.Name == AgentTelemetry.NativeSourceName;
 
@@ -35,6 +35,19 @@ internal sealed class LogfireAgentPrivacyProcessor : BaseProcessor<Activity>
 
         foreach (var tag in tags)
         {
+            // Installed SDK 1.24.0 / Extensions.AI 10.10.0 emit these as string tags,
+            // not events. Admit their full native values only under the shared policy.
+            // Never broaden this to gen_ai.*: SDK errors also carry exception payloads.
+            if (options.CaptureAgentContent && tag.Value is string && tag.Key is
+                ("gen_ai.input.messages" or "gen_ai.output.messages" or "gen_ai.system_instructions"
+                or "gen_ai.tool.definitions" or "gen_ai.agent.id" or "gen_ai.response.id"
+                or "gen_ai.tool.name" or "gen_ai.tool.type" or "gen_ai.tool.description"
+                or "gen_ai.tool.call.id" or "gen_ai.tool.call.arguments" or "gen_ai.tool.call.result"
+                or "gen_ai.agent.name" or "gen_ai.request.model" or "gen_ai.response.model" or "gen_ai.provider.name"))
+            {
+                activity.SetTag(tag.Key, tag.Value);
+                continue;
+            }
             switch (tag.Key)
             {
                 case "gen_ai.agent.name":

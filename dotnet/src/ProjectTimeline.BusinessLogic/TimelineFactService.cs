@@ -9,7 +9,9 @@ namespace ProjectTimeline.BusinessLogic;
 public sealed record TimelineFactScope(Guid ProjectId, Guid TimelineId, Guid EntryId);
 public sealed record TimelineFactCandidate(string Claim, string EntityKey, string EntityType, string SourceQuote, string SourceKind = "Entry");
 public sealed record TimelineFactRetraction(Guid FactId, string Reason, int? InvalidatingAdditionIndex = null);
-public sealed record TimelineFactQuestion(string Question, string? Answer);
+public sealed record TimelineFactQuestion(string Question, string? Answer,
+    [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)] Guid? ExtractionGenerationId = null,
+    [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)] Guid? ExtractionAnswerId = null);
 public sealed record TimelineFactDraft(IReadOnlyList<TimelineFactCandidate> Additions,
     IReadOnlyList<TimelineFactRetraction> Invalidations, IReadOnlyList<TimelineFactQuestion> Questions);
 
@@ -31,6 +33,7 @@ public sealed class TimelineFactService(ProjectTimelineDbContext db)
         await db.RequireUnreconciledFactSourceAsync(source.Id, ct);
         if (timeline.FactRevision != expectedRevision) throw Conflict("Timeline changed; regenerate the proposal.");
         ValidateDraft(draft, source);
+        await TimelineFactReconciliationEvidence.ValidateAsync(db, source, draft.Questions, ct);
         await LoadInvalidationsAsync(draft.Invalidations.Select(x => x.FactId).ToArray(), source, ct);
         await db.SupersedeFactProposalsAsync(source.Id, includeGeneration: false, ct);
         var proposal = new TimelineFactProposal
@@ -78,6 +81,7 @@ public sealed class TimelineFactService(ProjectTimelineDbContext db)
         ValidateDraft(new(additions.Select(x => new TimelineFactCandidate(x.Claim, x.EntityKey, x.EntityType, x.SourceQuote, x.SourceKind)).ToArray(),
             invalidations.Select(x => new TimelineFactRetraction(x.FactId, x.Reason,
                 x.InvalidatingAdditionId is null ? null : additions.FindIndex(a => a.Id == x.InvalidatingAdditionId))).ToArray(), questions), source, accepting: true);
+        await TimelineFactReconciliationEvidence.ValidateAsync(db, source, questions, ct);
         if (questions.Any(x => string.IsNullOrWhiteSpace(x.Answer))) throw Conflict("Clarification questions must be answered before acceptance.");
         var facts = await LoadInvalidationsAsync(invalidations.Select(x => x.FactId).ToArray(), source, ct);
         var now = DateTime.UtcNow;
@@ -163,11 +167,28 @@ public sealed class TimelineFactService(ProjectTimelineDbContext db)
     // Worker owns the serializable transaction. Generated is a non-acceptible extraction draft;
     // its primary key is the durable extraction job ID. No facts/embeddings exist before reconciliation.
     internal async Task CompleteExtractionAsync(TimelineFactJob job, TimelineFactDraft draft, CancellationToken ct)
+        => await CompleteGeneratedAsync(job, draft, null, ct);
+
+    internal Task CompleteGeneratedExtractionAsync(TimelineFactJob job, TimelineFactExtractionOutcome outcome, CancellationToken ct)
+    {
+        if (outcome.Questions.Count != 0) throw Conflict("Extraction questions require a leased pause, not completion.");
+        return CompleteGeneratedAsync(job, new(outcome.Candidates, [], []), outcome.Evidence, ct);
+    }
+
+    private async Task CompleteGeneratedAsync(TimelineFactJob job, TimelineFactDraft draft,
+        IReadOnlyList<TimelineFactCandidateEvidence>? support, CancellationToken ct)
     {
         var source = await db.TimelineEntries.AsNoTracking().SingleAsync(x => x.Id == job.EntryId, ct);
         if (TimelineFactEvidence.Fingerprint(source) != job.SourceFingerprint) throw Conflict("Extraction source changed.");
         if (draft.Invalidations.Count != 0 || draft.Questions.Count != 0) throw Conflict("Extraction cannot propose review changes.");
-        TimelineFactProcessing.ValidateCandidates(draft.Additions, new(source.Title, source.Content));
+        if (support is null) TimelineFactProcessing.ValidateCandidates(draft.Additions, new(source.Title, source.Content));
+        else
+        {
+            var snapshot = await db.ReadExtractionInputAsync(job, source, ct);
+            TimelineExtractionEvidence.Validate(source, snapshot.Input, draft.Additions.Select(x => new TimelineFact
+                { Claim = x.Claim, EntityKey = x.EntityKey, EntityType = x.EntityType, SourceQuote = x.SourceQuote, SourceKind = x.SourceKind }).ToArray(),
+                support.Select(x => new TimelineExtractionSupport(x.CandidateIndex, x.PrimarySpanId, x.Spans.Select(Agents.TimelineFactSourceEvidence.ToStored).ToArray())).ToArray());
+        }
         var proposal = new TimelineFactProposal
         {
             Id = job.Id, EntryId = source.Id, Status = "Generated", SourceFingerprint = job.SourceFingerprint,
@@ -179,6 +200,12 @@ public sealed class TimelineFactService(ProjectTimelineDbContext db)
             SourceQuote = x.SourceQuote, SourceKind = x.SourceKind
         }).ToList();
         db.TimelineFactProposals.Add(proposal);
+        if (support is not null)
+        {
+            var additions = proposal.Additions.ToArray();
+            job.ExtractionSupportJson = JsonSerializer.Serialize(support.Select(x => new TimelineExtractionSupport(
+                x.CandidateIndex, x.PrimarySpanId, x.Spans.Select(Agents.TimelineFactSourceEvidence.ToStored).ToArray(), additions[x.CandidateIndex].Id)));
+        }
         job.ExtractionResultHash = TimelineFactEvidence.ResultHash(proposal.Additions.Select(TimelineFactEvidence.CandidateEvidence));
         job.State = "Completed";
         job.LeaseOwner = null;

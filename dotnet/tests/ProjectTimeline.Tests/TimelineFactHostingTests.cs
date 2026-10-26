@@ -53,7 +53,8 @@ public sealed class TimelineFactHostingTests
             new TimelineFactJob { State = "Running", LeaseExpiresAtUtc = now.AddMinutes(-1), LeaseOwner = "expired" },
             new TimelineFactJob { State = "Retry", NextAttemptAtUtc = now.AddHours(1) },
             new TimelineFactJob { State = "Running", LeaseExpiresAtUtc = now.AddHours(1), LeaseOwner = "live" },
-            new TimelineFactJob { State = "Completed" }, new TimelineFactJob { State = "Failed" }
+            new TimelineFactJob { State = "Completed" }, new TimelineFactJob { State = "Failed" },
+            new TimelineFactJob { State = "AwaitingClarification", NextAttemptAtUtc = now.AddDays(-1) }
         };
         for (var i = 0; i < jobs.Length; i++)
         {

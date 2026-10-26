@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 using ProjectTimeline.BusinessLogic;
+using ProjectTimeline.BusinessLogic.Agents.Tools;
 using ProjectTimeline.DataAccessLogic;
 using Xunit;
 using Xunit.Sdk;
@@ -188,6 +189,60 @@ public sealed class TimelineFactPostgresTests
         Assert.Equal(Enumerable.Repeat(0.25f, 1536), fact.Embedding!.ToArray());
         Assert.Equal("text-embedding-3-small", fact.EmbeddingModel);
         Assert.Equal("Original", (await reader.TimelineEntries.SingleAsync()).Title);
+    });
+
+    // Opt-in only. Not part of the offline F1 filter: this fixture creates/migrates/drops a dedicated database.
+    [TimelineFactPostgresFact]
+    public Task Simple_FTS_lexemes_OR_rank_ties_chronology_and_citations() => RunAsync(async database =>
+    {
+        var seed = await SeedAsync(database);
+        var proposal = await PrepareAsync(database, seed, new([
+            new("Alice owns delivery", "personkey", "Person", "Alice owns delivery. Bob owns testing."),
+            new("Bob owns testing", "bob", "Person", "Bob owns testing.")], [], []));
+        Guid alice, bob;
+        Guid[] originalIds;
+        await using (var db = database.Context())
+        {
+            await new TimelineFactService(db).AcceptAsync(seed.Scope, proposal, seed.Actor, false);
+            alice = await db.TimelineFacts.Where(x => x.EntityKey == "personkey").Select(x => x.Id).SingleAsync();
+            bob = await db.TimelineFacts.Where(x => x.EntityKey == "bob").Select(x => x.Id).SingleAsync();
+            originalIds = await db.TimelineFacts.OrderBy(x => x.Id).Select(x => x.Id).ToArrayAsync();
+        }
+        TimelineFactScope later;
+        await using (var db = database.Context())
+        {
+            var entry = new TimelineEntry { TimelineId = seed.Scope.TimelineId, AuthorId = seed.Actor, EntryNumber = 2,
+                Title = "Later", Content = "Alice owns delivery. Café opens mañana. Bodyonly." };
+            db.Add(entry); await db.SaveChangesAsync(); later = seed.Scope with { EntryId = entry.Id };
+        }
+        var next = seed with { Scope = later };
+        var laterProposal = await PrepareAsync(database, next, new([
+            new("Alice owns delivery", "personkey", "Person", "Alice owns delivery."),
+            new("Café opens mañana", "café", "Place", "Café opens mañana.")], [], []));
+        await using var reader = database.Context();
+        await new TimelineFactService(reader).AcceptAsync(later, laterProposal, seed.Actor, false);
+        var review = new TimelineFactSearch(reader, seed.Scope, seed.Actor, false);
+        Assert.Equal(originalIds, (await review.SearchAsync("owns")).Select(x => x.Id));
+        Assert.Empty(await review.SearchAsync("café")); // chronology remains anchored
+        Assert.Empty(await review.SearchAsync("ALIC"));
+        Assert.Empty(await review.SearchAsync("!? -- __"));
+        var information = new TimelineFactInformationSearch(reader, new(seed.Scope.ProjectId, seed.Scope.TimelineId), seed.Actor, false);
+        var ranked = await information.SearchAsync("alice delivery testing", 2);
+        Assert.True(ranked.Coverage.Truncated); Assert.Equal(later.EntryId, ranked.Facts[0].EntryId);
+        Assert.Equal(alice, ranked.Facts[1].Id); Assert.Equal(proposal, ranked.Facts[1].CreationReviewId);
+        var fetched = Assert.Single(await review.FetchAsync([alice]));
+        Assert.Equal(fetched.SourceFingerprint, ranked.Facts[1].SourceFingerprint);
+        Assert.Equal(bob, Assert.Single((await information.SearchAsync("testing")).Facts).Id); // not Alice's source quote
+        Assert.Empty((await information.SearchAsync("bodyonly Original")).Facts);
+        Assert.Empty((await information.SearchAsync("cafe manana deliv")).Facts);
+        Assert.Single((await information.SearchAsync("CAFÉ mañana")).Facts);
+        Assert.Equal(2, (await information.SearchAsync("personkey")).Facts.Count);
+        Assert.Single((await information.SearchAsync("Place")).Facts);
+        using var tools = await TimelineFactInformationTools.CreateAsync(reader, new(seed.Scope.ProjectId, seed.Scope.TimelineId), seed.Actor, false);
+        var research = await tools.search_facts("alice delivery testing");
+        Assert.Equal(ranked.Facts.Select(x => x.Id), research.GetProperty("Facts").EnumerateArray().Take(2)
+            .Select(x => x.GetProperty("Id").GetGuid()));
+        Assert.Empty((await information.SearchAsync("missing | !absent:*")).Facts);
     });
 
     private sealed class InjectedFailure : Exception;

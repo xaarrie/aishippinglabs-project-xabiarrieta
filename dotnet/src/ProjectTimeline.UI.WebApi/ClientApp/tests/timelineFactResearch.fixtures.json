@@ -1,0 +1,55 @@
+{
+  "mixed": {
+    "content": "The accepted delivery fact and separate source-entry context describe the plan.",
+    "facts": [{
+      "id": "11111111-1111-4111-8111-111111111111",
+      "entryId": "22222222-2222-4222-8222-222222222222",
+      "entryNumber": 7,
+      "claim": "Sample team owns delivery.",
+      "entityKey": "Sample team",
+      "entityType": "Team",
+      "sourceQuote": "Sample team owns delivery.",
+      "sourceKind": "Entry",
+      "sourceFingerprint": "illustrative-fingerprint-not-real-data",
+      "clarificationEvidence": "",
+      "creationReviewId": "33333333-3333-4333-8333-333333333333",
+      "extractionJobId": null
+    }],
+    "citations": [{
+      "factId": "11111111-1111-4111-8111-111111111111",
+      "entryId": "22222222-2222-4222-8222-222222222222",
+      "entryNumber": 7,
+      "creationReviewId": "33333333-3333-4333-8333-333333333333",
+      "extractionJobId": null
+    }],
+    "coverage": { "entries": 1, "entriesWithoutCompletedExtraction": 0, "pendingReviews": 0, "acceptedValidFacts": 1, "truncated": false, "warnings": [] },
+    "sourceContexts": [{
+      "evidenceId": "44444444-4444-4444-8444-444444444444",
+      "entryId": "22222222-2222-4222-8222-222222222222",
+      "entryNumber": 7,
+      "anchorFactIds": ["11111111-1111-4111-8111-111111111111"],
+      "sourceFingerprint": "illustrative-fingerprint-not-real-data",
+      "text": "Sample team owns delivery. The entry also mentions a tentative planning window.",
+      "truncated": false,
+      "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+    }],
+    "contextCitations": [{
+      "evidenceId": "44444444-4444-4444-8444-444444444444",
+      "entryId": "22222222-2222-4222-8222-222222222222",
+      "entryNumber": 7,
+      "anchorFactIds": ["11111111-1111-4111-8111-111111111111"],
+      "sourceFingerprint": "illustrative-fingerprint-not-real-data",
+      "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+    }],
+    "research": {
+      "status": "Complete", "stopReason": null, "modelCalls": 4, "toolCalls": 3, "searchQueries": 1,
+      "evidenceTruncated": false, "budgetExhausted": false, "warnings": [],
+      "limits": { "maxModelCalls": 6, "maxToolCalls": 8, "maxSearchQueries": 4, "maxDistinctFacts": 40, "maxHitsPerSearch": 10, "maxSourceContexts": 3, "maxCharsPerContext": 4000, "maxTotalSourceContextChars": 12000, "maxTotalSerializedToolEvidenceChars": 32000, "maxOutputTokens": 1500, "deadlineSeconds": 60 }
+    }
+  },
+  "cases": {
+    "contextOnly": { "content": "The separate source-entry context mentions a tentative planning window.", "citations": [] },
+    "partial": { "research": { "status": "Partial", "stopReason": "ToolOrEvidenceLimit", "toolCalls": 9, "searchQueries": 5, "budgetExhausted": true, "warnings": ["A tool or evidence budget was exhausted; available evidence is incomplete."] } },
+    "malformed": { "contextCitations": [{ "evidenceId": "55555555-5555-4555-8555-555555555555", "entryId": "22222222-2222-4222-8222-222222222222", "entryNumber": 7, "anchorFactIds": ["11111111-1111-4111-8111-111111111111"], "sourceFingerprint": "illustrative-fingerprint-not-real-data", "evidenceKind": "SeparateSourceEntryContextNotFactProof" }] }
+  }
+}

@@ -311,7 +311,18 @@ public sealed class HostedUiTests
         var factClient = File.ReadAllText(Path.Combine(client, "factReview.js"));
         Assert.Contains("import FactReview from \"./FactReview.jsx\";", source);
         Assert.Contains("<FactReview key={id} entry={entry} canWrite={canWrite && !saving} dirty={reviewDirty} onActiveChange={setReviewActive} onStateChange={setFactState} />", workspace);
-        Assert.Contains("<FactReview key={id} entry={entry} canWrite={canWrite} onActiveChange={setReviewActive} onStateChange={setFacts} />", workspace);
+        var detail = workspace[workspace.IndexOf("function EntryDetail", StringComparison.Ordinal)..workspace.IndexOf("function EntryCreate", StringComparison.Ordinal)];
+        var detailReview = Assert.Single(Regex.Matches(detail, @"<FactReview\b.*? />", RegexOptions.Singleline).Cast<Match>()).Value;
+        foreach (var prop in new[] { "key={id}", "entry={entry}", "canWrite={canWrite}", "onActiveChange={setReviewActive}", "onStateChange={setFacts}", "refreshKey={factRefreshKey}" })
+            Assert.Contains(prop, detailReview);
+        Assert.Contains("const [factRefreshKey, setFactRefreshKey] = useState(0)", detail);
+        Assert.Contains("import EntryClarifications from \"./EntryClarifications.jsx\";", source);
+        var clarifications = Assert.Single(Regex.Matches(detail, @"<EntryClarifications\b.*? />", RegexOptions.Singleline).Cast<Match>()).Value;
+        foreach (var prop in new[] { "key={`clarifications-${id}`}", "entryId={id}", "canWrite={canWrite}", "blocked={reviewActive}", "refreshKey={`${facts?.generationId ?? ''}:${facts?.lifecycleState ?? ''}`}", "onResume={() => setFactRefreshKey(value => value + 1)}", "onActiveChange={setClarificationActive}" })
+            Assert.Contains(prop, clarifications);
+        Assert.DoesNotContain("onSave=", clarifications);
+        Assert.DoesNotContain("source=", clarifications);
+        Assert.DoesNotContain("content=", clarifications);
         Assert.Contains("from \"./entryAccess.js\"", source);
         Assert.Contains("createEntrySaveAction(factClient)", workspace);
         Assert.Contains("factReviewActions(factState, { canWrite }).edit", workspace);

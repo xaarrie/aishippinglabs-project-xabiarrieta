@@ -48,6 +48,13 @@ test('lifecycle actions fail closed and depend on server permissions, not propos
   assert.equal(review.factReviewActions({ ...pending, canEdit: false }, options).edit, false);
 });
 
+test('waiting for entry answers blocks generation and reconciliation even with incorrect write flags', () => {
+  const state = { source: { entryId: 'e', timelineId: 't', title: '', content: '', status: 'Draft', fingerprint: 'a'.repeat(64) }, refreshRequired: false,
+    lifecycleState: 'AwaitingClarification', generationId: 'g', canEdit: true, canGenerate: true, canRegenerate: true };
+  const actions = review.factReviewActions(state, { canWrite: true });
+  assert.equal(actions.regenerate, false); assert.equal(actions.generate, false); assert.equal(actions.reconcile, false);
+});
+
 test('source identity mismatches and mixed-read refresh gates block reconciliation and acceptance', () => {
   const fingerprint = 'A'.repeat(64);
   const source = { entryId: 'e', timelineId: 't', title: 'Current source', content: 'Current evidence.', status: 'Draft', fingerprint };

@@ -105,7 +105,8 @@ public sealed class TimelineFactProviderTests
             foreach (var requirement in new[] { "every independent", "quantities", "dates", "actors", "conditions", "relationships",
                 "Do not summarize", "no minimum", "Do not invent", "verbatim", "untrusted", "200" })
                 Assert.Contains(requirement, prompt, StringComparison.OrdinalIgnoreCase);
-            var input = JsonSerializer.Deserialize<TimelineFactExtraction>(root.GetProperty("messages")[1].GetProperty("content").GetString()!, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            using var payload = JsonDocument.Parse(root.GetProperty("messages")[1].GetProperty("content").GetString()!);
+            var input = payload.RootElement.GetProperty("source").Deserialize<TimelineFactExtraction>(new JsonSerializerOptions(JsonSerializerDefaults.Web));
             Assert.Equal(source, input);
             Assert.Equal(12000, root.GetProperty("max_completion_tokens").GetInt32());
             var format = root.GetProperty("response_format");
@@ -210,8 +211,8 @@ public sealed class TimelineFactProviderTests
             return Claims(JsonSerializer.Serialize(new { claims = candidates }));
         }).ExtractAsync(source, default);
         using var body = JsonDocument.Parse(sent!);
-        Assert.Equal(source, JsonSerializer.Deserialize<TimelineFactExtraction>(body.RootElement.GetProperty("messages")[1]
-            .GetProperty("content").GetString()!, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        using var payload = JsonDocument.Parse(body.RootElement.GetProperty("messages")[1].GetProperty("content").GetString()!);
+        Assert.Equal(source, payload.RootElement.GetProperty("source").Deserialize<TimelineFactExtraction>(new JsonSerializerOptions(JsonSerializerDefaults.Web)));
         Assert.Equal(199, result.Count);
     }
 

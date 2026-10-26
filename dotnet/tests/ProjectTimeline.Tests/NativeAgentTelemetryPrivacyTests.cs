@@ -113,16 +113,23 @@ public sealed class NativeAgentTelemetryPrivacyTests
     }
 
     [Theory]
-    [InlineData("exception")]
-    [InlineData("event-name")]
-    [InlineData("event-attribute")]
-    [InlineData("empty-event")]
-    [InlineData("link-context")]
-    [InlineData("link-attribute")]
-    [InlineData("empty-link")]
-    public async Task Any_native_event_or_link_fails_closed_without_dropping_safe_parent(string contamination)
+    [InlineData("exception", false)]
+    [InlineData("event-name", false)]
+    [InlineData("event-attribute", false)]
+    [InlineData("empty-event", false)]
+    [InlineData("link-context", false)]
+    [InlineData("link-attribute", false)]
+    [InlineData("empty-link", false)]
+    [InlineData("exception", true)]
+    [InlineData("event-name", true)]
+    [InlineData("event-attribute", true)]
+    [InlineData("empty-event", true)]
+    [InlineData("link-context", true)]
+    [InlineData("link-attribute", true)]
+    [InlineData("empty-link", true)]
+    public async Task Any_native_event_or_link_fails_closed_without_dropping_safe_parent(string contamination, bool capture)
     {
-        using var fixture = await Fixture.Start();
+        using var fixture = await Fixture.Start(capture: capture);
         using var wrapper = new ActivitySource(AgentTelemetry.SourceName);
         using var native = new ActivitySource(NativeSource);
         ActivitySpanId droppedId;
@@ -251,10 +258,12 @@ public sealed class NativeAgentTelemetryPrivacyTests
         fixture.AssertWireSafe();
     }
 
-    [Fact]
-    public async Task Immutable_scope_tags_fail_closed_without_leaking_through_exporter_scope()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Immutable_scope_tags_fail_closed_without_leaking_through_exporter_scope(bool capture)
     {
-        using var fixture = await Fixture.Start();
+        using var fixture = await Fixture.Start(capture: capture);
         using var wrapper = new ActivitySource(AgentTelemetry.SourceName);
         using var native = new ActivitySource(NativeSource, version: "1.24.0",
             tags: new[] { new KeyValuePair<string, object?>(Secret, Secret) });
@@ -294,6 +303,23 @@ public sealed class NativeAgentTelemetryPrivacyTests
         Assert.Empty(fixture.Transport.Requests);
     }
 
+    [Fact]
+    public async Task Content_mode_rejects_nonstring_content_without_invoking_untrusted_conversion()
+    {
+        using var fixture = await Fixture.Start(capture: true);
+        using var native = new ActivitySource(NativeSource);
+        using (var span = native.StartActivity(Secret))
+        {
+            Assert.NotNull(span);
+            span.SetTag("gen_ai.operation.name", "chat");
+            foreach (var key in new[] { "gen_ai.input.messages", "gen_ai.output.messages", "gen_ai.system_instructions",
+                "gen_ai.tool.definitions", "gen_ai.tool.call.arguments", "gen_ai.tool.call.result", "gen_ai.response.id" })
+                span.SetTag(key, new ExplosiveValue());
+        }
+        Assert.Equal(new Dictionary<string, object> { ["gen_ai.operation.name"] = "chat" }, Tags(Assert.Single(fixture.Flush())));
+        fixture.AssertWireSafe();
+    }
+
     private static Dictionary<string, object> Tags(byte[] span) => Messages(span, 9).ToDictionary(
         tag => Text(tag, 1), tag => AnyValue(Assert.Single(Messages(tag, 2))));
 
@@ -307,7 +333,7 @@ public sealed class NativeAgentTelemetryPrivacyTests
         public IHost Host { get; } = host;
         public CaptureHandler Transport { get; } = transport;
 
-        public static async Task<Fixture> Start(bool enabled = true)
+        public static async Task<Fixture> Start(bool enabled = true, bool capture = false)
         {
             var transport = new CaptureHandler();
             var host = new HostBuilder().ConfigureServices(services =>
@@ -316,7 +342,8 @@ public sealed class NativeAgentTelemetryPrivacyTests
                     ? new Dictionary<string, string?>
                     {
                         ["Logfire:Endpoint"] = "https://logfire-eu.pydantic.dev/v1/traces",
-                        ["Logfire:Token"] = "pylf_v1_dummy_offline_only"
+                        ["Logfire:Token"] = "pylf_v1_dummy_offline_only",
+                        ["Logfire:CaptureAgentContent"] = capture.ToString()
                     } : []).Build());
                 // Reuse the existing sealed in-memory HTTP transport; there is no network fallback.
                 services.PostConfigureAll<OtlpExporterOptions>(options => options.HttpClientFactory =

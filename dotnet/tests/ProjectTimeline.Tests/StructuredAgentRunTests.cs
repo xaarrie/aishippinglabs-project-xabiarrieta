@@ -84,7 +84,7 @@ public sealed class StructuredAgentRunTests
         Assert.Equal(verifier ? "timelineFactSemanticVerifier" : "timelineFactExtraction", spy.Name);
         Assert.True(spy.Token.CanBeCanceled);
         using var input = JsonDocument.Parse(spy.Input!);
-        Assert.Equal(Source.Content, (verifier ? input.RootElement.GetProperty("source") : input.RootElement).GetProperty("content").GetString());
+        Assert.Equal(Source.Content, input.RootElement.GetProperty("source").GetProperty("content").GetString());
         var options = Assert.IsType<StructuredAgentRunOptions>(spy.Options);
         Assert.Equal(12000, options.ChatOptions.MaxOutputTokens);
         Assert.IsType<ChatResponseFormatJson>(options.ChatOptions.ResponseFormat);

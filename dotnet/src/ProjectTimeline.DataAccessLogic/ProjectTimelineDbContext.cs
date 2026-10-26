@@ -14,6 +14,7 @@ public sealed partial class ProjectTimelineDbContext(DbContextOptions<ProjectTim
     protected override void OnModelCreating(ModelBuilder b)
     {
         TimelineFactModel.Configure(b, Database.IsNpgsql());
+        TimelineEntryClarificationModel.Configure(b);
         if (Database.IsNpgsql()) b.HasPostgresExtension("vector");
         foreach (var type in new[] { typeof(User), typeof(UserRole), typeof(Project), typeof(ProjectParticipant), typeof(ProjectRole), typeof(Timeline), typeof(TimelineEntry), typeof(TimelineArtifact), typeof(TimelineSnapshot), typeof(TimelineSnapshotEntry), typeof(MergeRequest), typeof(PasswordRecoveryState) }) b.Entity(type).Property<DateTime>(nameof(AuditedEntity.CreatedAtUtc)).IsRequired();
         b.Entity<User>().Property(x => x.Email).HasMaxLength(320).IsRequired(); b.Entity<User>().HasIndex(x => x.Email).IsUnique(); b.Entity<User>().Property(x => x.DisplayName).HasMaxLength(160).IsRequired(); b.Entity<User>().Property(x => x.PasswordHash).HasMaxLength(512).IsRequired(); b.Entity<User>().Property(x => x.IDUserRole).IsRequired();

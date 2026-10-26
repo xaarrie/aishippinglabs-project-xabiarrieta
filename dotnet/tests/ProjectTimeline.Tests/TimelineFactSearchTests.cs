@@ -12,7 +12,7 @@ namespace ProjectTimeline.Tests;
 public sealed class TimelineFactSearchTests
 {
     [Fact]
-    public async Task Partial_entity_search_returns_accepted_evidence_not_pending_candidates()
+    public async Task Whole_lexeme_search_returns_accepted_evidence_not_pending_candidates()
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var fact = await f.AcceptAsync("Alice owns delivery.", "alice-delivery");
@@ -21,7 +21,8 @@ public sealed class TimelineFactSearchTests
         Assert.NotEqual(fact.EntryId, pending.EntryId);
         Assert.Equal(f.Entry.Id, pending.EntryId);
         Assert.Equal("Bob owns testing.", pending.Additions.Single().SourceQuote);
-        var hit = Assert.Single(await f.Search.SearchAsync("ALIC"));
+        Assert.Empty(await f.Search.SearchAsync("ALIC"));
+        var hit = Assert.Single(await f.Search.SearchAsync("ALICE"));
         Assert.Equal(fact.Id, hit.Id);
         Assert.Equal("Alice owns delivery.", hit.SourceQuote);
         Assert.Equal(fact.SourceFingerprint, hit.SourceFingerprint);
@@ -75,6 +76,7 @@ public sealed class TimelineFactSearchTests
         var fake = new FactReviewFakeAgent();
         fake.Result.Additions.Add(new("Bob owns testing.", "bob", "Person", "Bob owns testing."));
         fake.Result.Invalidations.Add(new(accepted.Id, "Untrusted target", 0));
+        fake.Result.InvalidationAssessments.Add(TimelineFactContextReconciliationTests.Assessment(accepted, fake.Result.Additions[0]));
         var error = await Assert.ThrowsAsync<TimelineFactConflictException>(() => new TimelineFactReviewPlanner(f.Db, f.Scope,
             f.Actor.Id, false, new TimelineFactOptimizationAgent(fake)).PlanAsync());
         Assert.Contains("authorized effective scope", error.Message);
@@ -99,7 +101,9 @@ public sealed class TimelineFactSearchTests
         await Assert.ThrowsAsync<ArgumentException>(() => f.Search.FetchAsync([fact.Id, fact.Id]));
         await Assert.ThrowsAsync<ArgumentException>(() => f.Search.FetchAsync(Enumerable.Range(0, 51).Select(_ => Guid.NewGuid()).ToArray()));
         var tools = new TimelineFactReviewTools(f.Search);
-        for (var i = 0; i < 8; i++) await tools.search_facts("alice", 1);
+        var cached = await tools.search_facts("alice", 1);
+        for (var i = 1; i < TimelineFactReviewTools.MaximumCalls; i++) await tools.search_facts("alice " + i, 1);
+        Assert.Same(cached, await tools.search_facts("ALICE", 1));
         await Assert.ThrowsAsync<InvalidOperationException>(() => tools.fetch_facts([fact.Id]));
         f.Actor.IsActive = false; await f.Db.SaveChangesAsync();
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => f.Search.SearchAsync("alice"));
@@ -127,7 +131,8 @@ public sealed class TimelineFactSearchTests
         var query = (IQueryable<TimelineFactSearchHit>)method.Invoke(search, [2, new[] { "alic", "delivery" }, 20])!;
         var sql = query.ToQueryString(); // Translation only; no database call.
         Assert.Contains("LIMIT", sql);
-        Assert.Contains("lower(", sql);
+        Assert.Contains("@@", sql);
+        Assert.Contains("ts_rank(", sql);
         Assert.Contains("Accepted", sql);
         Assert.Contains("TimelineId", sql);
         Assert.DoesNotContain("\"Content\"", sql);

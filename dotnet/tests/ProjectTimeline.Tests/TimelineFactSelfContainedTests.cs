@@ -73,7 +73,7 @@ public sealed class TimelineFactSelfContainedTests
             calls++;
             if (calls == 1)
             {
-                Assert.Equal(source.Content, input.RootElement.GetProperty("content").GetString());
+                Assert.Equal(source.Content, input.RootElement.GetProperty("source").GetProperty("content").GetString());
                 return Completion(new { claims = claims.Select(c => new { c.Claim, c.EntityKey, c.EntityType, c.SourceQuote }) });
             }
             Assert.Equal(2, calls);

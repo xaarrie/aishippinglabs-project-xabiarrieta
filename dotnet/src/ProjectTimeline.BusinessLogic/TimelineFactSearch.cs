@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using ProjectTimeline.DataAccessLogic;
@@ -12,7 +11,7 @@ public sealed record TimelineFactCoverage(int Entries, int EntriesWithoutComplet
     string CurrentExtractionState, string SearchStatus = "BoundedLexicalSearchNotExhaustive");
 
 /// <summary>Read-only access with server-captured authorization and chronology. SQL filters before Take;
-/// portable lowercase Contains also runs under InMemory, without embeddings or full-history reads.</summary>
+/// PostgreSQL simple full-text rank precedes stable chronology/ID ties, without entry-body search.</summary>
 public sealed class TimelineFactSearch(ProjectTimelineDbContext db, TimelineFactScope scope, Guid actorId, bool administrator)
 {
     public const int MaximumResults = 50;
@@ -55,33 +54,11 @@ public sealed class TimelineFactSearch(ProjectTimelineDbContext db, TimelineFact
             ?? throw new KeyNotFoundException("Entry not found in this scope.");
     }
 
-    internal static string[] Terms(string text)
-    {
-        if (text is null || text.Length > 300) throw new ArgumentException("Search text must be at most 300 characters.");
-        return Regex.Matches(text.ToLowerInvariant(), @"[\p{L}\p{N}_-]{2,}").Select(x => x.Value)
-            .Distinct().Take(12).ToArray();
-    }
+    internal static string[] Terms(string text) => TimelineFactFullTextSearch.Terms(text);
 
-    // Compose predicates before projection. Both providers filter and bound in the query, not in memory.
-    private IQueryable<TimelineFactSearchHit> SearchQuery(int entryNumber, string[] tokens, int limit)
-    {
-        Expression<Func<FactRow, bool>> predicate = x => false;
-        foreach (var token in tokens)
-        {
-            var word = token;
-            Expression<Func<FactRow, bool>> match = x => x.Fact.Claim.ToLower().Contains(word)
-                || x.Fact.EntityKey.ToLower().Contains(word) || x.Fact.EntityType.ToLower().Contains(word);
-            var body = new ReplaceParameter(match.Parameters[0], predicate.Parameters[0]).Visit(match.Body)!;
-            predicate = Expression.Lambda<Func<FactRow, bool>>(Expression.OrElse(predicate.Body, body), predicate.Parameters);
-        }
-        return Effective(entryNumber).Where(predicate).OrderByDescending(x => x.Entry.EntryNumber)
-            .ThenBy(x => x.Fact.Id).Take(limit).Select(Hit);
-    }
-
-    private sealed class ReplaceParameter(ParameterExpression from, ParameterExpression to) : ExpressionVisitor
-    {
-        protected override Expression VisitParameter(ParameterExpression node) => node == from ? to : node;
-    }
+    private IQueryable<TimelineFactSearchHit> SearchQuery(int entryNumber, string[] tokens, int limit) =>
+        TimelineFactFullTextSearch.Rank(db, Effective(entryNumber), x => x.Fact, tokens)
+            .ThenByDescending(x => x.Entry.EntryNumber).ThenBy(x => x.Fact.Id).Take(limit).Select(Hit);
     private sealed class FactRow
     {
         public TimelineFact Fact { get; init; } = null!;

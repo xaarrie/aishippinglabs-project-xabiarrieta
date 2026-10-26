@@ -107,6 +107,18 @@ public sealed class AgentTelemetryTests
         }));
     }
 
+    private static Activity OwnedRun(Capture capture)
+    {
+        Assert.Equal(2, capture.Stopped.Count);
+        var run = capture.Stopped[0];
+        var session = capture.Stopped[1];
+        Assert.Equal("agent.session", session.OperationName);
+        Assert.Equal(session.SpanId, run.ParentSpanId);
+        Assert.Equal(session.TraceId, run.TraceId);
+        Assert.Null(AgentCostSession.Current);
+        return run;
+    }
+
     [Theory]
     [InlineData(false, "text")]
     [InlineData(false, "typed")]
@@ -132,12 +144,12 @@ public sealed class AgentTelemetryTests
         if (response is AgentResponse<Result> typed) Assert.Equal(Secret, typed.Result.Value);
         Assert.Equal(kind == "structured", validated);
         Assert.Equal(1, chat.Calls);
-        var span = Assert.Single(capture.Stopped);
+        var span = OwnedRun(capture);
         Assert.Equal(SourceName, AgentTelemetry.SourceName);
         Assert.Equal(AgentTelemetry.SourceName, span.Source.Name);
         Assert.Same(span, current);
         Assert.Same(parent, Activity.Current);
-        Assert.Equal(parent.SpanId, span.ParentSpanId);
+        Assert.Equal(parent.SpanId, capture.Stopped[1].ParentSpanId);
         Assert.Equal(parent.TraceId, span.TraceId);
         Assert.Equal(harness ? "agent.harness.run" : "agent.run", span.OperationName);
         Assert.Equal(ActivityKind.Internal, span.Kind);
@@ -163,7 +175,7 @@ public sealed class AgentTelemetryTests
         var error = new InvalidOperationException(Secret);
         var agent = Create(new Chat(_ => Task.FromException<ChatResponse>(error)), harness);
         Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(() => Run(agent, kind)));
-        var span = Assert.Single(capture.Stopped);
+        var span = OwnedRun(capture);
         Assert.Equal("error", span.GetTagItem("agent.run.outcome"));
         Assert.Equal(typeof(InvalidOperationException).FullName, span.GetTagItem("error.type"));
         Assert.Equal(ActivityStatusCode.Error, span.Status);
@@ -184,7 +196,7 @@ public sealed class AgentTelemetryTests
         var error = new OperationCanceledException(Secret, cancel.Token);
         var agent = Create(new Chat(_ => Task.FromException<ChatResponse>(error)), harness);
         Assert.Same(error, await Assert.ThrowsAsync<OperationCanceledException>(() => Run(agent, kind)));
-        var span = Assert.Single(capture.Stopped);
+        var span = OwnedRun(capture);
         Assert.Equal("cancelled", span.GetTagItem("agent.run.outcome"));
         Assert.Equal(ActivityStatusCode.Unset, span.Status);
         Assert.Null(span.GetTagItem("error.type"));
@@ -206,7 +218,7 @@ public sealed class AgentTelemetryTests
         var error = await Assert.ThrowsAsync<Exception>(() => Run(agent, kind));
         Assert.Equal("agent cannot be null", error.Message);
         Assert.Equal(0, chat.Calls);
-        var span = Assert.Single(capture.Stopped);
+        var span = OwnedRun(capture);
         Assert.Equal("unknown", span.GetTagItem("gen_ai.agent.name"));
         Assert.Equal("unknown", span.GetTagItem("gen_ai.request.model"));
         Assert.Equal("error", span.GetTagItem("agent.run.outcome"));
@@ -228,7 +240,7 @@ public sealed class AgentTelemetryTests
             if (!invalidJson) throw error;
         }, () => error);
         Assert.Same(error, await Assert.ThrowsAsync<InvalidDataException>(() => Run(agent, "structured", options)));
-        var span = Assert.Single(capture.Stopped);
+        var span = OwnedRun(capture);
         Assert.Equal("error", span.GetTagItem("agent.run.outcome"));
         Assert.Equal(typeof(InvalidDataException).FullName, span.GetTagItem("error.type"));
         Assert.Equal(ActivityStatusCode.Error, span.Status);
@@ -251,7 +263,7 @@ public sealed class AgentTelemetryTests
         Assert.Equal(cancel.Token, error.CancellationToken);
         Assert.Equal(stage == "before" ? 0 : 1, chat.Calls);
         if (stage != "before") Assert.Equal(cancel.Token, chat.Token);
-        var span = Assert.Single(capture.Stopped);
+        var span = OwnedRun(capture);
         Assert.Equal("cancelled", span.GetTagItem("agent.run.outcome"));
         Assert.Equal(ActivityStatusCode.Unset, span.Status);
         Assert.Null(span.GetTagItem("error.type"));
@@ -266,14 +278,21 @@ public sealed class AgentTelemetryTests
         var inner = Create(new Chat(_ => Task.FromResult(Response())));
         var outer = Create(new Chat(async _ => { await inner.RunAsync(Secret); return Response(); }), harness: true);
         await outer.RunAsync(Secret);
-        Assert.Equal(2, capture.Stopped.Count);
+        Assert.Equal(3, capture.Stopped.Count);
+        var session = capture.Stopped[2];
+        Assert.Equal("agent.session", session.OperationName);
+        Assert.Equal(2L, session.GetTagItem("agent.session.call_count"));
+        Assert.Equal(2L, session.GetTagItem("agent.session.unknown_cost_call_count"));
+        Assert.Null(AgentCostSession.Current);
         var child = capture.Stopped[0];
         var root = capture.Stopped[1];
         Assert.Equal(root.SpanId, child.ParentSpanId);
-        Assert.Equal(parent.SpanId, root.ParentSpanId);
+        Assert.Equal(session.SpanId, root.ParentSpanId);
+        Assert.Equal(parent.SpanId, session.ParentSpanId);
         Assert.Equal(parent.TraceId, child.TraceId);
         Assert.Same(parent, Activity.Current);
-        Assert.All(capture.Stopped, Safe);
+        Safe(child);
+        Safe(root);
     }
 
     [Fact]
@@ -297,7 +316,7 @@ public sealed class AgentTelemetryTests
         await agent.RunAsync(Secret);
         Assert.True(notifications >= 2);
         Assert.Equal(2, calls);
-        var span = Assert.Single(capture.Stopped);
+        var span = OwnedRun(capture);
         Assert.Equal("other", span.GetTagItem("gen_ai.agent.name"));
         Assert.Equal("other", span.GetTagItem("gen_ai.request.model"));
         Safe(span);
