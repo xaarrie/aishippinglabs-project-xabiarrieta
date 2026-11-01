@@ -52,7 +52,7 @@ internal static class TimelineFactStructuredResponse
 
     internal static StructuredAgentRunOptions VerificationOptions(JsonElement schema, int count) => Options(schema, "fact_semantic_assessments", root =>
     {
-        if (root.ValueKind != JsonValueKind.Object || root.EnumerateObject().Count() != 1
+        if (root.ValueKind != JsonValueKind.Object || root.EnumerateObject().Any(x => x.Name is not ("assessments" or "questions"))
             || !root.TryGetProperty("assessments", out var list) || list.ValueKind != JsonValueKind.Array
             || list.GetArrayLength() != count) throw new JsonException();
         // JSON enum converters accept integers and case variants by default; this contract does not.

@@ -176,7 +176,7 @@ public sealed class TimelineFactInformationTests
         Assert.Equal(question, JsonDocument.Parse(fake.Message!).RootElement.GetProperty("question").GetString());
         Assert.DoesNotContain("Bob owns testing", fake.Message);
         Assert.Contains("untrusted DATA", fake.Instructions);
-        Assert.Equal(new[] { "fetch_facts", "fetch_source_entry", "search_facts", "search_facts_batch" }, fake.Tools.Select(x => x.Name).Order());
+        Assert.Equal(new[] { "fetch_source_entry", "search_facts_batch" }, fake.Tools.Select(x => x.Name).Order());
         Assert.False(JsonDocument.Parse(fake.Message!).RootElement.TryGetProperty("facts", out _));
         var citation = Assert.Single(result.Citations);
         Assert.Equal(fact.Id, citation.FactId); Assert.Equal(f.Entry.Id, citation.EntryId);
@@ -533,8 +533,12 @@ internal sealed class InformationFakeAgent : ICustomAgent
         ct.ThrowIfCancellationRequested();
         // Preserve legacy grounding/auth assertions, but obtain the allowlist through the real tool.
         var query = JsonDocument.Parse(message).RootElement.GetProperty("question").GetString();
-        await Tools.OfType<AIFunction>().Single(x => x.Name == "search_facts")
-            .InvokeAsync(new AIFunctionArguments { ["query"] = query }, ct);
+        var batch = (JsonElement)(await Tools.OfType<AIFunction>().Single(x => x.Name == "search_facts_batch")
+            .InvokeAsync(new AIFunctionArguments { ["queries"] = new[] { query } }, ct))!;
+        var entries = batch.GetProperty("Results").EnumerateArray().SelectMany(x => x.GetProperty("Facts").EnumerateArray())
+            .Select(x => x.GetProperty("EntryId").GetGuid()).Distinct().ToArray();
+        if (entries.Length > 0) await Tools.OfType<AIFunction>().Single(x => x.Name == "fetch_source_entry")
+            .InvokeAsync(new AIFunctionArguments { ["entryIds"] = entries }, ct);
         if (EmitEvent) handlers?.Invoke(this, new FunctionCallEventArgs { Function = new FunctionCall { ID = "fake", Name = "fake", Executed = true } });
         if (Script is not null) await Script();
         ct.ThrowIfCancellationRequested();

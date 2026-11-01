@@ -171,7 +171,8 @@ public sealed class TimelineFactService(ProjectTimelineDbContext db)
 
     internal Task CompleteGeneratedExtractionAsync(TimelineFactJob job, TimelineFactExtractionOutcome outcome, CancellationToken ct)
     {
-        if (outcome.Questions.Count != 0) throw Conflict("Extraction questions require a leased pause, not completion.");
+        if (outcome.Questions.Count != 0 || outcome.Feedback is not null || job.ExtractionFeedbackJson is not null)
+            throw Conflict("Nonapproved extraction requires a leased pause or rejection, not completion.");
         return CompleteGeneratedAsync(job, new(outcome.Candidates, [], []), outcome.Evidence, ct);
     }
 

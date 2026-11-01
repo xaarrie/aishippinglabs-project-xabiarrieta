@@ -416,6 +416,7 @@ function EntryDetail({ id, projectId, timelineId, user }) {
   const [reviewActive, setReviewActive] = useState(false);
   const [clarificationActive, setClarificationActive] = useState(false);
   const [factRefreshKey, setFactRefreshKey] = useState(0);
+  const [clarificationRefreshKey, setClarificationRefreshKey] = useState(0);
   const source = savedFactSource(facts, id);
   const receipt = history.state?.entrySave;
   const editable = factReviewActions(facts, { canWrite, busy: reviewActive || clarificationActive }).edit && !reviewActive && !clarificationActive;
@@ -427,8 +428,8 @@ function EntryDetail({ id, projectId, timelineId, user }) {
     <LoadFeedback label="entry" loading={loading || timeline.loading} error={error || timeline.error || contextError} onRetry={() => { reload(); timeline.reload(); }} hasData={!!entry} />
     {receipt?.id === id && <p className={`request-feedback ${receipt.generationError ? "request-error" : "request-success"}`} role={receipt.generationError ? "alert" : "status"}>{receipt.generationError || "Entry saved. Review the generation status and pending facts below; nothing was automatically accepted."}</p>}
     {verified && <><ActionBar label="Entry source actions"><Link className="secondary" aria-disabled={!editable} href={`/projects/${projectId}/timelines/${timelineId}/entries/${id}/edit`}>Edit source</Link>{facts?.lifecycleState === "Reconciled" && <Link className="primary" href={`/projects/${projectId}/timelines/${timelineId}/entries/new`}>New correction entry</Link>}</ActionBar><section className="workspace-section" aria-label="Saved entry source">{source ? <><div className="entry-metadata"><StatusBadge>{source.status}</StatusBadge><span>By {entry.author.displayName}</span><span>Entry {entry.entryNumber}</span></div><h2>Entry content</h2><p className="entry-content">{source.content}</p><p className="context-field"><span>Entry identifier</span><strong>{entry.id}</strong></p></> : <p role="status">Loading authoritative saved source...</p>}</section>
-      <EntryClarifications key={`clarifications-${id}`} entryId={id} canWrite={canWrite} blocked={reviewActive} refreshKey={`${facts?.generationId ?? ''}:${facts?.lifecycleState ?? ''}`} onResume={() => setFactRefreshKey(value => value + 1)} onActiveChange={setClarificationActive} />
-      <FactReview key={id} entry={entry} canWrite={canWrite} onActiveChange={setReviewActive} onStateChange={setFacts} refreshKey={factRefreshKey} />
+      <EntryClarifications key={`clarifications-${id}`} entryId={id} canWrite={canWrite && !!source && facts?.canEdit === true && !facts?.refreshRequired} blocked={reviewActive} refreshKey={`${facts?.generationId ?? ''}:${facts?.lifecycleState ?? ''}:${clarificationRefreshKey}`} onResume={() => setFactRefreshKey(value => value + 1)} onSaved={() => setFactRefreshKey(value => value + 1)} onRefresh={() => setFactRefreshKey(value => value + 1)} onActiveChange={setClarificationActive} />
+      <FactReview key={id} entry={entry} canWrite={canWrite} blocked={clarificationActive} onActiveChange={setReviewActive} onStateChange={setFacts} refreshKey={factRefreshKey} onRefreshClarifications={() => setClarificationRefreshKey(value => value + 1)} />
       <section className="workspace-section"><h2>Artifacts</h2><ArtifactLinks artifacts={entry.artifacts} />{canWrite && <UploadForm key={id} entryId={entry.id} onUploaded={reload} />}</section></>}
   </section>;
 }
@@ -456,6 +457,9 @@ function EntryEdit({ id, projectId, timelineId, go, user }) {
   const [canWrite, setCanWrite] = useState(false);
   const [reviewActive, setReviewActive] = useState(false);
   const [factState, setFactState] = useState(null);
+  const [clarificationActive, setClarificationActive] = useState(false);
+  const [factRefreshKey, setFactRefreshKey] = useState(0);
+  const [clarificationRefreshKey, setClarificationRefreshKey] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveAction] = useState(() => createEntrySaveAction(factClient));
@@ -475,7 +479,7 @@ function EntryEdit({ id, projectId, timelineId, go, user }) {
     return () => controller.abort();
   }, [id, projectId, timelineId, user, loadRevision]);
   const save = async values => {
-    if (saveLock.current) return;
+    if (saveLock.current || reviewActive || clarificationActive) return;
     saveLock.current = true; setSaving(true); setError("");
     try {
       const signal = lifetime.current.signal;
@@ -493,29 +497,30 @@ function EntryEdit({ id, projectId, timelineId, go, user }) {
   const source = savedFactSource(factState, id);
   const sourceChanged = !!source && !entryMatchesFactSource(entry, source);
   const editable = factReviewActions(factState, { canWrite }).edit && !sourceChanged;
-  const reviewDirty = dirty || sourceChanged;
+  const reviewDirty = dirty || sourceChanged || !source || factState?.refreshRequired === true;
   return <FormPage eyebrow="Timeline maintenance" title={`Edit entry ${entry.entryNumber}`} description={`By ${entry.author.displayName} · ${source?.status || "Checking saved source"}`}>
     {!canWrite && <p className="request-feedback" role="status">Read-only access. Editing and Review are unavailable.</p>}
     {!factState && <p role="status">Checking server source-edit permission...</p>}
-    {sourceChanged && <div role="alert"><p>The saved source changed in another session. Your editor draft is retained; reload the saved source before saving or reconciling.</p><button type="button" className="secondary" disabled={saving || reviewActive} onClick={() => {
+    {sourceChanged && <div role="alert"><p>The saved source changed in another session. Your editor draft is retained; reload the saved source before saving or reconciling.</p><button type="button" className="secondary" disabled={saving || reviewActive || clarificationActive} onClick={() => {
       const values = { title: source.title, content: source.content, status: source.status };
       setEditor(values); setEntry(previous => ({ ...previous, ...values })); setError("");
     }}>Reload saved source (discard draft)</button></div>}
     {factState?.lifecycleState === "Reconciled" && <p role="status">Accepted reconciliation locks this source. <Link href={`/projects/${projectId}/timelines/${timelineId}/entries/new`}>Create a new correction entry</Link>.</p>}
     {saved && <p role="status">Entry saved. Generating pending facts; nothing has been activated. <Link href={`/projects/${projectId}/timelines/${timelineId}/entries/${id}`}>Open saved entry</Link></p>}
     <Form className="managed-form" aria-busy={saving} ariaLabel="Edit timeline entry" onSubmit={async () => {
-      if (!editable || saving || reviewActive) return;
+      if (!editable || saving || reviewActive || clarificationActive) return;
       try { await save(editor); } catch (e) { setError(e.status === 409 ? "The source changed or was locked by accepted reconciliation. Refresh fact state; accepted-source corrections require a new entry." : e.message); }
     }}>
-      <fieldset disabled={!editable || saving || reviewActive}><legend>Entry details</legend>
+      <fieldset disabled={!editable || saving || reviewActive || clarificationActive}><legend>Entry details</legend>
         <label htmlFor="edit-entry-title">Title<input id="edit-entry-title" name="title" value={editor.title} onChange={event => setEditor({ ...editor, title: event.target.value })} required /></label>
         <label htmlFor="edit-entry-content">Content<textarea id="edit-entry-content" name="content" value={editor.content} onChange={event => setEditor({ ...editor, content: event.target.value })} required /></label>
         <label htmlFor="edit-entry-status">Status<input id="edit-entry-status" name="status" value={editor.status} onChange={event => setEditor({ ...editor, status: event.target.value })} required /></label>
       </fieldset>
-      <ActionBar label="Edit entry actions"><button className="primary" disabled={!editable || saving || reviewActive}>{saving ? "Saving..." : "Save entry"}</button><Link className="secondary" aria-disabled={saving || reviewActive} href={`/projects/${projectId}`}>Cancel</Link></ActionBar>
+      <ActionBar label="Edit entry actions"><button className="primary" disabled={!editable || saving || reviewActive || clarificationActive}>{saving ? "Saving..." : "Save entry"}</button><Link className="secondary" aria-disabled={saving || reviewActive || clarificationActive} href={`/projects/${projectId}`}>Cancel</Link></ActionBar>
     </Form>
     {saving && <p className="request-feedback" role="status">Saving entry...</p>}
-    <FactReview key={id} entry={entry} canWrite={canWrite && !saving} dirty={reviewDirty} onActiveChange={setReviewActive} onStateChange={setFactState} />
+    <EntryClarifications key={`clarifications-${id}`} entryId={id} canWrite={canWrite && factState?.canEdit === true} blocked={reviewDirty || saving || reviewActive} refreshKey={`${factState?.generationId ?? ''}:${factState?.lifecycleState ?? ''}:${clarificationRefreshKey}`} onResume={() => setFactRefreshKey(value => value + 1)} onSaved={() => setFactRefreshKey(value => value + 1)} onRefresh={() => setFactRefreshKey(value => value + 1)} onActiveChange={setClarificationActive} />
+    <FactReview key={id} entry={entry} canWrite={canWrite && !saving} dirty={reviewDirty} blocked={clarificationActive} onActiveChange={setReviewActive} onStateChange={setFactState} refreshKey={factRefreshKey} onRefreshClarifications={() => setClarificationRefreshKey(value => value + 1)} />
     {error && <p className="request-feedback request-error" role="alert">{error} Your editor draft is retained.</p>}
   </FormPage>;
 }
@@ -555,7 +560,7 @@ function TimelineSearch({ timeline, projectId }) {
       } catch (error) {
         if (fence.isCurrent(controller)) { setAnswer(null); throw error; }
       }
-    }, "Fact search complete.");
+    }, "");
   }}><label>Question<input type="search" maxLength={300} aria-describedby={hintId} value={query} disabled={action.pending} onChange={event => { setQuery(event.target.value); setAnswer(null); }} /></label>
     <p className="muted" id={hintId}>1–300 characters. Searches accepted valid facts, not original entry content. Matching searches may incur model billing.</p>
     <ActionBar label="Fact search actions"><button className="secondary" disabled={action.pending || !query.trim() || query.length > 300}>{action.pending ? "Searching..." : "Search facts"}</button></ActionBar></form>

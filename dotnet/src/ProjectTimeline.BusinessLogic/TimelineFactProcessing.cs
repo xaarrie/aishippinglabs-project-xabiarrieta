@@ -11,11 +11,16 @@ public sealed record TimelineFactExtraction(string Title, string Content)
     // Trusted server seam only. Never bind this input from a client request.
     public Guid EntryId { get; private init; }
     public TimelineEntryExtractionInput? Input { get; private init; }
+    private readonly string? feedbackJson;
+    [System.Text.Json.Serialization.JsonIgnore]
+    public System.Text.Json.JsonElement? ExtractionFeedback => feedbackJson is null ? null
+        : System.Text.Json.JsonSerializer.SerializeToElement(TimelineExtractionFeedbackCodec.Decode(feedbackJson), Agents.TimelineFactStructuredResponse.Json);
     // Value-only source identity: retained by record copies, never serialized into model context.
     private readonly Guid timelineId;
     private readonly int entryNumber;
     private readonly Guid authorId;
-    public TimelineFactExtraction(TimelineEntry entry, TimelineEntryExtractionInput input) : this(entry.Title, entry.Content)
+    public TimelineFactExtraction(TimelineEntry entry, TimelineEntryExtractionInput input,
+        TimelineExtractionFeedback? extractionFeedback = null) : this(entry.Title, entry.Content)
     {
         if (entry.Id == Guid.Empty || input is null || input.JobId == Guid.Empty || input.Answers is null)
             throw new TimelineFactProviderException("InvalidResponse", "InvalidEvidence");
@@ -30,12 +35,20 @@ public sealed record TimelineFactExtraction(string Title, string Content)
             entryNumber = entry.EntryNumber;
             authorId = entry.AuthorId;
             Input = input with { Answers = answers };
+            if (extractionFeedback is not null)
+            {
+                if (extractionFeedback.SourceFingerprint != input.SourceFingerprint || extractionFeedback.EntryId != entry.Id
+                    || extractionFeedback.GenerationId == input.JobId)
+                    throw new TimelineFactConflictException("Feedback source identity changed.");
+                feedbackJson = TimelineExtractionFeedbackCodec.Encode(extractionFeedback);
+            }
         }
         catch (TimelineFactConflictException) { throw new TimelineFactProviderException("InvalidResponse", "InvalidEvidence"); }
     }
-    public TimelineFactExtraction Freeze() => Input is null ? this : new(new TimelineEntry
-        { Id = EntryId, TimelineId = timelineId, EntryNumber = entryNumber, AuthorId = authorId,
-            Title = Title, Content = Content }, Input);
+    internal TimelineEntry ToEntry() => new() { Id = EntryId, TimelineId = timelineId, EntryNumber = entryNumber,
+        AuthorId = authorId, Title = Title, Content = Content };
+    public TimelineFactExtraction Freeze() => Input is null ? this : new(ToEntry(), Input,
+        feedbackJson is null ? null : TimelineExtractionFeedbackCodec.Decode(feedbackJson));
 }
 
 // C2b must consume this outcome, not the legacy list API. Citations retain all supporting identities;
@@ -43,7 +56,8 @@ public sealed record TimelineFactExtraction(string Title, string Content)
 public sealed record TimelineFactCandidateEvidence(int CandidateIndex, string PrimarySpanId,
     IReadOnlyList<Agents.TimelineFactSourceSpan> Spans);
 public sealed record TimelineFactExtractionOutcome(IReadOnlyList<TimelineFactCandidate> Candidates,
-    IReadOnlyList<TimelineEntryQuestion> Questions, IReadOnlyList<TimelineFactCandidateEvidence> Evidence);
+    IReadOnlyList<TimelineEntryQuestion> Questions, IReadOnlyList<TimelineFactCandidateEvidence> Evidence,
+    TimelineExtractionFeedback? Feedback = null);
 public sealed class TimelineFactClarificationRequiredException(TimelineFactExtractionOutcome outcome)
     : Exception("Extraction requires clarification; consume ExtractOutcomeAsync.")
 {
@@ -58,7 +72,7 @@ public interface ITimelineFactProvider
     {
         ct.ThrowIfCancellationRequested();
         source = source.Freeze();
-        if (source.Input?.Answers.Count > 0)
+        if (source.Input?.Answers.Count > 0 || source.ExtractionFeedback is not null)
             throw new TimelineFactProviderException("InvalidResponse", "ClarificationInputUnsupported");
         return new(await ExtractAsync(source, ct), [], []);
     }
@@ -213,7 +227,8 @@ public sealed class TimelineFactProcessing(Func<ProjectTimelineDbContext> create
                     if (!await db.Users.AnyAsync(x => x.Id == entry.AuthorId && x.IsActive, ct)
                         || !await new ProjectAuthorization(db).CanWriteAsync(projectId, entry.AuthorId, admin, ct))
                         throw new TimelineFactProviderException("Unavailable");
-                    source = new(entry, (await db.ReadExtractionInputAsync(job, entry, ct)).Input);
+                    var snapshot = await db.ReadExtractionInputAsync(job, entry, ct);
+                    source = new(entry, snapshot.Input, snapshot.ExtractionFeedback);
                 }
                 else if (kind == "Embedding") claim = await EligibleClaimAsync(db, job, ct);
                 else throw new TimelineFactProviderException("InvalidResponse");
@@ -240,11 +255,16 @@ public sealed class TimelineFactProcessing(Func<ProjectTimelineDbContext> create
             {
                 var entry = await completion.TimelineEntries.AsNoTracking().SingleAsync(x => x.Id == leased.EntryId, ct);
                 await completion.ReadExtractionInputAsync(leased, entry, ct);
-                if (outcome!.Questions.Count > 0)
+                if (outcome!.Feedback is not null)
+                {
+                    await completion.StageExtractionFeedbackForLeaseAsync(leased.Id, owner, version, outcome.Feedback, ct);
+                    await completion.SaveChangesAsync(ct);
+                }
+                else if (outcome.Questions.Count > 0)
                 {
                     // Generation-qualified stable keys avoid ambiguity when valid rounds reuse provider keys.
-                    var questions = outcome.Questions.Select(x => new TimelineEntryQuestion(Convert.ToHexString(
-                        System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"{leased.Id:N}:{x.Key}"))), x.Text)).ToArray();
+                    var questions = outcome.Questions.Select(x => new TimelineEntryQuestion(
+                        TimelineExtractionFeedbackCodec.QuestionKey(leased.Id, x.Key), x.Text)).ToArray();
                     await completion.StageEntryQuestionsForLeaseAsync(leased.Id, owner, version, questions, ct);
                     await completion.SaveChangesAsync(ct);
                 }
@@ -294,6 +314,23 @@ public sealed class TimelineFactProcessing(Func<ProjectTimelineDbContext> create
                 || !TimelineEntryClarificationEvidence.Text(x.Key, 100) || !TimelineEntryClarificationEvidence.Text(x.Text, 2000)
                 || !x.Text.TrimEnd().EndsWith('?'))
             || outcome.Questions.Select(x => x.Key).Distinct(StringComparer.Ordinal).Count() != outcome.Questions.Count)
+            throw new TimelineFactProviderException("InvalidResponse", "InvalidQuestions");
+        if (outcome.Feedback is not null)
+        {
+            try
+            {
+                TimelineExtractionFeedbackCodec.Validate(outcome.Feedback, new TimelineFactJob {
+                    Id = source.Input!.JobId, EntryId = source.EntryId, SourceFingerprint = source.Input.SourceFingerprint,
+                    EffectiveInputFingerprint = source.Input.EffectiveFingerprint },
+                    source.ToEntry(), source.Input);
+                if (outcome.Candidates.Count != 0 || outcome.Evidence.Count != 0
+                    || !outcome.Questions.SequenceEqual(outcome.Feedback.Questions.Select(x => new TimelineEntryQuestion(x.Key, x.Text))))
+                    throw new TimelineFactConflictException("Feedback cannot carry completion candidates.");
+                return;
+            }
+            catch (TimelineFactConflictException) { throw new TimelineFactProviderException("InvalidResponse", "InvalidEvidence"); }
+        }
+        if (outcome.Questions.Count > 0 && (outcome.Candidates.Count > 0 || outcome.Evidence.Count > 0))
             throw new TimelineFactProviderException("InvalidResponse", "InvalidQuestions");
         var candidates = outcome.Candidates;
         if (source.Input!.Answers.Count == 0) ValidateCandidates(candidates, source);

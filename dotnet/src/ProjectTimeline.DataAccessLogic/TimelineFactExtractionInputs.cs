@@ -10,7 +10,9 @@ public sealed record TimelineExtractionSource(Guid Id, Guid TimelineId, int Entr
     public static TimelineExtractionSource From(TimelineEntry entry) => new(entry.Id, entry.TimelineId, entry.EntryNumber, entry.AuthorId, entry.Title, entry.Content);
     public TimelineEntry ToEntry() => new() { Id = Id, TimelineId = TimelineId, EntryNumber = EntryNumber, AuthorId = AuthorId, Title = Title, Content = Content };
 }
-public sealed record TimelineExtractionSnapshot(TimelineExtractionSource Source, TimelineEntryExtractionInput Input, Guid? PredecessorId);
+public sealed record TimelineExtractionSnapshot(TimelineExtractionSource Source, TimelineEntryExtractionInput Input, Guid? PredecessorId,
+    [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    TimelineExtractionFeedback? ExtractionFeedback = null);
 public sealed record TimelineExtractionSpan(string Id, string Source, int Start, int Length, string Text, string SourceKind = "Entry", Guid? AnswerId = null);
 public sealed record TimelineExtractionSupport(int CandidateIndex, string PrimarySpanId, IReadOnlyList<TimelineExtractionSpan> Spans, Guid? AdditionId = null);
 public sealed record TimelineExtractionReviewReference(Guid? GenerationId, Guid? AnswerId, string Question, string? Answer);
@@ -116,7 +118,8 @@ public sealed partial class ProjectTimelineDbContext
         if (proposal is null || proposal.EntryId != source.Id || proposal.Status != "Generated" || proposal.SourceFingerprint != fingerprint
             || job is null || job.EntryId != source.Id || job.Kind != "Extraction" || job.State != "Completed"
             || !TimelineFactEvidence.ExtractionKey(job) || job.FactId is not null || job.SourceFingerprint != fingerprint
-            || job.ExtractionRevision is null || job.ExtractionResultHash is null || job.LeaseOwner is not null || job.LeaseExpiresAtUtc is not null
+            || job.ExtractionRevision is null || job.ExtractionResultHash is null || job.ExtractionFeedbackJson is not null
+            || job.LeaseOwner is not null || job.LeaseExpiresAtUtc is not null
             || proposal.ExpectedRevision != job.ExtractionRevision + 1 || proposal.QuestionsJson != "[]" || proposal.ClarificationEvidence != ""
             || await TimelineFactJobs.AnyAsync(x => x.EntryId == source.Id && x.Kind == "Extraction" && x.Id != job.Id && x.State != "Superseded", ct)
             || await TimelineFactInvalidations.AnyAsync(x => x.ProposalId == proposal.Id, ct))
@@ -174,20 +177,33 @@ public sealed partial class ProjectTimelineDbContext
             || predecessorId is null && await TimelineEntryClarifications.AnyAsync(x => x.GenerationId == job.Id, ct))
             throw new TimelineFactConflictException("Input is already frozen or foreign.");
         var answers = new List<TimelineEntryAnswer>();
+        TimelineExtractionFeedback? feedback = null;
         if (predecessorId is { } id)
         {
             var predecessor = await TimelineFactJobs.SingleAsync(x => x.Id == id, ct);
             if (predecessor.EntryId != source.Id || predecessor.State == "Superseded" || predecessor.SourceFingerprint != TimelineFactEvidence.Fingerprint(source))
                 throw new TimelineFactConflictException("Predecessor is no longer applicable.");
             if (predecessor.ExtractionInputJson is not null)
-                answers.AddRange((await ReadExtractionInputAsync(predecessor, source, ct)).Input.Answers);
+            {
+                var prior = await ReadExtractionInputAsync(predecessor, source, ct);
+                answers.AddRange(prior.Input.Answers);
+                if (predecessor.ExtractionFeedbackJson is not null)
+                {
+                    feedback = TimelineExtractionFeedbackCodec.Decode(predecessor.ExtractionFeedbackJson);
+                    TimelineExtractionFeedbackCodec.Validate(feedback, predecessor, source, prior.Input);
+                    if (predecessor.State is not ("Failed" or "AwaitingClarification"))
+                        throw new TimelineFactConflictException("Feedback predecessor is not actionable.");
+                }
+            }
+            else if (predecessor.ExtractionFeedbackJson is not null)
+                throw new TimelineFactConflictException("Feedback has no frozen predecessor input.");
             var questions = await TimelineEntryClarifications.AsNoTracking().Where(x => x.GenerationId == id).ToListAsync(ct);
             if (questions.Any(x => x.Answer is null) || predecessor.State == "AwaitingClarification" && questions.Count == 0)
                 throw new TimelineFactConflictException("Required extraction questions are unanswered.");
             foreach (var row in questions) answers.Add(ActualAnswer(row));
         }
         var input = TimelineEntryClarificationEvidence.BindToJob(job, source, answers);
-        job.ExtractionInputJson = JsonSerializer.Serialize(new TimelineExtractionSnapshot(TimelineExtractionSource.From(source), input, predecessorId));
+        job.ExtractionInputJson = JsonSerializer.Serialize(new TimelineExtractionSnapshot(TimelineExtractionSource.From(source), input, predecessorId, feedback));
         job.EffectiveInputFingerprint = input.EffectiveFingerprint;
         stagedExtractionInputs.Add(job.Id);
     }
@@ -225,8 +241,21 @@ public sealed partial class ProjectTimelineDbContext
                 || predecessor.EntryId != source.Id || predecessor.SourceFingerprint != job.SourceFingerprint
                 || predecessor.ExtractionInputJson is null && predecessor.EffectiveInputFingerprint is not null)
                 throw new TimelineFactConflictException("Invalid predecessor identity.");
-            if (predecessor.ExtractionInputJson is not null) DecodeExtractionInput(predecessor, source);
+            var prior = predecessor.ExtractionInputJson is null ? null : DecodeExtractionInput(predecessor, source);
+            if (predecessor.ExtractionFeedbackJson is not null)
+            {
+                var feedback = TimelineExtractionFeedbackCodec.Decode(predecessor.ExtractionFeedbackJson);
+                if (prior is null || snapshot.ExtractionFeedback is null
+                    || TimelineExtractionFeedbackCodec.Encode(snapshot.ExtractionFeedback) != predecessor.ExtractionFeedbackJson
+                    || predecessor.State is not ("Failed" or "AwaitingClarification" or "Superseded"))
+                    throw new TimelineFactConflictException("Feedback predecessor identity changed.");
+                TimelineExtractionFeedbackCodec.Validate(feedback, predecessor, source, prior.Input);
+            }
+            else if (snapshot.ExtractionFeedback is not null)
+                throw new TimelineFactConflictException("Feedback was not carried from the exact predecessor.");
         }
+        else if (snapshot.ExtractionFeedback is not null)
+            throw new TimelineFactConflictException("Feedback has no predecessor.");
         foreach (var answer in snapshot.Input.Answers)
         {
             var row = await TimelineEntryClarifications.AsNoTracking().SingleOrDefaultAsync(x => x.Id == answer.Id, ct);

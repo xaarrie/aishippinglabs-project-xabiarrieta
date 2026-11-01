@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { api } from './api.js';
-import { canAcceptFactProposal, canAcceptCurrentFactProposal, createFactReviewClient, createFactRequestFence, currentFactGeneration, currentFactReconciliation, savedFactSource, factGenerationMatchesSource, factReviewActions, factReviewError, factInvalidationText, proposalInvalidationText } from './factReview.js';
+import { canAcceptFactProposal, canAcceptCurrentFactProposal, createFactReviewClient, createFactRequestFence, currentFactGeneration, currentFactReconciliation, currentExtractionFeedback, savedFactSource, factGenerationMatchesSource, factReviewActions, factReviewError, factInvalidationText, proposalInvalidationText } from './factReview.js';
 
 const client = createFactReviewClient(api);
 const lifecycleText = {
@@ -8,13 +8,14 @@ const lifecycleText = {
   Loading: 'Generation in progress. Candidates are not active facts.',
   Retry: 'Generation is waiting for retry/backoff. Check processing details or explicitly regenerate.',
   AwaitingClarification: 'Extraction is waiting for entry clarification answers. Save answers in Entry extraction clarifications, then explicitly extract using answers.',
+  NeedsCorrection: 'Semantic verification rejected this generation. No automatic correction or retry will run. Explicitly regenerate to use feedback, or edit the source first.',
   Failed: 'Generation failed. The saved entry is retained; explicitly regenerate to try again.',
   Empty: 'Generation completed with no candidates. Nothing has been activated. Reconcile explicitly even for empty evidence.',
   Pending: 'Pending candidates. Nothing is active until you reconcile and explicitly accept.',
   Reconciled: 'Reconciliation accepted. Source editing is locked, including empty accepted evidence. Corrections require a new entry.'
 };
 
-export default function FactReview({ entry, canWrite, dirty = false, onActiveChange = () => {}, onStateChange = () => {}, refreshKey = 0 }) {
+export default function FactReview({ entry, canWrite, dirty = false, blocked = false, onActiveChange = () => {}, onStateChange = () => {}, onRefreshClarifications = () => {}, refreshKey = 0 }) {
   const [state, setState] = useState(null);
   const [proposal, setProposal] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -24,8 +25,8 @@ export default function FactReview({ entry, canWrite, dirty = false, onActiveCha
   const selected = useRef(null);
   const lock = useRef(false);
   const [fence] = useState(createFactRequestFence);
-  const callbacks = useRef({ onActiveChange, onStateChange });
-  callbacks.current = { onActiveChange, onStateChange };
+  const callbacks = useRef({ onActiveChange, onStateChange, onRefreshClarifications });
+  callbacks.current = { onActiveChange, onStateChange, onRefreshClarifications };
 
   const applyState = response => {
     const value = savedFactSource(response, entry.id) ? response : { ...response, source: null, refreshRequired: true };
@@ -39,8 +40,11 @@ export default function FactReview({ entry, canWrite, dirty = false, onActiveCha
     const request = fence.begin();
     try {
       const value = await client.read(entry.id, { signal: request.signal });
-      if (fence.isCurrent(request)) { applyState(value); if (explicit) { setError(''); setConflict(false); } }
-    } catch (e) { if (fence.isCurrent(request)) setError(factReviewError(e)); }
+      if (fence.isCurrent(request)) {
+        applyState(value);
+        if (explicit) { setError(''); setConflict(false); callbacks.current.onRefreshClarifications(); }
+      }
+    } catch (e) { if (fence.isCurrent(request)) { setError(factReviewError(e)); setConflict(true); } }
   };
   useEffect(() => {
     lock.current = false; setBusy(false);
@@ -55,9 +59,9 @@ export default function FactReview({ entry, canWrite, dirty = false, onActiveCha
     // Optional read-only invalidation; do not remount or reset proposal drafts.
   }, [refreshKey]);
 
-  const actions = factReviewActions(state, { canWrite, dirty, busy, conflict });
+  const actions = factReviewActions(state, { canWrite, dirty, busy, blocked, conflict });
   const run = async action => {
-    if (lock.current || !canWrite || dirty) return;
+    if (lock.current || !canWrite || dirty || blocked) return;
     if (action === 'accept' ? !actions.reconcile || !canAcceptCurrentFactProposal(state, proposal)
       : action === 'answers' ? !actions.reconcile || proposal?.state !== 'Pending'
       : !actions[action]) return;
@@ -86,12 +90,16 @@ export default function FactReview({ entry, canWrite, dirty = false, onActiveCha
     } catch (e) {
       if (fence.isCurrent(request)) { setError(factReviewError(e)); if (e.status === 409) setConflict(true); }
     } finally {
-      if (fence.isCurrent(request)) { lock.current = false; setBusy(false); callbacks.current.onActiveChange(false); }
+      if (fence.isCurrent(request)) {
+        lock.current = false; setBusy(false); callbacks.current.onActiveChange(false);
+        callbacks.current.onRefreshClarifications(); // GET-only, including uncertain write outcomes.
+      }
     }
   };
   const source = savedFactSource(state, entry.id);
   const generated = factGenerationMatchesSource(state) ? currentFactGeneration(state) : null;
   const previewMatchesSource = source && !state.refreshRequired && proposal?.sourceFingerprint === source.fingerprint;
+  const feedback = currentExtractionFeedback(state);
   return <section className="card" aria-label="Fact review" aria-busy={busy}>
     <h3>Review entry facts</h3>
     <p>Generated candidates are proposals, not active facts. Reconcile the current generation, answer questions, review additions and invalidations, then explicitly accept. Original title and content are never rewritten by fact review.</p>
@@ -103,6 +111,11 @@ export default function FactReview({ entry, canWrite, dirty = false, onActiveCha
     {state?.refreshRequired && <p role="alert">Saved source or fact evidence changed during the read. Refresh before reconciling.</p>}
     {state && !state.refreshRequired && state.generationId && ['Pending', 'Empty'].includes(state.lifecycleState) && !generated && <p role="alert">Current generation does not match the saved source identity. Refresh fact state before reconciling.</p>}
     {state && <p role="status"><strong>{state.lifecycleState}</strong>: {lifecycleText[state.lifecycleState] || 'Unknown state. Refresh before taking action.'}</p>}
+    {feedback && <section aria-label="Current extraction feedback"><h4>Verification feedback (not evidence)</h4>
+      <p>{feedback.unsupportedCount} of {feedback.candidateCount} candidates were unsupported or flagged. Questions: {feedback.questionCount}.</p>
+      <p>Findings: {feedback.issues.join(', ') || 'No issue flags'}. Model scores are not acceptance thresholds.</p>
+      <p>{feedback.disposition === 'Rejected' ? 'Choose Regenerate pending facts to explicitly run extraction with predecessor feedback. Nothing runs automatically.' : 'Save genuine missing-information answers below, then explicitly extract using answers.'}</p>
+    </section>}
     <div className="action-bar">
       <button type="button" className="secondary" disabled={!actions.generate} onClick={() => run('generate')}>Generate pending facts</button>
       <button type="button" className="secondary" disabled={!actions.regenerate} onClick={() => run('regenerate')}>Regenerate pending facts</button>
@@ -135,7 +148,7 @@ export default function FactReview({ entry, canWrite, dirty = false, onActiveCha
       {proposal.questions.map((question, i) => <label key={`${proposal.proposalId}-${i}`}>{question.question}<textarea maxLength={4000} disabled={!actions.reconcile || proposal.state !== 'Pending' || question.answer != null} value={question.answer ?? answers[i] ?? ''} onChange={event => setAnswers({ ...answers, [i]: event.target.value })} /></label>)}
       <div className="action-bar">
         {proposal.state === 'Pending' && proposal.questions.length > 0 && <button type="button" disabled={!actions.reconcile || !Object.values(answers).some(x => x.trim())} onClick={() => run('answers')}>Submit answers for next proposal</button>}
-        <button type="button" className="primary" disabled={busy || !canWrite || dirty || conflict || !canAcceptFactProposal(proposal) || !canAcceptCurrentFactProposal(state, proposal)} onClick={() => run('accept')}>Accept fact proposal</button>
+        <button type="button" className="primary" disabled={busy || blocked || !canWrite || dirty || conflict || !canAcceptFactProposal(proposal) || !canAcceptCurrentFactProposal(state, proposal)} onClick={() => run('accept')}>Accept fact proposal</button>
       </div>
       {proposal.state === 'Accepted' && <p role="status">Facts accepted by the server. Original entry and title are unchanged. Corrections require a new entry.</p>}
     </section>}

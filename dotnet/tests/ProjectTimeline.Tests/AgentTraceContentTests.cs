@@ -63,7 +63,8 @@ public sealed class AgentTraceContentTests
         using var wire = await Wire.Start(capture: capture);
         var policy = wire.Services.GetRequiredService<AgentTelemetryOptions>();
         var chat = new Chat(turn => new ChatResponse(new ChatMessage(ChatRole.Assistant, turn == 1
-            ? [new FunctionCallContent("SEARCH_CALL_ID", "search_facts", new Dictionary<string, object?> { ["query"] = "alice" })]
+            ? [new FunctionCallContent("SEARCH_CALL_ID", "search_facts_batch", new Dictionary<string, object?> { ["queries"] = new[] { "alice" } })]
+            : turn == 2 ? [new FunctionCallContent("SOURCE_CALL_ID", "fetch_source_entry", new Dictionary<string, object?> { ["entryIds"] = new[] { fact.EntryId } })]
             : [new TextContent(JsonSerializer.Serialize(new { Content = "SYNTHESIS_SENTINEL", CitedFactIds = new[] { fact.Id }, CitedContextEvidenceIds = Array.Empty<Guid>() }))]))
             { ModelId = "gpt-4o-mini", Usage = new() { InputTokenCount = 100, OutputTokenCount = 20 } });
         var app = new TimelineFactInformationApplication(f.Db, chatClient: chat, telemetryOptions: policy);
@@ -72,18 +73,18 @@ public sealed class AgentTraceContentTests
         {
             var result = await app.SearchAsync(f.Timeline.Id, f.Actor.Id, "QUESTION_CAPTURE_SENTINEL");
             Assert.Equal("SYNTHESIS_SENTINEL", result.Content);
-            Assert.Equal(2, result.Research!.ModelCalls);
-            Assert.Equal(1, result.Research.ToolCalls);
+            Assert.Equal(3, result.Research!.ModelCalls);
+            Assert.Equal(2, result.Research.ToolCalls);
         }
-        Assert.Equal(2, chat.Calls);
-        Assert.Equal(2, session.GetSnapshot().Totals.CallCount);
+        Assert.Equal(3, chat.Calls);
+        Assert.Equal(3, session.GetSnapshot().Totals.CallCount);
         var spans = wire.Flush();
-        Assert.Equal(6, spans.Length); // Session + wrapper + invocation + two chats + tool.
+        Assert.Equal(8, spans.Length); // Session + wrapper + invocation + three chats + two tools.
         var payload = string.Join("\n", wire.Transport.Requests.Select(request => Encoding.UTF8.GetString(request.Body)));
         foreach (var expected in new[] { "QUESTION_CAPTURE_SENTINEL", "SYNTHESIS_SENTINEL", "SEARCH_CALL_ID", "Alice owns delivery." })
             if (capture != false) Assert.Contains(expected, payload);
             else Assert.DoesNotContain(expected, payload);
-        Assert.Single(spans, span => Text(span, 5) == "execute_tool");
+        Assert.Equal(2, spans.Count(span => Text(span, 5) == "execute_tool"));
     }
 
     [Fact]

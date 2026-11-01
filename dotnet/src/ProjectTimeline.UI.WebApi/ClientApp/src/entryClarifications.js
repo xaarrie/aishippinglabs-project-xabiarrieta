@@ -70,9 +70,9 @@ function clarificationError(error) {
 
 // One entry-scoped session owns drafts and fences even abort-ignorant transports.
 // Refresh and effects are GET-only; save and paid resume are separate user events.
-export function createClarificationSession(client, { onChange = () => {}, onResume = () => {} } = {}) {
+export function createClarificationSession(client, { onChange = () => {}, onResume = () => {}, onSaved = () => {}, onRefresh = () => {} } = {}) {
   let view = { entryId: null, state: null, drafts: {}, loading: false, busy: false, conflict: false, error: '', message: '' };
-  let canWrite = false, request = null;
+  let canWrite = false, permissionVersion = 0, request = null;
   const update = patch => { view = { ...view, ...patch }; onChange(view); };
   const cancel = () => { request?.abort(); request = null; };
   const begin = () => { cancel(); request = new AbortController(); return request; };
@@ -90,7 +90,7 @@ export function createClarificationSession(client, { onChange = () => {}, onResu
       const response = await client.read(entryId, { signal: token.signal });
       if (!current(token)) return;
       apply(response);
-      if (explicit) update({ error: '', conflict: false, message: '' });
+      if (explicit) { update({ error: '', conflict: false, message: '' }); onRefresh(); }
     } catch (error) {
       if (current(token)) update({ state: null, error: clarificationError(error), conflict: true });
     } finally { if (current(token)) update({ loading: false }); }
@@ -100,21 +100,27 @@ export function createClarificationSession(client, { onChange = () => {}, onResu
     const row = view.state?.current.find(item => item.id === questionId);
     const answer = view.drafts[questionId];
     if (kind === 'save' ? !actions.answer(row) || !text(answer, 4000) : !actions.resume) return;
-    const token = begin(), entryId = view.entryId, generationId = view.state.generationId;
+    const token = begin(), entryId = view.entryId, generationId = view.state.generationId, permission = permissionVersion;
+    const confirmPermission = () => {
+      if (!canWrite || permission !== permissionVersion) throw new Error('Write permission or source fence changed');
+    };
     update({ busy: true, error: '', message: '' });
     try {
       if (kind === 'save') {
         const response = await client.answer(entryId, questionId, generationId, answer, { signal: token.signal });
         if (!current(token)) return;
+        confirmPermission();
         const confirmed = normalizeClarifications(response, entryId);
         if (!confirmed || confirmed.refreshRequired || confirmed.generationId !== generationId
           || confirmed.current.find(item => item.id === questionId)?.answer !== answer) throw new Error('Unconfirmed answer save');
         update({ state: confirmed });
         const drafts = { ...view.drafts }; delete drafts[questionId];
         update({ drafts, message: 'Answer saved. No model run was requested.' });
+        onSaved(); // Invalidate the independent fact view with GET only.
       } else {
         const facts = await client.resume(entryId, generationId, { signal: token.signal });
         if (!current(token)) return;
+        confirmPermission();
         if (!savedFactSource(facts, entryId) || !guid(facts.generationId) || facts.generationId === generationId
           || !text(facts.lifecycleState, 100)
           || !['canEdit', 'canGenerate', 'canRegenerate', 'refreshRequired'].every(key => typeof facts[key] === 'boolean')) throw new Error('Invalid resume response');
@@ -140,7 +146,7 @@ export function createClarificationSession(client, { onChange = () => {}, onResu
       cancel();
       update({ entryId, state: null, drafts: {}, loading: false, busy: false, conflict: false, error: '', message: '' });
     },
-    permissions(value) { canWrite = value === true; },
+    permissions(value) { if (canWrite !== (value === true)) permissionVersion++; canWrite = value === true; },
     draft(id, answer) { update({ drafts: { ...view.drafts, [id]: answer } }); },
     refresh, save: id => write('save', id), resume: () => write('resume'),
     dispose: cancel

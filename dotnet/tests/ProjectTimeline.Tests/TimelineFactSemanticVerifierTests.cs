@@ -99,6 +99,67 @@ public sealed class TimelineFactSemanticVerifierTests
     }
 
     [Theory]
+    [InlineData(false, false, TimelineFactVerificationDisposition.Rejected)]
+    [InlineData(false, true, TimelineFactVerificationDisposition.NeedsClarification)]
+    [InlineData(true, true, TimelineFactVerificationDisposition.NeedsClarification)]
+    [InlineData(true, false, TimelineFactVerificationDisposition.Approved)]
+    public async Task Outcome_is_server_derived_and_strict_API_rejects_every_nonapproval(bool supported, bool questions,
+        TimelineFactVerificationDisposition disposition)
+    {
+        var response = Valid();
+        foreach (var item in response["assessments"]!.AsArray())
+        {
+            item!["supported"] = supported;
+            item["evidenceIds"] = supported ? item["evidenceIds"]!.DeepClone() : new JsonArray();
+        }
+        response["questions"] = questions ? new JsonArray(JsonSerializer.SerializeToNode(new {
+            key = "actor", text = "Who is responsible for delivery?", reason = "AmbiguousReference",
+            evidenceIds = new[] { TimelineFactSourceEvidence.Create(Source).Last().Id }
+        })) : new JsonArray();
+        var verifier = new TimelineFactSemanticVerifierAgent(Client(_ => Completion(response.ToJsonString())));
+        var outcome = await verifier.VerifyOutcomeAsync(Source, Candidates, default);
+        Assert.Equal(disposition, outcome.Disposition); Assert.Equal(2, outcome.Result.Assessments.Count);
+        Assert.Equal(questions ? 1 : 0, outcome.Result.Questions.Count);
+        if (disposition == TimelineFactVerificationDisposition.Approved) await verifier.VerifyAsync(Source, Candidates, default);
+        else Assert.Equal("SemanticUnsupported", (await Assert.ThrowsAsync<TimelineFactProviderException>(() =>
+            verifier.VerifyAsync(Source, Candidates, default))).DiagnosticCode);
+    }
+
+    [Theory]
+    [InlineData("answer", "MalformedAssessment")]
+    [InlineData("reason", "InvalidQuestions")]
+    [InlineData("statement", "InvalidQuestions")]
+    [InlineData("duplicate", "InvalidQuestions")]
+    [InlineData("too-many", "InvalidQuestions")]
+    [InlineData("unknown-id", "InvalidEvidence")]
+    [InlineData("rejected-id", "InvalidEvidence")]
+    [InlineData("null", "MalformedAssessment")]
+    public async Task Verifier_questions_and_rejected_citations_are_admitted_structurally_not_as_semantic_proof(string attack, string diagnostic)
+    {
+        var response = Valid();
+        var question = JsonSerializer.SerializeToNode(new { key = "actor", text = "Who owns delivery?", reason = "MissingInformation",
+            evidenceIds = new[] { TimelineFactSourceEvidence.Create(Source).Last().Id } })!;
+        response["questions"] = new JsonArray(question);
+        switch (attack)
+        {
+            case "answer": question["answer"] = "Alice"; break;
+            case "reason": question["reason"] = "UnsupportedAssertion"; break;
+            case "statement": question["text"] = "Confirm Alice owns delivery."; break;
+            case "duplicate": response["questions"]!.AsArray().Add(question.DeepClone()); break;
+            case "too-many": response["questions"] = new JsonArray(Enumerable.Range(0, 21).Select(i => {
+                var copy = question.DeepClone(); copy["key"] = $"q{i}"; return copy;
+            }).ToArray()); break;
+            case "unknown-id": question["evidenceIds"] = new JsonArray("foreign"); break;
+            case "rejected-id": response["assessments"]![0]!["supported"] = false;
+                response["assessments"]![0]!["evidenceIds"] = new JsonArray("foreign"); break;
+            case "null": response["questions"] = null; break;
+        }
+        var error = await Assert.ThrowsAsync<TimelineFactProviderException>(() => new TimelineFactSemanticVerifierAgent(
+            Client(_ => Completion(response.ToJsonString()))).VerifyOutcomeAsync(Source, Candidates, default));
+        Assert.Equal(diagnostic, error.DiagnosticCode);
+    }
+
+    [Theory]
     [InlineData("missing-index")]
     [InlineData("duplicate-index")]
     [InlineData("negative-index")]
@@ -443,7 +504,7 @@ public sealed class TimelineFactSemanticVerifierTests
         });
         var diagnostics = new List<string>();
         var provider = new TimelineFactOpenAIProvider(new(client), new(client), client);
-        Assert.Equal(rejectSecond ? "Retry" : "Completed", await new TimelineFactProcessing(Db, provider, validationDiagnostic: diagnostics.Add).ProcessAsync(job.Id, "offline"));
+        Assert.Equal(rejectSecond ? "Failed" : "Completed", await new TimelineFactProcessing(Db, provider, validationDiagnostic: diagnostics.Add).ProcessAsync(job.Id, "offline"));
         Assert.Equal(2, calls);
         await using var db = Db();
         Assert.Empty(await db.TimelineFacts.ToListAsync());
@@ -454,7 +515,8 @@ public sealed class TimelineFactSemanticVerifierTests
         {
             Assert.Empty(additions); Assert.Empty(await db.TimelineFactProposals.ToListAsync());
             Assert.Single(await db.TimelineFactJobs.ToListAsync());
-            Assert.Null(savedJob.ExtractionResultHash); Assert.Equal(new[] { "SemanticUnsupported" }, diagnostics);
+            Assert.Null(savedJob.ExtractionResultHash); Assert.Empty(diagnostics);
+            Assert.Equal("Rejected", TimelineExtractionFeedbackCodec.Decode(savedJob.ExtractionFeedbackJson!).Disposition);
         }
         else
         {

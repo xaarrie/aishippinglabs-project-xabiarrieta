@@ -300,17 +300,25 @@ public sealed class HostedUiTests
         Assert.Contains("ariaLabel=\"Create timeline\"", workspace);
         Assert.Contains("ariaLabel=\"Create timeline entry\"", workspace);
         Assert.Contains("aria-busy={action.pending}", workspace);
-        Assert.Contains("if (saveLock.current) return", workspace);
+        Assert.Contains("if (saveLock.current || reviewActive || clarificationActive) return", workspace);
         Assert.Contains("body.append(\"file\", file)", workspace);
         Assert.Contains("entryIds: selected", workspace);
         Assert.Contains("<legend>Select entries</legend>", workspace);
         Assert.Contains("onRetry={reload}", workspace);
         Assert.Contains("hasData={!!entries.length}", workspace);
-        Assert.Contains("dirty={reviewDirty} onActiveChange={setReviewActive}", workspace);
+        Assert.Contains("dirty={reviewDirty} blocked={clarificationActive} onActiveChange={setReviewActive}", workspace);
         var factReview = File.ReadAllText(Path.Combine(client, "FactReview.jsx"));
         var factClient = File.ReadAllText(Path.Combine(client, "factReview.js"));
         Assert.Contains("import FactReview from \"./FactReview.jsx\";", source);
-        Assert.Contains("<FactReview key={id} entry={entry} canWrite={canWrite && !saving} dirty={reviewDirty} onActiveChange={setReviewActive} onStateChange={setFactState} />", workspace);
+        var edit = workspace[workspace.IndexOf("function EntryEdit", StringComparison.Ordinal)..workspace.IndexOf("function SnapshotMaintenance", StringComparison.Ordinal)];
+        var editReview = Assert.Single(Regex.Matches(edit, @"<FactReview\b.*? />", RegexOptions.Singleline).Cast<Match>()).Value;
+        foreach (var prop in new[] { "key={id}", "entry={entry}", "canWrite={canWrite && !saving}", "dirty={reviewDirty}",
+            "blocked={clarificationActive}", "onActiveChange={setReviewActive}", "onStateChange={setFactState}", "refreshKey={factRefreshKey}" })
+            Assert.Contains(prop, editReview);
+        var editClarifications = Assert.Single(Regex.Matches(edit, @"<EntryClarifications\b.*? />", RegexOptions.Singleline).Cast<Match>()).Value;
+        Assert.Contains("blocked={reviewDirty || saving || reviewActive}", editClarifications);
+        Assert.Contains("onSaved={() => setFactRefreshKey(value => value + 1)}", editClarifications);
+        Assert.Contains("saving || reviewActive || clarificationActive", edit);
         var detail = workspace[workspace.IndexOf("function EntryDetail", StringComparison.Ordinal)..workspace.IndexOf("function EntryCreate", StringComparison.Ordinal)];
         var detailReview = Assert.Single(Regex.Matches(detail, @"<FactReview\b.*? />", RegexOptions.Singleline).Cast<Match>()).Value;
         foreach (var prop in new[] { "key={id}", "entry={entry}", "canWrite={canWrite}", "onActiveChange={setReviewActive}", "onStateChange={setFacts}", "refreshKey={factRefreshKey}" })
@@ -318,7 +326,8 @@ public sealed class HostedUiTests
         Assert.Contains("const [factRefreshKey, setFactRefreshKey] = useState(0)", detail);
         Assert.Contains("import EntryClarifications from \"./EntryClarifications.jsx\";", source);
         var clarifications = Assert.Single(Regex.Matches(detail, @"<EntryClarifications\b.*? />", RegexOptions.Singleline).Cast<Match>()).Value;
-        foreach (var prop in new[] { "key={`clarifications-${id}`}", "entryId={id}", "canWrite={canWrite}", "blocked={reviewActive}", "refreshKey={`${facts?.generationId ?? ''}:${facts?.lifecycleState ?? ''}`}", "onResume={() => setFactRefreshKey(value => value + 1)}", "onActiveChange={setClarificationActive}" })
+        Assert.Contains("blocked={clarificationActive}", detailReview);
+        foreach (var prop in new[] { "key={`clarifications-${id}`}", "entryId={id}", "canWrite={canWrite && !!source && facts?.canEdit === true && !facts?.refreshRequired}", "blocked={reviewActive}", "refreshKey={`${facts?.generationId ?? ''}:${facts?.lifecycleState ?? ''}:${clarificationRefreshKey}`}", "onResume={() => setFactRefreshKey(value => value + 1)}", "onActiveChange={setClarificationActive}" })
             Assert.Contains(prop, clarifications);
         Assert.DoesNotContain("onSave=", clarifications);
         Assert.DoesNotContain("source=", clarifications);

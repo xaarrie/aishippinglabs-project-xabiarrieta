@@ -79,8 +79,10 @@ public sealed class TimelineFactModelTests
         Assert.True(vector.IsNullable);
         Assert.Equal(typeof(Pgvector.Vector), vector.ClrType);
         Assert.False(db.Database.HasPendingModelChanges());
-        var target = new ProjectTimeline.Database.Migrations.ClarificationExtractionInputs().TargetModel;
-        var snapshot = db.GetService<IMigrationsAssembly>().ModelSnapshot!.Model;
+        var migrations = db.GetService<IMigrationsAssembly>();
+        var latestMigration = migrations.Migrations.OrderBy(x => x.Key, StringComparer.Ordinal).Last();
+        var target = migrations.CreateMigration(latestMigration.Value, db.Database.ProviderName!).TargetModel;
+        var snapshot = migrations.ModelSnapshot!.Model;
         Assert.Equal(snapshot.GetEntityTypes().Select(x => x.Name).Order(), target.GetEntityTypes().Select(x => x.Name).Order());
         foreach (var entity in snapshot.GetEntityTypes())
         {

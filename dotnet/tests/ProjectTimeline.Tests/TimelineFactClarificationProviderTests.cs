@@ -203,7 +203,7 @@ public sealed class TimelineFactClarificationProviderTests
     [InlineData("entity")]
     [InlineData("claim")]
     [InlineData("quote")]
-    public async Task Unsupported_entity_claim_or_rewritten_quote_is_failure_not_question(string detail)
+    public async Task Unsupported_entity_claim_or_rewritten_quote_is_rejection_not_question_or_success(string detail)
     {
         var (entry, input, _) = Bound();
         var source = new TimelineFactExtraction(entry, input);
@@ -213,8 +213,14 @@ public sealed class TimelineFactClarificationProviderTests
         var claim = JsonNode.Parse(Claim)!;
         claim["claims"]![0]![detail switch { "entity" => "entityKey", "claim" => "claim", _ => "sourceQuote" }] = "Invented unsupported information";
         var calls = 0;
-        var error = await Assert.ThrowsAsync<TimelineFactProviderException>(() => Provider(Client(_ => Completion(
-            ++calls == 1 ? claim.ToJsonString() : response.ToJsonString()))).ExtractOutcomeAsync(source, default));
+        var provider = Provider(Client(_ => Completion(++calls % 2 == 1 ? claim.ToJsonString() : response.ToJsonString())));
+        var outcome = await provider.ExtractOutcomeAsync(source, default);
+        Assert.Empty(outcome.Candidates); Assert.Empty(outcome.Questions); Assert.Empty(outcome.Evidence);
+        Assert.Equal("Rejected", outcome.Feedback!.Disposition);
+        Assert.Equal("Invented unsupported information", detail switch {
+            "entity" => outcome.Feedback.Findings[0].EntityKey, "claim" => outcome.Feedback.Findings[0].Claim,
+            _ => outcome.Feedback.Findings[0].SourceQuote });
+        var error = await Assert.ThrowsAsync<TimelineFactProviderException>(() => provider.ExtractAsync(source, default));
         Assert.Equal("SemanticUnsupported", error.DiagnosticCode);
     }
 
@@ -286,16 +292,18 @@ public sealed class TimelineFactClarificationProviderTests
     }
 
     [Fact]
-    public async Task Questions_do_not_bypass_semantic_validation_of_supplied_candidates()
+    public async Task Extractor_questions_discard_provisional_candidates_before_any_verifier_call()
     {
         var source = new TimelineFactExtraction("Delivery", "Someone ordered sensors.");
         var assessment = Assessment(TimelineFactSourceEvidence.Create(source).Last().Id);
         assessment["assessments"]![0]!["supported"] = false;
         var calls = 0;
-        var error = await Assert.ThrowsAsync<TimelineFactProviderException>(() => Provider(Client(_ => Completion(++calls == 1
-            ? Questions(source, Claim) : assessment.ToJsonString()))).ExtractOutcomeAsync(source, default));
-        Assert.Equal("SemanticUnsupported", error.DiagnosticCode);
-        Assert.Equal(2, calls);
+        var outcome = await Provider(Client(_ => Completion(++calls == 1
+            ? Questions(source, Claim) : assessment.ToJsonString()))).ExtractOutcomeAsync(source, default);
+        Assert.Single(outcome.Questions);
+        Assert.Empty(outcome.Candidates);
+        Assert.Empty(outcome.Evidence);
+        Assert.Equal(1, calls);
     }
 
     [Theory]
@@ -392,8 +400,12 @@ public sealed class TimelineFactClarificationProviderTests
         var question = root["questions"]![0]!;
         root["questions"] = new JsonArray(Enumerable.Range(0, 20).Select(i =>
         { var copy = question.DeepClone(); copy["key"] = $"q{i}"; return copy; }).ToArray());
+        var error = await Assert.ThrowsAsync<TimelineFactProviderException>(() => Provider(Client(_ => Completion(root.ToJsonString())))
+            .ExtractOutcomeAsync(source, default));
+        Assert.Equal("InvalidQuestions", error.DiagnosticCode); // One inherited answer leaves room for nineteen questions.
+        root["questions"]!.AsArray().RemoveAt(19);
         var outcome = await Provider(Client(_ => Completion(root.ToJsonString()))).ExtractOutcomeAsync(source, default);
-        Assert.Equal(20, outcome.Questions.Count);
+        Assert.Equal(19, outcome.Questions.Count);
     }
 
     [Fact]

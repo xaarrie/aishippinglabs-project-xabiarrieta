@@ -59,6 +59,48 @@ public sealed class TimelineFactStrictSchemaTests
         }
     }
 
+    private sealed class VerifierStrictProvider(bool legacy, bool question) : HttpMessageHandler
+    {
+        public int Calls;
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        {
+            Calls++;
+            using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(ct));
+            var contract = body.RootElement.GetProperty("response_format").GetProperty("json_schema");
+            Assert.True(contract.GetProperty("strict").GetBoolean());
+            Assert.Equal("fact_semantic_assessments", contract.GetProperty("name").GetString());
+            var schema = contract.GetProperty("schema"); Assert.Null(StrictSchemaError(schema));
+            Assert.Contains("questions", schema.GetProperty("required").EnumerateArray().Select(x => x.GetString()));
+            var item = schema.GetProperty("properties").GetProperty("questions").GetProperty("items");
+            Assert.Equal(new[] { "evidenceIds", "key", "reason", "text" }, item.GetProperty("required")
+                .EnumerateArray().Select(x => x.GetString()).Order(StringComparer.Ordinal).ToArray());
+            using var payload = JsonDocument.Parse(body.RootElement.GetProperty("messages")[1].GetProperty("content").GetString()!);
+            var id = payload.RootElement.GetProperty("sourceSpans")[0].GetProperty("id").GetString()!;
+            var result = JsonSerializer.SerializeToNode(new { assessments = new[] { new { candidateIndex = 0, supported = true,
+                supportScore = 0.0, issues = Array.Empty<string>(), evidenceIds = new[] { id } } } })!;
+            if (!legacy) result["questions"] = question ? JsonSerializer.SerializeToNode(new[] { new {
+                key = "actor", text = "Who owns delivery?", reason = "MissingInformation", evidenceIds = new[] { id }
+            } }) : new JsonArray();
+            return Json(HttpStatusCode.OK, new { id = "offline", model = "gpt-4o-mini", created = 0,
+                choices = new[] { new { index = 0, finish_reason = "stop", message = new { role = "assistant", content = result.ToJsonString() } } } });
+        }
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public async Task Verifier_native_schema_requires_questions_but_legacy_inbound_omission_is_compatible(bool legacy, bool question)
+    {
+        using var handler = new VerifierStrictProvider(legacy, question);
+        var client = new CustomOpenAIClient("fake-offline-credential", new HttpClient(handler));
+        var outcome = await new TimelineFactSemanticVerifierAgent(client).VerifyOutcomeAsync(new("Delivery", "Delivery is planned."),
+            [new("Delivery is planned.", "delivery", "Event", "Delivery is planned.")], default);
+        Assert.Equal(1, handler.Calls);
+        Assert.Equal(question ? TimelineFactVerificationDisposition.NeedsClarification : TimelineFactVerificationDisposition.Approved,
+            outcome.Disposition);
+    }
+
     private sealed class OptimizerStrictProvider(TimelineFactReviewResult result, bool toolTurn, string finish = "stop") : HttpMessageHandler
     {
         public JsonElement Request { get; private set; }

@@ -7,7 +7,13 @@ namespace ProjectTimeline.BusinessLogic.Agents.AgentModels;
 public sealed class TimelineFactSemanticVerificationResult
 {
     public required List<TimelineFactSemanticAssessment> Assessments { get; init; }
+    // Inbound legacy responses may omit questions; strict outbound schema requires them.
+    public List<TimelineFactExtractionQuestion> Questions { get; init; } = [];
 }
+
+public enum TimelineFactVerificationDisposition { Approved, NeedsClarification, Rejected }
+public sealed record TimelineFactVerificationOutcome(TimelineFactVerificationDisposition Disposition,
+    TimelineFactSemanticVerificationResult Result);
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class TimelineFactSemanticAssessment

@@ -4,11 +4,14 @@ import { clarificationActions, createClarificationClient, createClarificationSes
 
 const client = createClarificationClient(api);
 
-export default function EntryClarifications({ entryId, canWrite, blocked = false, refreshKey, onResume = () => {}, onActiveChange = () => {} }) {
+export default function EntryClarifications({ entryId, canWrite, blocked = false, refreshKey, onResume = () => {}, onSaved = () => {}, onRefresh = () => {}, onActiveChange = () => {} }) {
   const [view, setView] = useState(null);
-  const callbacks = useRef({ onResume, onActiveChange });
-  callbacks.current = { onResume, onActiveChange };
-  const [session] = useState(() => createClarificationSession(client, { onChange: setView, onResume: () => callbacks.current.onResume() }));
+  const callbacks = useRef({ onResume, onSaved, onRefresh, onActiveChange });
+  callbacks.current = { onResume, onSaved, onRefresh, onActiveChange };
+  const [session] = useState(() => createClarificationSession(client, {
+    onChange: setView, onResume: () => callbacks.current.onResume(), onSaved: () => callbacks.current.onSaved(),
+    onRefresh: () => callbacks.current.onRefresh()
+  }));
   session.permissions(canWrite && !blocked);
   useEffect(() => {
     if (session.snapshot().entryId !== entryId) session.select(entryId);
@@ -46,6 +49,7 @@ export default function EntryClarifications({ entryId, canWrite, blocked = false
     <h3>Entry extraction clarifications</h3>
     <p>Questions about missing source information are separate from reconciliation questions. Answer in your own words. Saving an answer does not run a model or change the original saved source.</p>
     {!canWrite && <p role="status">Read-only clarification access.</p>}
+    {blocked && <p role="status">Clarification writes are paused while source changes or another request is active. Drafts are retained.</p>}
     {current.loading && <p role="status">Loading clarification evidence and server permissions...</p>}
     {current.busy && <p role="status">Processing explicit clarification request...</p>}
     {current.error && <p role="alert">{current.error}</p>}

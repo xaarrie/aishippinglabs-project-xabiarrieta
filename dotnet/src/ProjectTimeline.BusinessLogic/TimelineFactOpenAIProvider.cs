@@ -1,10 +1,12 @@
 using ProjectTimeline.BusinessLogic.Agents;
 using ProjectTimeline.BusinessLogic.Agents.Framework;
+using ProjectTimeline.BusinessLogic.Agents.AgentModels;
+using ProjectTimeline.DataAccessLogic;
 using System.ClientModel;
 
 namespace ProjectTimeline.BusinessLogic;
 
-/// <summary>Thin orchestration: every nonempty extraction incurs one independent verifier call.
+/// <summary>Thin orchestration: question-free nonempty extraction incurs one independent verifier call.
 /// Final literal evidence is reconstructed from the original source, never verifier-written text.</summary>
 public sealed class TimelineFactOpenAIProvider(TimelineFactExtractionAgent extraction,
     TimelineFactSemanticVerifierAgent verifier, ICustomEmbeddingClient embeddings) : ITimelineFactProvider
@@ -13,6 +15,7 @@ public sealed class TimelineFactOpenAIProvider(TimelineFactExtractionAgent extra
     public async Task<IReadOnlyList<TimelineFactCandidate>> ExtractAsync(TimelineFactExtraction source, CancellationToken ct)
     {
         var outcome = await ExtractOutcomeAsync(source, ct);
+        if (outcome.Feedback is not null) throw new TimelineFactProviderException("InvalidResponse", "SemanticUnsupported");
         if (outcome.Questions.Count > 0) throw new TimelineFactClarificationRequiredException(outcome);
         return outcome.Candidates;
     }
@@ -22,8 +25,22 @@ public sealed class TimelineFactOpenAIProvider(TimelineFactExtractionAgent extra
         var extracted = await extraction.ExtractOutcomeAsync(source, ct);
         var candidates = extracted.Candidates;
         ct.ThrowIfCancellationRequested();
+        if (extracted.Questions.Count > 0) return new([], extracted.Questions, []);
         if (candidates.Count == 0) return extracted;
-        var assessment = await verifier.VerifyAsync(source, candidates, ct);
+        var verification = await verifier.VerifyOutcomeAsync(source, candidates, ct);
+        var assessment = verification.Result;
+        if (verification.Disposition != TimelineFactVerificationDisposition.Approved)
+        {
+            var findings = assessment.Assessments.OrderBy(x => x.CandidateIndex).Select(x => {
+                var candidate = candidates[x.CandidateIndex];
+                return new TimelineExtractionFinding(x.CandidateIndex, candidate.Claim, candidate.EntityKey, candidate.EntityType,
+                    candidate.SourceQuote, x.Supported, x.SupportScore, x.Issues.Select(issue => issue.ToString()).ToArray(), x.EvidenceIds.ToArray());
+            }).ToArray();
+            var feedback = new TimelineExtractionFeedback(1, source.Input?.JobId ?? Guid.Empty, source.EntryId,
+                source.Input?.SourceFingerprint ?? "", source.Input?.EffectiveFingerprint ?? "", verification.Disposition.ToString(), findings,
+                assessment.Questions.Select(x => new TimelineExtractionFeedbackQuestion(x.Key, x.Text, x.Reason, x.EvidenceIds.ToArray())).ToArray());
+            return new([], assessment.Questions.Select(x => new TimelineEntryQuestion(x.Key, x.Text)).ToArray(), [], feedback);
+        }
         var spans = TimelineFactSourceEvidence.Create(source);
         var byIndex = assessment.Assessments.ToDictionary(x => x.CandidateIndex);
         var evidence = candidates.Select((_, index) =>

@@ -19,8 +19,21 @@ export async function api(path, options = {}) {
     const code = body?.code;
     const knownFailure = response.status === 502 && ['entry_review_failed', 'entry_review_audit_failed'].includes(code);
     const changed = response.status === 409 && code === 'entry_review_source_changed';
-    const error = new Error(`Request failed (${response.status})`);
+    const researchMessages = {
+      '400:InvalidQuestion': 'Enter a searchable question of 1–300 characters.',
+      '409:EvidenceChanged': 'Fact evidence changed. Refresh the timeline and search again.',
+      '409:StorageUnavailable': 'Fact search storage is unavailable. Retry later; contact an administrator if this continues.',
+      '504:ResearchDeadlineExceeded': 'Fact research timed out. Try a narrower question or retry later.',
+      '499:RequestCanceled': 'Fact research was canceled. Submit the search again when ready.',
+      '502:InvalidResearchAnswer': 'A verified fact answer is unavailable. Retry later or try a narrower question.'
+    };
+    // Match both status and code; no provider/body text becomes a trusted UI message.
+    const researchMessage = typeof code === 'string' ? researchMessages[`${response.status}:${code}`] : undefined;
+    const error = new Error(researchMessage
+      ? `${researchMessage} (HTTP ${response.status} · ${code})`
+      : `Request failed (${response.status})`);
     error.status = response.status;
+    if (researchMessage) error.problem = { code };
     if (knownFailure || changed) {
       const problem = { code };
       const stages = ['initialization', 'agent_invocation', 'result_validation', 'audit_initialization', 'audit_invocation', 'audit_result_validation', 'unknown'];

@@ -11,7 +11,14 @@ public sealed class TimelineFactSemanticVerifierAgent(ICustomChatClient client, 
 
     public string Model { get; } = !string.IsNullOrWhiteSpace(model) && model.Length <= 100
         ? model : throw new ArgumentException("Invalid verification model.");
-    private static readonly JsonElement Schema = TimelineFactStructuredResponse.Schema<TimelineFactSemanticVerificationResult>();
+    private static readonly JsonElement Schema = CreateSchema();
+    private static JsonElement CreateSchema()
+    {
+        var schema = System.Text.Json.Nodes.JsonNode.Parse(
+            TimelineFactStructuredResponse.Schema<TimelineFactSemanticVerificationResult>().GetRawText())!;
+        schema["required"]!.AsArray().Add("questions");
+        return JsonSerializer.SerializeToElement(schema);
+    }
     private const string Instructions = """
         # Independent semantic verification
 
@@ -73,9 +80,28 @@ public sealed class TimelineFactSemanticVerifierAgent(ICustomChatClient client, 
 
         The full original source is provided; span boundaries are mechanical, not semantic. Assess all candidates,
         not just a valid prefix. If evidence cannot support the entire claim, mark it unsupported.
+        Unsupported assessments may have no evidenceIds; every supplied ID must still be from current sourceSpans.
+
+        ## Genuine clarification questions
+
+        Return questions: [] unless missing source information or an ambiguous reference genuinely prevents support.
+        Use at most 20 questions (inherited answers plus new questions must not exceed 20), with stable key,
+        neutral text ending in ?, reason MissingInformation or AmbiguousReference, and current evidenceIds locating
+        the gap. Ask what is missing, never ask the user to confirm a candidate's hallucinated assertion or suggest
+        an answer. Do not turn unsupported invented details, technical errors or citation failures into questions.
+        Do not repair candidates. The server derives disposition from assessments and questions, not score thresholds.
         """;
 
     public async Task<TimelineFactSemanticVerificationResult> VerifyAsync(TimelineFactExtraction source,
+        IReadOnlyList<TimelineFactCandidate> candidates, CancellationToken ct)
+    {
+        var outcome = await VerifyOutcomeAsync(source, candidates, ct);
+        if (outcome.Disposition != TimelineFactVerificationDisposition.Approved)
+            throw new TimelineFactProviderException("InvalidResponse", "SemanticUnsupported");
+        return outcome.Result;
+    }
+
+    public async Task<TimelineFactVerificationOutcome> VerifyOutcomeAsync(TimelineFactExtraction source,
         IReadOnlyList<TimelineFactCandidate> candidates, CancellationToken ct)
     {
         source = source.Freeze();
@@ -83,7 +109,7 @@ public sealed class TimelineFactSemanticVerifierAgent(ICustomChatClient client, 
         TimelineFactProcessing.ValidateCandidateShape(candidates);
         if (candidates.Count >= 200) throw new TimelineFactProviderException("InvalidResponse", "CandidateLimit");
         ct.ThrowIfCancellationRequested();
-        if (candidates.Count == 0) return new() { Assessments = [] };
+        if (candidates.Count == 0) return new(TimelineFactVerificationDisposition.Approved, new() { Assessments = [] });
         var spans = TimelineFactSourceEvidence.Create(source);
         return await TimelineFactProviderCall.RunAsync(async token =>
         {
@@ -108,12 +134,15 @@ public sealed class TimelineFactSemanticVerifierAgent(ICustomChatClient client, 
                         || x.EvidenceIds is null)
                     || result.Assessments.Select(x => x.CandidateIndex).Distinct().Count() != candidates.Count)
                     throw new JsonException();
-                if (result.Assessments.Any(x => !x.Supported || x.Issues.Count != 0))
-                    throw new TimelineFactProviderException("InvalidResponse", "SemanticUnsupported");
                 foreach (var item in result.Assessments)
-                    TimelineFactSourceEvidence.Reconstruct(source, spans, item.EvidenceIds);
+                    if (item.Supported || item.EvidenceIds.Count > 0)
+                        TimelineFactSourceEvidence.Reconstruct(source, spans, item.EvidenceIds);
+                var questions = TimelineFactClarificationQuestions.Validate(result.Questions, source, spans);
+                var disposition = questions.Count > 0 ? TimelineFactVerificationDisposition.NeedsClarification
+                    : result.Assessments.All(x => x.Supported && x.Issues.Count == 0)
+                        ? TimelineFactVerificationDisposition.Approved : TimelineFactVerificationDisposition.Rejected;
                 token.ThrowIfCancellationRequested();
-                return result;
+                return new TimelineFactVerificationOutcome(disposition, result);
             }
             catch (Exception ex) when (ex is JsonException or InvalidOperationException or ArgumentException)
             { throw new TimelineFactProviderException("InvalidResponse", "MalformedAssessment"); }

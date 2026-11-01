@@ -653,6 +653,7 @@ namespace ProjectTimeline.Database.Migrations
             TimelineFactFullTextSnapshotModel.Configure(modelBuilder);
             EntryExtractionClarificationsSnapshotModel.Configure(modelBuilder);
             ClarificationExtractionInputsSnapshotModel.Configure(modelBuilder);
+            ExtractionGenerationFeedbackSnapshotModel.Configure(modelBuilder);
 #pragma warning restore 612, 618
         }
     }

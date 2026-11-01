@@ -9,7 +9,7 @@ public sealed class TimelineFactInformationResult
     public string Content { get; set; } = "";
     [Description("Fact Id GUIDs from Facts returned by research tools in this operation, without duplicates. Never context EvidenceIds, entry IDs or fingerprints.")]
     public List<Guid> CitedFactIds { get; set; } = [];
-    [Description("Only EvidenceId GUIDs from Contexts returned by fetch_source_entry in this operation, without duplicates. No fetched context or no context used => []. Never fingerprints, entry IDs or fact Id GUIDs.")]
+    [Description("Only EvidenceId GUIDs from Contexts returned by fetch_source_entry(entryIds) in this operation, without duplicates; each distinct entry has its own context identity. No fetched context or no context used => []. Never fingerprints, entry IDs or fact Id GUIDs.")]
     public List<Guid> CitedContextEvidenceIds { get; set; } = [];
 }
 
@@ -19,7 +19,7 @@ public sealed record TimelineFactInformationSourceContext(Guid EvidenceId, Guid 
     IReadOnlyList<Guid> AnchorFactIds, string SourceFingerprint, string Text, bool Truncated, string EvidenceKind);
 public sealed record TimelineFactInformationContextCitation(Guid EvidenceId, Guid EntryId, int EntryNumber,
     IReadOnlyList<Guid> AnchorFactIds, string SourceFingerprint, string EvidenceKind);
-public sealed record TimelineFactInformationResearchLimits(int MaxModelCalls, int MaxToolCalls, int MaxSearchQueries,
+public sealed record TimelineFactInformationResearchLimits(int MaxModelCalls, int MaxToolCalls, int? MaxSearchQueries,
     int MaxDistinctFacts, int MaxHitsPerSearch, int MaxSourceContexts, int MaxCharsPerContext,
     int MaxTotalSourceContextChars, int MaxTotalSerializedToolEvidenceChars, int MaxOutputTokens, double DeadlineSeconds);
 public sealed record TimelineFactInformationResearchStatus(string Status, string? StopReason, int ModelCalls,

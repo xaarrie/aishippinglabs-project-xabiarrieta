@@ -118,4 +118,5 @@ public sealed class TimelineFactJob : AuditedEntity
     public string? ExtractionInputJson { get; set; }
     public string? EffectiveInputFingerprint { get; set; }
     public string? ExtractionSupportJson { get; set; }
+    public string? ExtractionFeedbackJson { get; set; }
 }

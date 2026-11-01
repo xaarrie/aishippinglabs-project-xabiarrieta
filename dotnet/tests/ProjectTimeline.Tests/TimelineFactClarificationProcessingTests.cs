@@ -173,9 +173,9 @@ public sealed class TimelineFactClarificationProcessingTests
     [Theory]
     [InlineData("schema")]
     [InlineData("citation")]
-    [InlineData("semantic")]
+    [InlineData("unsupported-with-bad-citation")]
     [InlineData("sdk")]
-    public async Task Real_provider_technical_schema_citation_and_semantic_failures_do_not_pause(string failure)
+    public async Task Real_provider_technical_schema_and_citation_failures_do_not_pause_even_when_unsupported(string failure)
     {
         var f = new Fixture(); await f.Initialize(); var calls = 0;
         var client = new CustomOpenAIClient("fake-offline-credential", new HttpClient(new Handler(_ =>
@@ -184,7 +184,7 @@ public sealed class TimelineFactClarificationProcessingTests
             if (failure == "schema") return Completion("{\"claims\":\"wrong type\"}");
             if (++calls == 1) return Completion("{\"claims\":[{\"claim\":\"Delivery is planned.\",\"entityKey\":\"delivery\",\"entityType\":\"Event\",\"sourceQuote\":\"Delivery is planned.\"}]}");
             return Completion(JsonSerializer.Serialize(new { assessments = new[] { new { candidateIndex = 0,
-                supported = failure != "semantic", supportScore = failure == "semantic" ? 0.0 : 1.0,
+                supported = failure != "unsupported-with-bad-citation", supportScore = failure == "unsupported-with-bad-citation" ? 0.0 : 1.0,
                 issues = Array.Empty<string>(), evidenceIds = new[] { "unknown-citation" } } } }));
         })));
         f.Provider = new TimelineFactOpenAIProvider(new TimelineFactExtractionAgent(client), new TimelineFactSemanticVerifierAgent(client), client);

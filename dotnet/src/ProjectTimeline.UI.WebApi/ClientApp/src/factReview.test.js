@@ -39,13 +39,33 @@ test('lifecycle actions fail closed and depend on server permissions, not propos
     assert.deepEqual(review.factReviewActions(state, options), { edit: false, generate: false, regenerate: false, reconcile: false });
     assert.equal(review.canAcceptCurrentFactProposal(state, pending.proposals[1]), false);
   }
-  for (const flags of [{ canWrite: false }, { canWrite: true, dirty: true }, { canWrite: true, busy: true }, { canWrite: true, conflict: true }]) {
+  for (const flags of [{ canWrite: false }, { canWrite: true, dirty: true }, { canWrite: true, busy: true }, { canWrite: true, blocked: true }, { canWrite: true, conflict: true }]) {
     const actions = review.factReviewActions(pending, flags);
     assert.equal(actions.generate, false); assert.equal(actions.regenerate, false); assert.equal(actions.reconcile, false);
   }
   for (const lifecycleState of ['NotGenerated', 'Loading', 'Retry', 'Failed']) assert.equal(review.factReviewActions({ ...pending, lifecycleState }, options).reconcile, false);
   assert.equal(review.factReviewActions({ ...pending, lifecycleState: 'Empty' }, options).reconcile, true);
   assert.equal(review.factReviewActions({ ...pending, canEdit: false }, options).edit, false);
+});
+
+test('NeedsCorrection exposes only current bounded feedback and requires explicit regeneration', () => {
+  const extractionFeedback = { generationId: 'g', disposition: 'Rejected', candidateCount: 2, unsupportedCount: 1, issues: ['Unsupported'], questionCount: 0 };
+  const state = { source: { entryId: 'e', timelineId: 't', title: 'Source', content: 'Source', status: 'Draft', fingerprint: 'a'.repeat(64) },
+    generationId: 'g', lifecycleState: 'NeedsCorrection', canEdit: true, canGenerate: true, canRegenerate: true, extractionFeedback };
+  assert.equal(review.currentExtractionFeedback(state), extractionFeedback);
+  assert.deepEqual(review.factReviewActions(state, { canWrite: true }), { edit: true, generate: false, regenerate: true, reconcile: false });
+  for (const feedback of [null, {}, { ...extractionFeedback, generationId: 'old' }, { ...extractionFeedback, issues: ['<script>invented</script>'] },
+    { ...extractionFeedback, disposition: 'Approved' }, { ...extractionFeedback, candidateCount: 200 },
+    { ...extractionFeedback, unsupportedCount: 0 }, { ...extractionFeedback, questionCount: 1 }]) {
+    assert.equal(review.currentExtractionFeedback({ ...state, extractionFeedback: feedback }), null);
+  }
+  assert.equal(review.currentExtractionFeedback({ ...state, refreshRequired: true }), null);
+  assert.equal(review.currentExtractionFeedback({ ...state, lifecycleState: 'Pending' }), null);
+  const component = readFileSync(new URL('./FactReview.jsx', import.meta.url), 'utf8');
+  assert.match(component, /NeedsCorrection:/);
+  assert.match(component, /Verification feedback \(not evidence\)/);
+  assert.match(component, /Nothing runs automatically/);
+  assert.match(component, /callbacks.current.onRefreshClarifications\(\)/);
 });
 
 test('waiting for entry answers blocks generation and reconciliation even with incorrect write flags', () => {

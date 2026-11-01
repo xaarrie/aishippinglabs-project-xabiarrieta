@@ -161,6 +161,7 @@ public sealed partial class ProjectTimelineDbContext
             || stored.Version != change.Property(x => x.Version).OriginalValue
             || stored.LeaseOwner != change.Property(x => x.LeaseOwner).OriginalValue
             || job.LeaseOwner is not null || job.LeaseExpiresAtUtc is not null
+            || job.ExtractionFeedbackJson is not null || stored.ExtractionFeedbackJson is not null
             || stored.SourceFingerprint != TimelineFactEvidence.Fingerprint(source)
             || stored.ExtractionRevision != timeline.FactRevision || job.ExtractionRevision != stored.ExtractionRevision
             || !FactText(stored.Model, 100) || stored.Model == "unassigned")
@@ -228,6 +229,7 @@ public sealed partial class ProjectTimelineDbContext
     {
         ChangeTracker.DetectChanges();
         await ValidateEntryClarificationsAsync(ct);
+        await ValidateExtractionFeedbackAsync(ct);
         foreach (var completion in ChangeTracker.Entries<TimelineFactJob>().Where(x => x.State == EntityState.Modified
             && x.Entity.Kind == "Extraction" && x.Entity.State == "Completed").ToList())
             await ValidateExtractionCompletionAsync(completion.Entity, ct);
@@ -412,7 +414,8 @@ public sealed partial class ProjectTimelineDbContext
                             && p.Metadata.Name is not ("Version" or "UpdatedAtUtc"))))
                     throw new TimelineFactConflictException("Waiting generations require an explicit successor.");
             }
-            else if (change.Entity.ExtractionInputJson is not null || change.Entity.EffectiveInputFingerprint is not null || change.Entity.ExtractionSupportJson is not null)
+            else if (change.Entity.ExtractionInputJson is not null || change.Entity.EffectiveInputFingerprint is not null
+                || change.Entity.ExtractionSupportJson is not null || change.Entity.ExtractionFeedbackJson is not null)
                 throw new TimelineFactConflictException("Embedding jobs cannot carry extraction input.");
             if (change.Entity.ExtractionSupportJson is not null && (change.State == EntityState.Added
                 || change.Property(x => x.ExtractionSupportJson).IsModified && change.Entity.State != "Completed"))

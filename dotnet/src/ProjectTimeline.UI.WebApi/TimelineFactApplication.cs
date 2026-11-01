@@ -31,10 +31,12 @@ public sealed record TimelineFactDto(Guid Id, Guid EntryId, string Claim, string
     bool Valid, Guid? CreationReviewId, Guid? InvalidationReviewId, Guid? ExtractionJobId = null, Guid? InvalidatedByFactId = null);
 public sealed record TimelineFactJobDto(Guid Id, string Kind, string State, int Attempts, DateTime? NextAttemptAtUtc, string? ErrorCode);
 public sealed record TimelineFactSourceDto(Guid EntryId, Guid TimelineId, string Title, string Content, string Status, string Fingerprint);
+public sealed record TimelineFactFeedbackDto(Guid GenerationId, string Disposition, int CandidateCount, int UnsupportedCount,
+    IReadOnlyList<string> Issues, int QuestionCount);
 public sealed record TimelineFactStateDto(IReadOnlyList<TimelineFactDto> Facts, IReadOnlyList<TimelineFactProposalDto> Proposals,
     IReadOnlyList<TimelineFactJobDto> Processing, TimelineFactCoverage Coverage, bool Truncated,
     string LifecycleState = "NotGenerated", Guid? GenerationId = null, bool CanEdit = false, bool CanGenerate = false, bool CanRegenerate = false,
-    TimelineFactSourceDto? Source = null, bool RefreshRequired = false);
+    TimelineFactSourceDto? Source = null, bool RefreshRequired = false, TimelineFactFeedbackDto? ExtractionFeedback = null);
 
 /// <summary>Only authenticated server identities enter here. Agent construction is lazy and follows write authorization.</summary>
 public sealed class TimelineFactApplication(ProjectTimelineDbContext db, Func<ICustomAgent> createAgent,
@@ -163,7 +165,8 @@ public sealed class TimelineFactApplication(ProjectTimelineDbContext db, Func<IC
         var state = locked ? "Reconciled" : current?.State switch
         {
             "AwaitingClarification" => "AwaitingClarification",
-            "Running" => "Loading", "Pending" => "Loading", "Retry" => "Retry", "Failed" => "Failed",
+            "Running" => "Loading", "Pending" => "Loading", "Retry" => "Retry",
+            "Failed" => current.ExtractionFeedbackJson is not null ? "NeedsCorrection" : "Failed",
             "Completed" => empty ? "Empty" : "Pending", _ => "NotGenerated"
         };
         var writable = await new ProjectAuthorization(db).CanWriteAsync(scope.ProjectId, actor, admin, ct);
@@ -182,9 +185,25 @@ public sealed class TimelineFactApplication(ProjectTimelineDbContext db, Func<IC
             try { await new TimelineEntryClarificationService(db).ReadStateAsync(scope, actor, admin, ct); }
             catch (TimelineFactConflictException) { refresh = true; }
         }
+        TimelineFactFeedbackDto? summary = null;
+        if (current?.ExtractionFeedbackJson is not null)
+        {
+            try
+            {
+                var snapshot = await db.ReadExtractionInputAsync(current, source, ct);
+                var feedback = TimelineExtractionFeedbackCodec.Decode(current.ExtractionFeedbackJson);
+                TimelineExtractionFeedbackCodec.Validate(feedback, current, source, snapshot.Input);
+                if (current.State != (feedback.Disposition == "Rejected" ? "Failed" : "AwaitingClarification"))
+                    throw new TimelineFactConflictException("Feedback state changed.");
+                summary = new(current.Id, feedback.Disposition, feedback.Findings.Count,
+                    feedback.Findings.Count(x => !x.Supported || x.Issues.Count > 0),
+                    feedback.Findings.SelectMany(x => x.Issues).Distinct().Order(StringComparer.Ordinal).ToArray(), feedback.Questions.Count);
+            }
+            catch (TimelineFactConflictException) { refresh = true; }
+        }
         return new(facts.Take(500).ToArray(), dtos, jobs.Take(100).ToArray(), coverage, facts.Count > 500 || proposals.Count > 50 || jobs.Count > 100,
             state, current?.Id, writable && !locked, writable && !locked && !waiting && !refresh, writable && !locked && !waiting && !refresh && current is not null,
-            new(source.Id, source.TimelineId, source.Title, source.Content, source.Status, fingerprint), refresh);
+            new(source.Id, source.TimelineId, source.Title, source.Content, source.Status, fingerprint), refresh, refresh ? null : summary);
     }
 
     private async Task<TimelineEntry> ReadSourceAsync(TimelineFactScope scope, CancellationToken ct) =>

@@ -34,9 +34,9 @@ export function factGenerationMatchesSource(state) {
   const source = savedFactSource(state), generated = currentFactGeneration(state);
   return !!(source && !state.refreshRequired && generated && generated.sourceFingerprint === source.fingerprint);
 }
-export function factReviewActions(state, { canWrite = false, dirty = false, busy = false, conflict = false } = {}) {
+export function factReviewActions(state, { canWrite = false, dirty = false, busy = false, blocked = false, conflict = false } = {}) {
   const edit = !!(canWrite && state?.canEdit === true && savedFactSource(state) && !state.refreshRequired && state.lifecycleState !== 'Reconciled');
-  const mutate = edit && !dirty && !busy && !conflict;
+  const mutate = edit && !dirty && !busy && !blocked && !conflict;
   const completed = ['Pending', 'Empty'].includes(state?.lifecycleState) && factGenerationMatchesSource(state);
   return {
     edit,
@@ -44,6 +44,20 @@ export function factReviewActions(state, { canWrite = false, dirty = false, busy
     regenerate: !!(mutate && state.lifecycleState !== 'AwaitingClarification' && state.canRegenerate === true && state.generationId),
     reconcile: !!(mutate && completed)
   };
+}
+// Display only the bounded server summary for the current, source-validated generation.
+export function currentExtractionFeedback(state) {
+  const value = state?.extractionFeedback;
+  if (!savedFactSource(state) || state.refreshRequired || !value || value.generationId !== state.generationId
+    || !['NeedsCorrection', 'AwaitingClarification'].includes(state.lifecycleState)
+    || value.disposition !== (state.lifecycleState === 'NeedsCorrection' ? 'Rejected' : 'NeedsClarification')
+    || !Number.isInteger(value.candidateCount) || value.candidateCount < 1 || value.candidateCount >= 200
+    || !Number.isInteger(value.unsupportedCount) || value.unsupportedCount < 0 || value.unsupportedCount > value.candidateCount
+    || !Number.isInteger(value.questionCount) || value.questionCount < 0 || value.questionCount > 20
+    || (value.disposition === 'Rejected' ? value.questionCount !== 0 || value.unsupportedCount === 0 : value.questionCount === 0)
+    || !Array.isArray(value.issues) || value.issues.length > 5
+    || value.issues.some(issue => !['Numeric', 'Date', 'Actor', 'Negation', 'Unsupported'].includes(issue))) return null;
+  return value;
 }
 export function canAcceptCurrentFactProposal(state, proposal) {
   return !!(state?.canEdit === true && ['Pending', 'Empty'].includes(state.lifecycleState)

@@ -161,6 +161,10 @@ test('actual component escapes human text, retains history and hides writer cont
   loaded.current = [{ ...row(), question }]; loaded.canResume = false;
   const unanswered = render(true); assert.match(unanswered, /maxlength="4000"/i); assert.ok(unanswered.includes(`id="clarification-answer-${id}"`));
   assert.ok(unanswered.includes('aria-label="Save answer: &lt;img'));
+  const blocked = renderToStaticMarkup(React.createElement(module.exports.default, { entryId, canWrite: true, blocked: true }));
+  assert.match(blocked, /<textarea[^>]*disabled/);
+  assert.match(blocked, /<button[^>]*disabled[^>]*>Save answer/);
+  assert.match(blocked, /Drafts are retained/);
 });
 
 test('entry integration remains separate and fact refresh does not remount review drafts', () => {
@@ -172,6 +176,21 @@ test('entry integration remains separate and fact refresh does not remount revie
   assert.ok(review.includes('AwaitingClarification:')); assert.ok(review.includes('if (refreshKey) refresh();'));
   const component = readFileSync(new URL('./EntryClarifications.jsx', import.meta.url), 'utf8');
   assert.ok(!component.includes('dangerouslySetInnerHTML')); assert.ok(!component.includes('setInterval'));
+});
+
+test('detail and edit mount independently fenced clarification controls without remounting drafts', () => {
+  const app = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
+  for (const screen of [app.slice(app.indexOf('function EntryDetail('), app.indexOf('function EntryCreate(')),
+    app.slice(app.indexOf('function EntryEdit('), app.indexOf('function SnapshotMaintenance('))]) {
+    assert.match(screen, /<EntryClarifications/);
+    assert.match(screen, /blocked=\{[^}]*reviewActive/);
+    assert.match(screen, /<FactReview[^\n]*blocked=\{clarificationActive\}/);
+    assert.match(screen, /onResume=\{\(\) => setFactRefreshKey/);
+    assert.match(screen, /onRefresh=\{\(\) => setFactRefreshKey/);
+  }
+  const edit = app.slice(app.indexOf('function EntryEdit('), app.indexOf('function SnapshotMaintenance('));
+  assert.match(edit, /blocked=\{reviewDirty \|\| saving \|\| reviewActive\}/);
+  assert.match(edit, /saving \|\| reviewActive \|\| clarificationActive/);
 });
 
 test('corrupt resume responses refresh both views but never claim successful extraction', async () => {
@@ -189,6 +208,29 @@ test('unconfirmed save responses retain drafts and do not imply answer persisten
     session.select(entryId); session.permissions(true); await session.refresh(); session.draft(id, 'Exact saved text'); await session.save(id);
     assert.equal(session.snapshot().drafts[id], 'Exact saved text'); assert.equal(session.snapshot().conflict, true);
   }
+});
+
+test('dirty or busy permission fences retain drafts and reject stale save receipts without replay', async () => {
+  let release, writes = 0, saved = 0;
+  const pending = new Promise(resolve => release = resolve);
+  const session = createClarificationSession({ read: async () => state(), answer: () => { writes++; return pending; } }, { onSaved: () => saved++ });
+  session.select(entryId); session.permissions(true); await session.refresh(); session.draft(id, 'Actual human text');
+  const save = session.save(id); session.permissions(false); session.permissions(true);
+  release(ready()); await save;
+  assert.equal(writes, 1); assert.equal(saved, 0); assert.equal(session.snapshot().conflict, true);
+  assert.equal(session.snapshot().drafts[id], 'Actual human text');
+  await session.save(id); await session.resume(); assert.equal(writes, 1);
+});
+
+test('confirmed answer saves invalidate only GET views and never request paid processing', async () => {
+  let saved = 0, paid = 0, reads = 0, refreshed = 0;
+  const session = createClarificationSession({ read: async () => { reads++; return state(); }, answer: async () => ready(),
+    resume: async () => { paid++; return factState(); } }, { onSaved: () => saved++, onRefresh: () => refreshed++ });
+  session.select(entryId); session.permissions(true); await session.refresh(); session.draft(id, 'Actual human text');
+  await session.save(id); assert.equal(saved, 1); assert.equal(paid, 0);
+  session.permissions(false); await session.refresh(true); await session.save(id); await session.resume();
+  assert.equal(reads, 2); assert.equal(paid, 0); assert.equal(saved, 1); assert.equal(refreshed, 1);
+  await session.refresh(); assert.equal(refreshed, 1, 'effect-driven GET refreshes never create a callback loop');
 });
 
 test('corrupt success and failed reads fail closed without dropping unsaved drafts', async () => {

@@ -79,6 +79,7 @@ public static class TimelineFactModel
         job.Property(x => x.EffectiveInputFingerprint).HasMaxLength(64);
         job.Property(x => x.ExtractionInputJson).HasColumnType("text");
         job.Property(x => x.ExtractionSupportJson).HasColumnType("text");
+        job.Property(x => x.ExtractionFeedbackJson).HasColumnType("text");
         Text(job.Property(x => x.WorkKey), 300);
         Text(job.Property(x => x.Kind), 30);
         Text(job.Property(x => x.SourceFingerprint), 64);

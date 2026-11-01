@@ -239,8 +239,8 @@ public sealed class TimelineFactPostgresTests
         Assert.Equal(2, (await information.SearchAsync("personkey")).Facts.Count);
         Assert.Single((await information.SearchAsync("Place")).Facts);
         using var tools = await TimelineFactInformationTools.CreateAsync(reader, new(seed.Scope.ProjectId, seed.Scope.TimelineId), seed.Actor, false);
-        var research = await tools.search_facts("alice delivery testing");
-        Assert.Equal(ranked.Facts.Select(x => x.Id), research.GetProperty("Facts").EnumerateArray().Take(2)
+        var research = await tools.search_facts_batch(["alice delivery testing"]);
+        Assert.Equal(ranked.Facts.Select(x => x.Id), research.GetProperty("Results")[0].GetProperty("Facts").EnumerateArray().Take(2)
             .Select(x => x.GetProperty("Id").GetGuid()));
         Assert.Empty((await information.SearchAsync("missing | !absent:*")).Facts);
     });
