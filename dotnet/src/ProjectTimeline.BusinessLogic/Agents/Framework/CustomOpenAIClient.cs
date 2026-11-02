@@ -199,7 +199,36 @@ namespace ProjectTimeline.BusinessLogic.Agents.Framework
             var client = GetChatClient(model);
             var tracked = client is UsageTrackingChatClient ? client : new UsageTrackingChatClient(client, model);
             // Call-time ambient admission stays above accounting, even for already initialized agents.
-            return new ExecutionBudgetChatClient(tracked);
+            return new SearchResponseAdmissionClient(new ExecutionBudgetChatClient(tracked));
+        }
+
+        private const string SearchAdmissionKey = "ProjectTimeline.Search.ResponseAdmission";
+
+        // Per-stage opt-in only. No ambient/global validator or retained conversation state.
+        internal static void RequireSearchResponseAdmission(ChatOptions options, Action<ChatResponse> validate)
+        {
+            options.AdditionalProperties ??= new();
+            options.AdditionalProperties[SearchAdmissionKey] = validate;
+        }
+
+        private sealed class SearchResponseAdmissionClient(IChatClient inner) : DelegatingChatClient(inner)
+        {
+            public override async Task<ChatResponse> GetResponseAsync(IEnumerable<Microsoft.Extensions.AI.ChatMessage> messages, ChatOptions? options = null,
+                CancellationToken cancellationToken = default)
+            {
+                if (options?.AdditionalProperties?.TryGetValue(SearchAdmissionKey, out var value) != true
+                    || value is not Action<ChatResponse> validate)
+                    return await base.GetResponseAsync(messages, options, cancellationToken);
+
+                // Strip the private callback from a clone before reaching accounting/provider adapters.
+                // Validate AFTER usage capture, but BEFORE the SDK can interpret tool calls or continue.
+                var providerOptions = options.Clone();
+                providerOptions.AdditionalProperties!.Remove(SearchAdmissionKey);
+                var response = await base.GetResponseAsync(messages, providerOptions, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                validate(response);
+                return response;
+            }
         }
 
         public IChatClient GetChatClient(string model)

@@ -51,7 +51,7 @@ public sealed class AgentTraceContentTests
     [InlineData(null)]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task Search_application_propagates_host_policy_through_real_harness_tool_loop(bool? capture)
+    public async Task Search_application_propagates_host_policy_through_two_isolated_harness_stages(bool? capture)
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var role = new UserRole { RoleName = "User" };
@@ -62,29 +62,37 @@ public sealed class AgentTraceContentTests
         var fact = await f.AcceptAsync("Alice owns delivery.", "alice");
         using var wire = await Wire.Start(capture: capture);
         var policy = wire.Services.GetRequiredService<AgentTelemetryOptions>();
-        var chat = new Chat(turn => new ChatResponse(new ChatMessage(ChatRole.Assistant, turn == 1
-            ? [new FunctionCallContent("SEARCH_CALL_ID", "search_facts_batch", new Dictionary<string, object?> { ["queries"] = new[] { "alice" } })]
-            : turn == 2 ? [new FunctionCallContent("SOURCE_CALL_ID", "fetch_source_entry", new Dictionary<string, object?> { ["entryIds"] = new[] { fact.EntryId } })]
-            : [new TextContent(JsonSerializer.Serialize(new { Content = "SYNTHESIS_SENTINEL", CitedFactIds = new[] { fact.Id }, CitedContextEvidenceIds = Array.Empty<Guid>() }))]))
-            { ModelId = "gpt-4o-mini", Usage = new() { InputTokenCount = 100, OutputTokenCount = 20 } });
+        var chat = new Chat(turn =>
+        {
+            var text = turn == 1
+                ? JsonSerializer.Serialize(new { decision = "Search", queries = new[] { "alice" }, refusalReason = (string?)null })
+                : JsonSerializer.Serialize(new { content = "SYNTHESIS_SENTINEL", citedFactIds = new[] { fact.Id }, citedContextEvidenceIds = Array.Empty<Guid>() });
+            var raw = System.ClientModel.Primitives.ModelReaderWriter.Read<OpenAI.Chat.ChatCompletion>(BinaryData.FromString(JsonSerializer.Serialize(new
+            {
+                id = "offline", model = "gpt-4o-mini", created = 0,
+                choices = new[] { new { index = 0, finish_reason = "stop", message = new { role = "assistant", content = text } } }
+            })));
+            return new ChatResponse(new ChatMessage(ChatRole.Assistant, text))
+            { RawRepresentation = raw, ModelId = "gpt-4o-mini", Usage = new() { InputTokenCount = 100, OutputTokenCount = 20 } };
+        });
         var app = new TimelineFactInformationApplication(f.Db, chatClient: chat, telemetryOptions: policy);
         var session = AgentCostSession.Start();
         using (session)
         {
             var result = await app.SearchAsync(f.Timeline.Id, f.Actor.Id, "QUESTION_CAPTURE_SENTINEL");
             Assert.Equal("SYNTHESIS_SENTINEL", result.Content);
-            Assert.Equal(3, result.Research!.ModelCalls);
+            Assert.Equal(2, result.Research!.ModelCalls);
             Assert.Equal(2, result.Research.ToolCalls);
         }
-        Assert.Equal(3, chat.Calls);
-        Assert.Equal(3, session.GetSnapshot().Totals.CallCount);
+        Assert.Equal(2, chat.Calls);
+        Assert.Equal(2, session.GetSnapshot().Totals.CallCount);
         var spans = wire.Flush();
-        Assert.Equal(8, spans.Length); // Session + wrapper + invocation + three chats + two tools.
+        Assert.Equal(7, spans.Length); // Session + two wrapper/invocation/chat groups, no model tool execution.
         var payload = string.Join("\n", wire.Transport.Requests.Select(request => Encoding.UTF8.GetString(request.Body)));
-        foreach (var expected in new[] { "QUESTION_CAPTURE_SENTINEL", "SYNTHESIS_SENTINEL", "SEARCH_CALL_ID", "Alice owns delivery." })
+        foreach (var expected in new[] { "QUESTION_CAPTURE_SENTINEL", "SYNTHESIS_SENTINEL", "Alice owns delivery." })
             if (capture != false) Assert.Contains(expected, payload);
             else Assert.DoesNotContain(expected, payload);
-        Assert.Equal(2, spans.Count(span => Text(span, 5) == "execute_tool"));
+        Assert.DoesNotContain(spans, span => Text(span, 5) == "execute_tool");
     }
 
     [Fact]

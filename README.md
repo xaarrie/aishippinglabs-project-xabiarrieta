@@ -4,7 +4,7 @@ The Web API hosts the production React bundle and the layered .NET 10 applicatio
 
 ## Quick path
 
-1. Install the .NET 10 SDK and PostgreSQL.
+1. Install the .NET 10 SDK and PostgreSQL. Before startup, follow the [timeline facts deployment guide](dotnet/docs/timeline-facts.md) for official pgvector setup and safe migration preparation; local administrator installation is currently deferred.
 2. Set `ConnectionStrings__ProjectTimeline` and a 32-character `Authentication__SigningKey` in the shell. Never commit either value.
 3. On the first empty database only, set `PROJECT_TIMELINE_ADMIN_PASSWORD` to create `x.arrieta@ibernova.com`. There is no password fallback. A missing value logs an explicit initialization error and creates no administrator.
 4. Run `dotnet restore dotnet/ProjectTimeline.sln`, then `dotnet run --project dotnet/src/ProjectTimeline.UI.WebApi`.
@@ -26,11 +26,7 @@ Set `Recovery__BaseUrl` and `Recovery__OutboxPath` for local development. The de
 
 ## Database
 
-PostgreSQL schema creation is an executable EF Core migration in `dotnet/src/ProjectTimeline.Database/Migrations/202610010001_InitialCreate.cs`. Runtime initialization uses `MigrateAsync()` only. To apply it explicitly:
-
-```powershell
-dotnet ef database update --project dotnet/src/ProjectTimeline.Database --startup-project dotnet/src/ProjectTimeline.UI.WebApi --connection "$env:ConnectionStrings__ProjectTimeline"
-```
+PostgreSQL schema creation starts with `dotnet/src/ProjectTimeline.Database/Migrations/202610010001_InitialCreate.cs`; timeline facts additionally require official pgvector server files and per-database extension creation. Runtime initialization uses `MigrateAsync()` only and schema failure is fatal. Back up and review migration SQL offline before applying it to an explicitly selected database. See the [deployment, configuration, backfill and opt-in test guide](dotnet/docs/timeline-facts.md); never pass connection passwords on the command line or reset/drop the application database as a deployment shortcut.
 
 Development seeding is separate and secret-gated. No credentials are stored in source control.
 

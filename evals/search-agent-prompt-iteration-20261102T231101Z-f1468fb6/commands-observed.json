@@ -1,0 +1,30 @@
+{
+  "sessionPath": "C:\\Users\\biarunxa\\.gentle-shell\\agent\\gentle-agents\\sessions\\2026-11-02T23-07-17-590Z_01a19e84-5ed5-72ca-b730-a9cf0ef48d0b.jsonl",
+  "commandsAndResults": [
+    {
+      "sessionLine": 8,
+      "command": "dotnet test dotnet/tests/ProjectTimeline.Tests/ProjectTimeline.Tests.csproj -c Release -p:SkipClientBuild=true --artifacts-path dotnet/tests/ProjectTimeline.Tests/bin/search-eval-build --no-restore --filter \"FullyQualifiedName~SearchEntriesPromptContractTests|FullyQualifiedName~TimelineFactResearchTests|FullyQualifiedName~TimelineFactInformationTests|FullyQualifiedName~SearchResponseJudge\""
+    },
+    {
+      "sessionLine": 9,
+      "observedOutput": "  ProjectTimeline.DataAccessLogic -> C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.DataAccessLogic\\release\\ProjectTimeline.DataAccessLogic.dll\r\n  ProjectTimeline.BusinessLogic -> C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.BusinessLogic\\release\\ProjectTimeline.BusinessLogic.dll\r\n  ProjectTimeline.Database -> C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.Database\\release\\ProjectTimeline.Database.dll\r\n  ProjectTimeline.EvaluationLabeler -> C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.EvaluationLabeler\\release\\ProjectTimeline.EvaluationLabeler.dll\r\n  ProjectTimeline.SearchFactsEvaluator -> C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.SearchFactsEvaluator\\release\\ProjectTimeline.SearchFactsEvaluator.dll\r\n  ProjectTimeline.FactsInitializer -> C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.FactsInitializer\\release\\ProjectTimeline.FactsInitializer.dll\r\n  ProjectTimeline.SearchFactsJudge -> C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.SearchFactsJudge\\release\\ProjectTimeline.SearchFactsJudge.dll\r\n  ProjectTimeline.UI.WebApi -> C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.UI.WebApi\\release\\ProjectTimeline.UI.WebApi.dll\r\n  ProjectTimeline.Tests -> C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.Tests\\release\\ProjectTimeline.Tests.dll\r\nSerie de pruebas para C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.Tests\\release\\ProjectTimeline.Tests.dll (.NETCoreApp,Version=v10.0)\r\n1 archivos de prueba en total coincidieron con el patrón especificado.\r\n\r\nCorrectas! - Con error:     0, Superado:   167, Omitido:     0, Total:   167, Duración: 8 s - ProjectTimeline.Tests.dll (net10.0)\r\n"
+    },
+    {
+      "sessionLine": 14,
+      "command": "dotnet build dotnet/src/ProjectTimeline.SearchFactsEvaluator/ProjectTimeline.SearchFactsEvaluator.csproj -c Release -p:SkipClientBuild=true --artifacts-path dotnet/tests/ProjectTimeline.Tests/bin/search-eval-build --no-restore"
+    },
+    {
+      "sessionLine": 14,
+      "command": "git diff --check -- dotnet/src/ProjectTimeline.BusinessLogic/Agents/SearchEntriesAgent.cs dotnet/tests/ProjectTimeline.Tests/SearchEntriesPromptContractTests.cs"
+    },
+    {
+      "sessionLine": 15,
+      "observedOutput": "  ProjectTimeline.DataAccessLogic -> C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.DataAccessLogic\\release\\ProjectTimeline.DataAccessLogic.dll\r\n  ProjectTimeline.BusinessLogic -> C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.BusinessLogic\\release\\ProjectTimeline.BusinessLogic.dll\r\n  ProjectTimeline.SearchFactsEvaluator -> C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.SearchFactsEvaluator\\release\\ProjectTimeline.SearchFactsEvaluator.dll\r\n\r\nCompilación correcta.\r\n    0 Advertencia(s)\r\n    0 Errores\r\n\r\nTiempo transcurrido 00:00:00.99\r\n"
+    }
+  ],
+  "otherInspectionCommands": "Read-only git diff/status and Python inspections are retained in this verifier session. Offline generation/verification scripts in this directory are reproducible; no extra test/build/lint commands executed.",
+  "artifactPreparationFailures": [
+    "First long inline preparation command failed SyntaxError before any mutation.",
+    "prepare-offline.py stopped after creating derived/corrected CSVs: responseEvidence deliberately omits content, unlike full response. SearchJudgeInput.cs confirmed this projection. Followup compares answer separately and excludes content; original failed script and partial artifacts retained, never overwritten."
+  ]
+}

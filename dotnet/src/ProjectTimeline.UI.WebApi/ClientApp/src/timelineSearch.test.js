@@ -30,6 +30,26 @@ function renderResult(result) {
   return renderToStaticMarkup(React.createElement(module.exports.default, { result, projectId: 'p', timelineId: 't', Link: 'a' }));
 }
 
+test('safe refusal uses fixed visible outcome, never uncited payload narrative', () => {
+  const value = researchResponse();
+  Object.assign(value, { content: 'PRIVATE unsafe model prose', facts: [], citations: [], sourceContexts: [], contextCitations: [] });
+  Object.assign(value.research, { status: 'Refused', stopReason: 'SafeRefusal', toolCalls: 0, searchQueries: 0,
+    evidenceTruncated: false, budgetExhausted: false });
+  const result = normalizeTimelineSearch(value);
+  assert.equal(result.content, '');
+  assert.equal(result.outcomeMessage, 'This request cannot be answered by read-only timeline fact search.');
+  const html = renderResult(result);
+  assert.match(html, /This request cannot be answered/);
+  assert.doesNotMatch(html, /PRIVATE/);
+  for (const patch of [
+    { facts: [fact] }, { citations: [citation] }, { sourceContexts: [{}] }, { contextCitations: [{}] },
+    ...['Complete', 'Partial'].map(status => ({ research: { ...value.research, status } })),
+    { research: { ...value.research, stopReason: null } },
+    { research: { ...value.research, toolCalls: 1 } },
+    { research: { ...value.research, budgetExhausted: true } }
+  ]) assert.throws(() => normalizeTimelineSearch({ ...value, ...patch }), /structured fact evidence/i);
+});
+
 test('structured evidence is mandatory, including valid counters and fact provenance', () => {
   for (const value of [{ content: 'legacy' }, { ...response(), coverage: null }, { ...response(), coverage: { ...coverage, entries: -1 } }, { ...response(), facts: [{ ...fact, claim: null }] }]) {
     assert.throws(() => normalizeTimelineSearch(value), /structured fact evidence/i);

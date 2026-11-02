@@ -1,0 +1,7 @@
+{
+  "exitCode": 2,
+  "stdout": "Completed: persisted=17, returned=16, failed=1, cancelled=0, unstarted=0.\n",
+  "stderr": "",
+  "timedOut": false,
+  "elapsedSeconds": 82.77523389994167
+}

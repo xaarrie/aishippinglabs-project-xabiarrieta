@@ -1,0 +1,403 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "UnlabeledJudge/1.0.0": {
+        "dependencies": {
+          "Google.Protobuf": "3.30.2.0",
+          "Microsoft.Agents.AI.Abstractions": "1.24.0.0",
+          "Microsoft.Agents.AI": "1.24.0.0",
+          "Microsoft.Agents.AI.Harness": "1.24.0.0",
+          "Microsoft.Agents.AI.OpenAI": "1.24.0.0",
+          "Microsoft.EntityFrameworkCore.Abstractions": "10.0.0.0",
+          "Microsoft.EntityFrameworkCore": "10.0.0.0",
+          "Microsoft.EntityFrameworkCore.Relational": "10.0.0.0",
+          "Microsoft.Extensions.AI.Abstractions": "10.10.0.0",
+          "Microsoft.Extensions.AI": "10.10.0.0",
+          "Microsoft.Extensions.AI.Evaluation": "10.10.0.0",
+          "Microsoft.Extensions.AI.OpenAI": "10.10.0.0",
+          "Microsoft.Extensions.Compliance.Abstractions": "10.10.0.0",
+          "Microsoft.Extensions.VectorData.Abstractions": "10.10.0.0",
+          "Microsoft.ML.Tokenizers": "1.0.0.0",
+          "Npgsql": "10.0.0.0",
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.0.0",
+          "OpenAI": "2.14.0.0",
+          "Pgvector": "0.3.2.0",
+          "Pgvector.EntityFrameworkCore": "0.3.0.0",
+          "ProjectTimeline.BusinessLogic": "1.0.0.0",
+          "ProjectTimeline.DataAccessLogic": "1.0.0.0",
+          "ProjectTimeline.EvaluationLabeler": "1.0.0.0",
+          "ProjectTimeline.SearchFactsJudge": "1.0.0.0",
+          "System.ClientModel": "1.15.0.0",
+          "System.Memory.Data": "10.0.0.9",
+          "System.Numerics.Tensors": "10.0.0.12"
+        },
+        "runtime": {
+          "UnlabeledJudge.dll": {}
+        }
+      },
+      "Google.Protobuf/3.30.2.0": {
+        "runtime": {
+          "Google.Protobuf.dll": {
+            "assemblyVersion": "3.30.2.0",
+            "fileVersion": "3.30.2.0"
+          }
+        }
+      },
+      "Microsoft.Agents.AI.Abstractions/1.24.0.0": {
+        "runtime": {
+          "Microsoft.Agents.AI.Abstractions.dll": {
+            "assemblyVersion": "1.24.0.0",
+            "fileVersion": "1.24.0.0"
+          }
+        }
+      },
+      "Microsoft.Agents.AI/1.24.0.0": {
+        "runtime": {
+          "Microsoft.Agents.AI.dll": {
+            "assemblyVersion": "1.24.0.0",
+            "fileVersion": "1.24.0.0"
+          }
+        }
+      },
+      "Microsoft.Agents.AI.Harness/1.24.0.0": {
+        "runtime": {
+          "Microsoft.Agents.AI.Harness.dll": {
+            "assemblyVersion": "1.24.0.0",
+            "fileVersion": "1.24.0.0"
+          }
+        }
+      },
+      "Microsoft.Agents.AI.OpenAI/1.24.0.0": {
+        "runtime": {
+          "Microsoft.Agents.AI.OpenAI.dll": {
+            "assemblyVersion": "1.24.0.0",
+            "fileVersion": "1.24.0.0"
+          }
+        }
+      },
+      "Microsoft.EntityFrameworkCore.Abstractions/10.0.0.0": {
+        "runtime": {
+          "Microsoft.EntityFrameworkCore.Abstractions.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "Microsoft.EntityFrameworkCore/10.0.0.0": {
+        "runtime": {
+          "Microsoft.EntityFrameworkCore.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "Microsoft.EntityFrameworkCore.Relational/10.0.0.0": {
+        "runtime": {
+          "Microsoft.EntityFrameworkCore.Relational.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.25.52411"
+          }
+        }
+      },
+      "Microsoft.Extensions.AI.Abstractions/10.10.0.0": {
+        "runtime": {
+          "Microsoft.Extensions.AI.Abstractions.dll": {
+            "assemblyVersion": "10.10.0.0",
+            "fileVersion": "10.1000.126.47502"
+          }
+        }
+      },
+      "Microsoft.Extensions.AI/10.10.0.0": {
+        "runtime": {
+          "Microsoft.Extensions.AI.dll": {
+            "assemblyVersion": "10.10.0.0",
+            "fileVersion": "10.1000.26.45902"
+          }
+        }
+      },
+      "Microsoft.Extensions.AI.Evaluation/10.10.0.0": {
+        "runtime": {
+          "Microsoft.Extensions.AI.Evaluation.dll": {
+            "assemblyVersion": "10.10.0.0",
+            "fileVersion": "10.1000.26.45902"
+          }
+        }
+      },
+      "Microsoft.Extensions.AI.OpenAI/10.10.0.0": {
+        "runtime": {
+          "Microsoft.Extensions.AI.OpenAI.dll": {
+            "assemblyVersion": "10.10.0.0",
+            "fileVersion": "10.1000.126.47502"
+          }
+        }
+      },
+      "Microsoft.Extensions.Compliance.Abstractions/10.10.0.0": {
+        "runtime": {
+          "Microsoft.Extensions.Compliance.Abstractions.dll": {
+            "assemblyVersion": "10.10.0.0",
+            "fileVersion": "10.1000.26.45902"
+          }
+        }
+      },
+      "Microsoft.Extensions.VectorData.Abstractions/10.10.0.0": {
+        "runtime": {
+          "Microsoft.Extensions.VectorData.Abstractions.dll": {
+            "assemblyVersion": "10.10.0.0",
+            "fileVersion": "10.1000.26.45902"
+          }
+        }
+      },
+      "Microsoft.ML.Tokenizers/1.0.0.0": {
+        "runtime": {
+          "Microsoft.ML.Tokenizers.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "2.0.25.55704"
+          }
+        }
+      },
+      "Npgsql/10.0.0.0": {
+        "runtime": {
+          "Npgsql.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.0.0"
+          }
+        }
+      },
+      "Npgsql.EntityFrameworkCore.PostgreSQL/10.0.0.0": {
+        "runtime": {
+          "Npgsql.EntityFrameworkCore.PostgreSQL.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.0.0"
+          }
+        }
+      },
+      "OpenAI/2.14.0.0": {
+        "runtime": {
+          "OpenAI.dll": {
+            "assemblyVersion": "2.14.0.0",
+            "fileVersion": "2.14.0.0"
+          }
+        }
+      },
+      "Pgvector/0.3.2.0": {
+        "runtime": {
+          "Pgvector.dll": {
+            "assemblyVersion": "0.3.2.0",
+            "fileVersion": "0.3.2.0"
+          }
+        }
+      },
+      "Pgvector.EntityFrameworkCore/0.3.0.0": {
+        "runtime": {
+          "Pgvector.EntityFrameworkCore.dll": {
+            "assemblyVersion": "0.3.0.0",
+            "fileVersion": "0.3.0.0"
+          }
+        }
+      },
+      "ProjectTimeline.BusinessLogic/1.0.0.0": {
+        "runtime": {
+          "ProjectTimeline.BusinessLogic.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "ProjectTimeline.DataAccessLogic/1.0.0.0": {
+        "runtime": {
+          "ProjectTimeline.DataAccessLogic.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "ProjectTimeline.EvaluationLabeler/1.0.0.0": {
+        "runtime": {
+          "ProjectTimeline.EvaluationLabeler.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "ProjectTimeline.SearchFactsJudge/1.0.0.0": {
+        "runtime": {
+          "ProjectTimeline.SearchFactsJudge.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "System.ClientModel/1.15.0.0": {
+        "runtime": {
+          "System.ClientModel.dll": {
+            "assemblyVersion": "1.15.0.0",
+            "fileVersion": "1.1500.26.40403"
+          }
+        }
+      },
+      "System.Memory.Data/10.0.0.9": {
+        "runtime": {
+          "System.Memory.Data.dll": {
+            "assemblyVersion": "10.0.0.9",
+            "fileVersion": "10.0.926.27113"
+          }
+        }
+      },
+      "System.Numerics.Tensors/10.0.0.12": {
+        "runtime": {
+          "System.Numerics.Tensors.dll": {
+            "assemblyVersion": "10.0.0.12",
+            "fileVersion": "10.0.1226.42308"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "UnlabeledJudge/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Google.Protobuf/3.30.2.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Agents.AI.Abstractions/1.24.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Agents.AI/1.24.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Agents.AI.Harness/1.24.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Agents.AI.OpenAI/1.24.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.EntityFrameworkCore.Abstractions/10.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.EntityFrameworkCore/10.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.EntityFrameworkCore.Relational/10.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Extensions.AI.Abstractions/10.10.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Extensions.AI/10.10.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Extensions.AI.Evaluation/10.10.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Extensions.AI.OpenAI/10.10.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Extensions.Compliance.Abstractions/10.10.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Extensions.VectorData.Abstractions/10.10.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.ML.Tokenizers/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Npgsql/10.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Npgsql.EntityFrameworkCore.PostgreSQL/10.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "OpenAI/2.14.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Pgvector/0.3.2.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Pgvector.EntityFrameworkCore/0.3.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ProjectTimeline.BusinessLogic/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ProjectTimeline.DataAccessLogic/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ProjectTimeline.EvaluationLabeler/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "ProjectTimeline.SearchFactsJudge/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "System.ClientModel/1.15.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "System.Memory.Data/10.0.0.9": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "System.Numerics.Tensors/10.0.0.12": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

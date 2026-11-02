@@ -35,7 +35,30 @@ public sealed class TimelineFactResearchOptions
 }
 
 /// <summary>Stable non-sensitive failure code; no input, scope IDs or database/provider messages.</summary>
-public sealed class TimelineFactResearchException(string code) : InvalidOperationException(code)
+public sealed class TimelineFactResearchException : InvalidOperationException
 {
-    public string Code { get; } = code;
+    public string Code { get; }
+    public TimelineFactResearchException(string code) : this(code, null) { }
+    public TimelineFactResearchException(string code, Exception? innerException) : base(code, innerException) => Code = code;
+}
+
+public enum TimelineFactExecutionStage { Coverage, Initialization, Model, ResultParsing, Revalidation, Synthesis, Session, Retrieval }
+public enum TimelineFactSynthesisFailureReason
+{
+    MissingResult, MissingContent, ContentTooLong, MissingFactCitations, MissingContextCitations,
+    TooManyFactCitations, TooManyContextCitations, MissingCitations, DuplicateFactCitations,
+    DuplicateContextCitations, UnknownFactCitation, UnknownContextCitation
+}
+
+/// <summary>Process-local attribution only; never puts arbitrary exception payloads into serializable Data.</summary>
+public static class TimelineFactFailureContext
+{
+    private sealed record Attribution(TimelineFactExecutionStage Stage);
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Exception, Attribution> Stages = new();
+    public static T Record<T>(T error, TimelineFactExecutionStage stage) where T : Exception
+    {
+        Stages.GetValue(error, _ => new(stage)); // Preserve an earlier, more specific boundary.
+        return error;
+    }
+    public static TimelineFactExecutionStage? Stage(Exception error) => Stages.TryGetValue(error, out var value) ? value.Stage : null;
 }

@@ -3,7 +3,11 @@ using System.Text.Json;
 
 namespace ProjectTimeline.DataAccessLogic;
 
-public sealed class TimelineFactConflictException(string message) : InvalidOperationException(message);
+public sealed class TimelineFactConflictException : InvalidOperationException
+{
+    public TimelineFactConflictException(string message) : base(message) { }
+    public TimelineFactConflictException(string message, Exception innerException) : base(message, innerException) { }
+}
 
 public sealed partial class ProjectTimelineDbContext
 {

@@ -1,0 +1,389 @@
+{
+  "schemaVersion": 1,
+  "artifactType": "independent-offline-capture-integrity-validation",
+  "createdUtc": "2026-11-01T15:53:49.670043+00:00",
+  "runId": "1fb7cd9e-9356-4fee-bae8-42e1e7f44ee9",
+  "captureIntegrityComplete": true,
+  "allAgentAnswersSuccessful": false,
+  "counts": {
+    "scenarioCount": 50,
+    "persisted": 50,
+    "returned": 20,
+    "failed": 30,
+    "cancelled": 0,
+    "unstarted": 0
+  },
+  "researchStatusDistribution": {
+    "Partial": 14,
+    "Complete": 5,
+    "InsufficientEvidence": 1
+  },
+  "safeErrors": [
+    {
+      "type": "Agent",
+      "code": "SynthesisUnavailable",
+      "count": 30
+    }
+  ],
+  "safeAgentFailures": [
+    {
+      "category": "Other",
+      "exceptionType": "Other",
+      "httpStatus": null,
+      "providerCode": null,
+      "count": 26
+    },
+    {
+      "category": "HttpProvider",
+      "exceptionType": "ClientResultException",
+      "httpStatus": null,
+      "providerCode": null,
+      "count": 1
+    }
+  ],
+  "failedWithoutDiagnosticOrdinals": [
+    15,
+    40,
+    47
+  ],
+  "returnedMessageProjections": {
+    "total": 105,
+    "onReturnedRows": 98,
+    "onFailedRows": 7
+  },
+  "observedUsageAndCost": {
+    "sessions": 50,
+    "distinctSessionIds": 50,
+    "currency": "USD",
+    "callCount": 115,
+    "inFlightCallCount": 0,
+    "unknownUsageCallCount": 1,
+    "unknownCostCallCount": 1,
+    "inputTokenCount": null,
+    "outputTokenCount": null,
+    "totalTokenCount": null,
+    "knownEstimatedCost": "0.09103170",
+    "estimatedTotalCost": null,
+    "usageComplete": false,
+    "estimatedCostComplete": false,
+    "completeUsageSessionCount": 49,
+    "tokensAcrossCompleteUsageSessionsOnly": {
+      "inputTokenCount": 635234,
+      "outputTokenCount": 18431,
+      "totalTokenCount": 653665
+    },
+    "callsAcrossCompleteUsageSessionsOnly": 114,
+    "note": "Known cost components are observed production estimates, not invoices. Complete-session token subset is not a complete run total."
+  },
+  "unknownUsageCostSessionOrdinals": [
+    22
+  ],
+  "originalArtifacts": [
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search_facts_evaluation_scenarios.csv",
+      "bytes": 7520,
+      "sha256Before": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sha256After": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "byteIdentical": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl",
+      "bytes": 993174,
+      "sha256Before": "A77BCE9398935706130A6B3B7A31065E509C68101C789C66B08A7C3DB5E21A77",
+      "sha256After": "A77BCE9398935706130A6B3B7A31065E509C68101C789C66B08A7C3DB5E21A77",
+      "byteIdentical": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl.manifest.json",
+      "bytes": 42226,
+      "sha256Before": "C2F6747C83997EA7B668B392230D82FE473AAE37B0E20B1ADF1B679CC3E45277",
+      "sha256After": "C2F6747C83997EA7B668B392230D82FE473AAE37B0E20B1ADF1B679CC3E45277",
+      "byteIdentical": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T153358Z-eef20fd8.corpus-context.json",
+      "bytes": 11938,
+      "sha256Before": "15E54FA42EB4F954B97FC4DC2569D95C1325BC37A0DB44A0B9AA5C51CB26F2B6",
+      "sha256After": "15E54FA42EB4F954B97FC4DC2569D95C1325BC37A0DB44A0B9AA5C51CB26F2B6",
+      "byteIdentical": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T131839Z-facf1f8b.corpus-context.json",
+      "bytes": 8280,
+      "sha256Before": "F08CA0C3D2BDC76E71BC946595653991F46BC149CE96780606AFFD0905FD1F49",
+      "sha256After": "F08CA0C3D2BDC76E71BC946595653991F46BC149CE96780606AFFD0905FD1F49",
+      "byteIdentical": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl",
+      "bytes": 122004,
+      "sha256Before": "F11FFB68306C1D183BBF26E769CACE920169F44C399A1AD7055AB13EB255CEC1",
+      "sha256After": "F11FFB68306C1D183BBF26E769CACE920169F44C399A1AD7055AB13EB255CEC1",
+      "byteIdentical": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl.manifest.json",
+      "bytes": 40638,
+      "sha256Before": "C5A92B13FFF2C4AB6446C5B483A462A33BC5A90FA335177AD2A112B84162C0A5",
+      "sha256After": "C5A92B13FFF2C4AB6446C5B483A462A33BC5A90FA335177AD2A112B84162C0A5",
+      "byteIdentical": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-diagnostic-20261101T135456Z-1508bb9e.csv",
+      "bytes": 171,
+      "sha256Before": "A50E26B0096767E2F78929F2689B8D7B0970E891ED65ABC6C0504B359D3298FF",
+      "sha256After": "A50E26B0096767E2F78929F2689B8D7B0970E891ED65ABC6C0504B359D3298FF",
+      "byteIdentical": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl",
+      "bytes": 2577,
+      "sha256Before": "C5C5A50AF0063C8DA0BBD9B4135DDD076DDDE16EA930DFC22A0FD5BBE5B551A3",
+      "sha256After": "C5C5A50AF0063C8DA0BBD9B4135DDD076DDDE16EA930DFC22A0FD5BBE5B551A3",
+      "byteIdentical": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl.manifest.json",
+      "bytes": 2294,
+      "sha256Before": "6C9526D23F491CFFE47A130D0345A4E508CC67D0BB61409AD096A5E31DA5AAE9",
+      "sha256After": "6C9526D23F491CFFE47A130D0345A4E508CC67D0BB61409AD096A5E31DA5AAE9",
+      "byteIdentical": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-diagnostic-20261101T135456Z-1508bb9e.provenance.json",
+      "bytes": 1603,
+      "sha256Before": "EC0BD81BB814EF5CE5A054C83C31C068D465A4E707BCA35187E91EED39C10C3E",
+      "sha256After": "EC0BD81BB814EF5CE5A054C83C31C068D465A4E707BCA35187E91EED39C10C3E",
+      "byteIdentical": true
+    }
+  ],
+  "checks": [
+    {
+      "name": "strict_UTF8_JSONL_JSON_all11_originals",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "original_CSV_parser_translation_agrees_with_standard_csv",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "all50_ordered_fields_questions_categories_types_ordinals_unique_IDs_run_hashes",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "scope_coverage_consistency",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "terminal_response_error_exclusivity",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "complete_persisted_typed_response_objects",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "UTC_chronology_and_durations",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "manifest_context_paths_hashes_counts_linkage",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "research_status_accounting",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "safe_agentFailure_shape_allowlists_aggregates",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "message_projection_shapes_and_105_count",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "cost_sessions_and_exact_Decimal_unknown_handling",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "recorded_fingerprint_caveats_and_entry8",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "seven_prior_hashes_match_context_before_after",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "CSV_CreateNew_BOM_50rows_27columns_all_fields_roundtrip",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "CSV_400_JSON_cells_exact_Decimal_correspondence",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "CSV_formula_safety_zero_escaped_cells",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "all11_original_hashes_unchanged_after_export",
+      "result": "pass",
+      "evidence": "Observed successful offline Python checks in session transcript; report current hashes checked again."
+    },
+    {
+      "name": "secret_names_and_key_shaped_credential_scan",
+      "result": "pass",
+      "propertyFlags": [
+        {
+          "file": "search-facts-evaluation-20261101T153358Z-eef20fd8.corpus-context.json",
+          "path": "/authorization",
+          "disposition": "Human run authorization provenance, not authentication material"
+        }
+      ],
+      "credentialPatternMatches": 0,
+      "patternFamilies": [
+        "OpenAI sk-",
+        "AWS access key",
+        "GitHub token",
+        "private PEM key",
+        "Bearer token",
+        "JWT",
+        "password assignment"
+      ],
+      "scope": "All11 originals recursively parsed; heuristic only, not no-PII clearance."
+    },
+    {
+      "name": "tests_build",
+      "result": "skipped",
+      "reason": "Parent independently observed241PASS/build0warnings-errors after last source change; no rerun authorized/needed."
+    },
+    {
+      "name": "RED_GREEN",
+      "result": "not_applicable",
+      "reason": "Artifact verification/export only; no product implementation. Actual structural roundtrip/hash checks executed."
+    },
+    {
+      "name": "fresh_database_source_specification_verification",
+      "result": "skipped",
+      "reason": "Offline/prohibited; corpus-context is recorded evidence only."
+    },
+    {
+      "name": "wire_inflight_physical_requests_billing",
+      "result": "unavailable",
+      "reason": "Only persisted projections/admissions/estimates; one unknown usage/cost call remains unknown."
+    },
+    {
+      "name": "correctness_validity_scores_expected_answers",
+      "result": "not_requested",
+      "reason": "Explicitly excluded; no scoring, semantic fixes or reruns."
+    },
+    {
+      "name": "mem_save",
+      "result": "unavailable",
+      "reason": "No memory or codemode execution tool exposed."
+    }
+  ],
+  "failedChecks": [],
+  "pendingChecks": [],
+  "reportComplete": true,
+  "derivatives": {
+    "csv": {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T153358Z-eef20fd8.results.csv",
+      "bytes": 2119928,
+      "sha256": "74A1838DBF1597437D358FE21C714A1676F3575E9EF71B034743A391A45807A1",
+      "encoding": "UTF-8 BOM",
+      "creationMode": "CreateNew: Python open(x); no overwrite",
+      "rowCount": 50,
+      "columns": [
+        "question",
+        "category",
+        "type",
+        "ordinal",
+        "outcome",
+        "agent_content",
+        "research_status",
+        "error_category",
+        "error_code",
+        "agent_failure_category",
+        "agent_failure_exception_type",
+        "agent_failure_http_status",
+        "agent_failure_provider_code",
+        "run_id",
+        "scenario_id",
+        "input_sha256",
+        "started_utc",
+        "ended_utc",
+        "duration_ms",
+        "scenario_json",
+        "response_json",
+        "error_json",
+        "agent_failure_json",
+        "returned_messages_json",
+        "cost_snapshot_json",
+        "scope_json",
+        "original_record_json"
+      ],
+      "jsonColumns": {
+        "scenario_json": "scenario",
+        "response_json": "response",
+        "error_json": "error",
+        "agent_failure_json": "agentFailure",
+        "returned_messages_json": "messages",
+        "cost_snapshot_json": "cost",
+        "scope_json": "scope",
+        "original_record_json": "Exact original logical JSONL line excluding terminator"
+      },
+      "recordNewlines": "CRLF; embedded cell quotes/newlines preserved",
+      "safety": {
+        "escapedCellCount": 0,
+        "escapedCellLocations": [],
+        "originalScenarioCellsEscaped": 0,
+        "rule": "Apostrophe prefix for leading =,+,-,@,TAB,CR; also after stripping space/NBSP/BOM. Reverse only at listed locations. None needed; questions unchanged.",
+        "authoritativeRawRecord": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl",
+        "cellsOver32767Characters": 25,
+        "maxCellCharacters": 65743,
+        "spreadsheetLimit": "Some spreadsheet apps truncate/reject long cells; CSV parser roundtrip preserves all content. Use JSONL as exact authority."
+      }
+    },
+    "validation": {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T153358Z-eef20fd8.validation.json",
+      "encoding": "UTF-8",
+      "creationMode": "CreateNew: Python open(x); no overwrite",
+      "selfHash": "Emitted after creation; not embedded due self-reference."
+    }
+  },
+  "limitations": [
+    "Completed means terminal capture, not all successful answers. Thirty execution failures remain failures; current causes unknown.",
+    "Server research statuses are not correctness judgments. No scores, expected answers or semantic fixes.",
+    "Overall tokens and estimatedTotalCost remain null. Known USD0.09103170 component and complete-session token subset are incomplete, not invoice/run totals or proof of physical requests.",
+    "Corpus fingerprint/discrepancies1/3/6/entry8zero eligible are recorded evidence, not fresh DB checks. Recorded digest excludes timestamps/embeddings/jobs and cannot detect transient reverted mutations.",
+    "Complete persisted typed objects and exact logical JSONL lines retained, not unavailable wire/in-flight/provider raw data.",
+    "Sensitive facts/source outputs intentionally retained locally. Credential-pattern scan is heuristic, not an exhaustive secret or PII clearance.",
+    "No network/database/provider calls, orchestration, tests/build reruns, source/config edits, repairs, commits or uploads. External directory additions checked; repository-wide/background mutations not monitored."
+  ],
+  "executionEvidence": {
+    "commandInvocation": "python -B - <<'PY'",
+    "exactBodies": "Session tool transcript",
+    "pythonVersion": "3.13.15",
+    "testBuildCommandsRun": [],
+    "launchFailures": "One oversized command spawn ENAMETOOLONG; two host-truncated commands failed syntax before execution. No output/mutation from those attempts. Successful bounded commands completed offline checks/export."
+  }
+}

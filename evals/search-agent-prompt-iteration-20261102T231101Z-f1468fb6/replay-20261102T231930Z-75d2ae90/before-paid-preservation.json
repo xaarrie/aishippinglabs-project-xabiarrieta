@@ -1,0 +1,36 @@
+{
+  "searchSourceSha256": "432e52716dc4fa20720032f89a09e0d6a5ef11f1e20e31113681c91ffb29ca0b",
+  "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+  "labelsSha256": "a704ba82d039461ac6d76a71aea1beeaa42f72dcdb2502e416257ef5da23aabe",
+  "derivedCsvSha256": "ea80f6ffce0225d5640c530ca2c7b9f0b7f944251e0b4649d5812de2a5d0f5b6",
+  "rubrics": [
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-citation-allowlists-20261102T062417Z-f35d9311.judge-20261102T2237495800801Z\\rubric.md",
+      "sha256": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+    },
+    {
+      "path": "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\Prompts\\SearchResponseJudge.md",
+      "sha256": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+    },
+    {
+      "path": "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-judge-build\\bin\\ProjectTimeline.Tests\\release\\Prompts\\SearchResponseJudge.md",
+      "sha256": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+    },
+    {
+      "path": "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-judge-build\\bin\\ProjectTimeline.SearchFactsJudge\\release\\Prompts\\SearchResponseJudge.md",
+      "sha256": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+    },
+    {
+      "path": "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.Tests\\release\\Prompts\\SearchResponseJudge.md",
+      "sha256": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+    },
+    {
+      "path": "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.SearchFactsJudge\\release\\Prompts\\SearchResponseJudge.md",
+      "sha256": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+    }
+  ],
+  "judgeSourceFilesMatchPriorSnapshot": true,
+  "appsettingsSha256": "045f50b2b690783cbd780c446b5836a2aca52b251bc2689aa5b878c352b83c9f",
+  "launchSettingsSha256": "95e4b8f1510429830151392e875c5a99ad0ee58e22c44fead2174d9daea774e4",
+  "evaluatorDllSha256": "6b9d00d0f1fe784f26849056385584d76ee2c3b2408859b25daca3bc7c14b71b"
+}

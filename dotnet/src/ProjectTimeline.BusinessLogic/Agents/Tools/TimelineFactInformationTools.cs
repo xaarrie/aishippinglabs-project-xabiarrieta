@@ -74,6 +74,13 @@ public sealed class TimelineFactInformationTools : IDisposable
         return ReadAsync(ct => SourceCoreAsync(snapshot!, ct), false, cancellationToken);
     }
 
+    internal bool HasEmittedFacts => facts.Count > 0;
+
+    /// <summary>The server derives the complete stable source set only after phase admission,
+    /// under the same gate as ledger commitment. No caller/model can choose or copy IDs.</summary>
+    public Task<JsonElement> FetchEmittedSourcesAsync(CancellationToken cancellationToken = default) =>
+        ReadAsync(ct => SourceCoreAsync(facts.Values.Select(f => f.EntryId).Distinct().ToArray(), ct), false, cancellationToken);
+
     private sealed record SearchGroup(string Query, ImmutableArray<TimelineFactSearchHit> Facts, bool Truncated);
     private sealed record SearchBatch(string Status, List<SearchGroup> Results, int? RemainingSearchQueries, bool Truncated);
     private sealed record SourceBatch(string Status, ImmutableArray<TimelineFactResearchContext> Contexts,
@@ -89,7 +96,7 @@ public sealed class TimelineFactInformationTools : IDisposable
         {
             ct.ThrowIfCancellationRequested();
             try { TimelineFactInformationSearch.ValidateQuestion(query); }
-            catch (ArgumentException) { this.queries++; throw new TimelineFactResearchException("InvalidQuery"); }
+            catch (ArgumentException e) { this.queries++; throw new TimelineFactResearchException("InvalidQuery", e); }
         }
         limit = Math.Min(limit, Options.MaxHitsPerSearch);
         var groups = new List<SearchGroup>();
@@ -322,9 +329,9 @@ public sealed class TimelineFactInformationTools : IDisposable
         try { return await action(); }
         catch (TimelineFactResearchException) { throw; }
         catch (OperationCanceledException) { throw; }
-        catch (UnauthorizedAccessException) { throw new TimelineFactResearchException("AccessDenied"); }
-        catch (KeyNotFoundException) { throw new TimelineFactResearchException("ScopeUnavailable"); }
-        catch (Exception) { throw new TimelineFactResearchException("EvidenceReadFailed"); }
+        catch (UnauthorizedAccessException e) { throw new TimelineFactResearchException("AccessDenied", e); }
+        catch (KeyNotFoundException e) { throw new TimelineFactResearchException("ScopeUnavailable", e); }
+        catch (Exception e) { throw new TimelineFactResearchException("EvidenceReadFailed", e); }
     }
 
     private sealed class BoundedFunction(TimelineFactInformationTools owner, AIFunction inner) : DelegatingAIFunction(inner)

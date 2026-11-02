@@ -1,0 +1,838 @@
+{
+  "schemaVersion": 1,
+  "artifactType": "offline-T6",
+  "createdUtc": "2026-11-01T17:41:04.181212+00:00",
+  "runId": "8728e5c0-0eaf-4eac-a182-e86865d97f9a",
+  "captureIntegrityComplete": true,
+  "allAgentAnswersSuccessful": false,
+  "reconciledExecution": {
+    "passCount": 1,
+    "cliExitCode": 2,
+    "model": "gpt-4o-mini",
+    "status": "Completed",
+    "startedUtc": "2026-11-01T17:18:30.6513845+00:00",
+    "endedUtc": "2026-11-01T17:22:56.2778285+00:00",
+    "launcherStartedUtc": "2026-11-01T17:18:28.612179+00:00",
+    "launcherEndedUtc": "2026-11-01T17:22:56.340662+00:00",
+    "launcherElapsedSeconds": 267.72798740002327,
+    "sumRowElapsedMilliseconds": 264958.1255,
+    "timeoutSeconds": 7800,
+    "configurationReloadedInNewProcess": true,
+    "automaticRetries": false,
+    "externalTelemetryExportersDisabled": true,
+    "counts": {
+      "scenarioCount": 50,
+      "persisted": 50,
+      "returned": 20,
+      "failed": 30,
+      "cancelled": 0,
+      "unstarted": 0
+    },
+    "researchStatusDistribution": {
+      "Partial": 15,
+      "Complete": 5
+    },
+    "normalizedErrorCounts": {
+      "Agent/SynthesisUnavailable": 30
+    },
+    "stageCounts": {
+      "ResultParsing": 1,
+      "Revalidation": 29
+    },
+    "domainReasonGroups": [
+      {
+        "category": "Synthesis",
+        "exceptionType": "TimelineFactInformationSynthesisException",
+        "reason": null,
+        "httpStatus": null,
+        "providerCode": null,
+        "count": 1,
+        "ordinals": [
+          3
+        ]
+      },
+      {
+        "category": "Research",
+        "exceptionType": "TimelineFactResearchException",
+        "reason": "UnknownOrInvalidEntryIds",
+        "httpStatus": null,
+        "providerCode": null,
+        "count": 20,
+        "ordinals": [
+          4,
+          5,
+          6,
+          8,
+          12,
+          13,
+          14,
+          15,
+          16,
+          20,
+          26,
+          28,
+          31,
+          32,
+          34,
+          36,
+          37,
+          43,
+          44,
+          45
+        ]
+      },
+      {
+        "category": "Research",
+        "exceptionType": "TimelineFactResearchException",
+        "reason": "InvalidResearchPhase",
+        "httpStatus": null,
+        "providerCode": null,
+        "count": 6,
+        "ordinals": [
+          7,
+          11,
+          23,
+          24,
+          41,
+          49
+        ]
+      },
+      {
+        "category": "Research",
+        "exceptionType": "TimelineFactResearchException",
+        "reason": "MissingResearchPhase",
+        "httpStatus": null,
+        "providerCode": null,
+        "count": 3,
+        "ordinals": [
+          40,
+          46,
+          47
+        ]
+      }
+    ],
+    "deepestRecordedCauseGroups": [
+      {
+        "category": "JsonSchemaParse",
+        "exceptionType": "FormatException",
+        "reason": null,
+        "httpStatus": null,
+        "providerCode": null,
+        "count": 1,
+        "ordinals": [
+          3
+        ]
+      },
+      {
+        "category": "Research",
+        "exceptionType": "TimelineFactResearchException",
+        "reason": "UnknownOrInvalidEntryIds",
+        "httpStatus": null,
+        "providerCode": null,
+        "count": 20,
+        "ordinals": [
+          4,
+          5,
+          6,
+          8,
+          12,
+          13,
+          14,
+          15,
+          16,
+          20,
+          26,
+          28,
+          31,
+          32,
+          34,
+          36,
+          37,
+          43,
+          44,
+          45
+        ]
+      },
+      {
+        "category": "Research",
+        "exceptionType": "TimelineFactResearchException",
+        "reason": "InvalidResearchPhase",
+        "httpStatus": null,
+        "providerCode": null,
+        "count": 6,
+        "ordinals": [
+          7,
+          11,
+          23,
+          24,
+          41,
+          49
+        ]
+      },
+      {
+        "category": "Research",
+        "exceptionType": "TimelineFactResearchException",
+        "reason": "MissingResearchPhase",
+        "httpStatus": null,
+        "providerCode": null,
+        "count": 3,
+        "ordinals": [
+          40,
+          46,
+          47
+        ]
+      }
+    ],
+    "failedWithoutDiagnostic": 0,
+    "supplementaryAgentObservations": 0,
+    "messageProjectionCount": 108,
+    "interpretation": "Deepest recorded cause is bounded evidence, not proof of ultimate external root cause. Research statuses are not correctness judgments. No fixes or retries."
+  },
+  "counts": {
+    "scenarioCount": 50,
+    "persisted": 50,
+    "returned": 20,
+    "failed": 30,
+    "cancelled": 0,
+    "unstarted": 0
+  },
+  "rootReasonCounts": {
+    "FormatException": 1,
+    "UnknownOrInvalidEntryIds": 20,
+    "InvalidResearchPhase": 6,
+    "MissingResearchPhase": 3
+  },
+  "failureOrdinals": {
+    "FormatException": [
+      3
+    ],
+    "UnknownOrInvalidEntryIds": [
+      4,
+      5,
+      6,
+      8,
+      12,
+      13,
+      14,
+      15,
+      16,
+      20,
+      26,
+      28,
+      31,
+      32,
+      34,
+      36,
+      37,
+      43,
+      44,
+      45
+    ],
+    "InvalidResearchPhase": [
+      7,
+      11,
+      23,
+      24,
+      41,
+      49
+    ],
+    "MissingResearchPhase": [
+      40,
+      46,
+      47
+    ]
+  },
+  "stageOrdinals": {
+    "ResultParsing": [
+      3
+    ],
+    "Revalidation": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      20,
+      23,
+      24,
+      26,
+      28,
+      31,
+      32,
+      34,
+      36,
+      37,
+      40,
+      41,
+      43,
+      44,
+      45,
+      46,
+      47,
+      49
+    ]
+  },
+  "observedUsageAndCost": {
+    "callCount": 116,
+    "inFlightCallCount": 0,
+    "unknownUsageCallCount": 0,
+    "unknownCostCallCount": 0,
+    "inputTokenCount": 667183,
+    "outputTokenCount": 18070,
+    "totalTokenCount": 685253,
+    "sessions": 50,
+    "currency": "USD",
+    "knownEstimatedCost": "0.09554985",
+    "estimatedTotalCost": "0.09554985",
+    "usageComplete": true,
+    "estimatedCostComplete": true,
+    "note": "Observed production tariff estimates, not an invoice."
+  },
+  "modelIds": {
+    "configured": "gpt-4o-mini",
+    "observed": "gpt-4o-mini-2024-07-18"
+  },
+  "messages": {
+    "total": 108,
+    "returnedRows": 100,
+    "failedRows": 8
+  },
+  "grouping": "Validated actual schema: domain=deepest Research/Synthesis (ordinal3 Synthesis); root=last chain node; CSV reason else exceptionType, not ultimate origin.",
+  "causeInterpretations": [
+    {
+      "reason": "UnknownOrInvalidEntryIds",
+      "criteria": "After Distinct: null/empty IDs, count > MaxDistinctFacts, or requested set != distinct EntryId set of ledger facts; failing predicate unknown.",
+      "pathLine": "dotnet/src/ProjectTimeline.BusinessLogic/Agents/Tools/TimelineFactInformationTools.cs:149-156"
+    },
+    {
+      "reason": "InvalidResearchPhase",
+      "criteria": "After scope/cancellation, fatal error and budget checks: search requires New; source requires Searched. Admission advances phase before binding; actual call/phase unknown.",
+      "pathLine": "dotnet/src/ProjectTimeline.BusinessLogic/Agents/Tools/TimelineFactInformationTools.cs:236-253"
+    },
+    {
+      "reason": "MissingResearchPhase",
+      "criteria": "After scope/cancellation and prior fatalToolError rethrow, phase != Complete; omitted phase unknown.",
+      "pathLine": "dotnet/src/ProjectTimeline.BusinessLogic/Agents/Tools/TimelineFactInformationTools.cs:202-215"
+    },
+    {
+      "reason": "FormatException",
+      "criteria": "Ordinal3: Synthesis -> JsonException -> FormatException, ResultParsing; no value/message diagnosis.",
+      "pathLine": "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.jsonl:3"
+    }
+  ],
+  "compatibility": {
+    "contract": "Agent/SynthesisUnavailable unchanged; additive bounded chain; stage=surface boundary not origin; observation supplementary",
+    "pathLine": "dotnet/src/ProjectTimeline.SearchFactsEvaluator/EvaluationRunner.cs:125-132,153-160"
+  },
+  "recordedCorpusEvidence": {
+    "freshDBCheck": false,
+    "fingerprint": {
+      "recipe": "timeline-corpus-v1",
+      "algorithm": "SHA-256 of UTF8 PostgreSQL jsonb document text; arrays ID-sorted",
+      "baseline": "5b9d9545036c2c502f95a20cafd9a93c7592d0dc58f399567f6e7f954f727502",
+      "postrun": "5b9d9545036c2c502f95a20cafd9a93c7592d0dc58f399567f6e7f954f727502",
+      "matches": true,
+      "excludedProjectTimelineEntryFields": [
+        "CreatedAtUtc",
+        "UpdatedAtUtc"
+      ],
+      "excludedFactFields": [
+        "CreatedAtUtc",
+        "UpdatedAtUtc",
+        "InvalidatedAtUtc",
+        "Embedding",
+        "EmbeddingModel",
+        "EmbeddedAtUtc"
+      ],
+      "jobQueueRecordsExcluded": true,
+      "readOnly": "on",
+      "isolation": "repeatable read"
+    },
+    "counts": {
+      "projects": 1,
+      "timelines": 1,
+      "entries": 8,
+      "facts": 48,
+      "validFacts": 40
+    },
+    "sourceGaps": [
+      1,
+      3,
+      6
+    ],
+    "zeroEligibleEntries": [
+      8
+    ],
+    "pendingEmbeddings": 48
+  },
+  "originalArtifacts": [
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl",
+      "sha256Before": "F11FFB68306C1D183BBF26E769CACE920169F44C399A1AD7055AB13EB255CEC1",
+      "sha256After": "F11FFB68306C1D183BBF26E769CACE920169F44C399A1AD7055AB13EB255CEC1",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl.manifest.json",
+      "sha256Before": "C5A92B13FFF2C4AB6446C5B483A462A33BC5A90FA335177AD2A112B84162C0A5",
+      "sha256After": "C5A92B13FFF2C4AB6446C5B483A462A33BC5A90FA335177AD2A112B84162C0A5",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T131839Z-facf1f8b.corpus-context.json",
+      "sha256Before": "F08CA0C3D2BDC76E71BC946595653991F46BC149CE96780606AFFD0905FD1F49",
+      "sha256After": "F08CA0C3D2BDC76E71BC946595653991F46BC149CE96780606AFFD0905FD1F49",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl",
+      "sha256Before": "A77BCE9398935706130A6B3B7A31065E509C68101C789C66B08A7C3DB5E21A77",
+      "sha256After": "A77BCE9398935706130A6B3B7A31065E509C68101C789C66B08A7C3DB5E21A77",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl.manifest.json",
+      "sha256Before": "C2F6747C83997EA7B668B392230D82FE473AAE37B0E20B1ADF1B679CC3E45277",
+      "sha256After": "C2F6747C83997EA7B668B392230D82FE473AAE37B0E20B1ADF1B679CC3E45277",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T153358Z-eef20fd8.corpus-context.json",
+      "sha256Before": "15E54FA42EB4F954B97FC4DC2569D95C1325BC37A0DB44A0B9AA5C51CB26F2B6",
+      "sha256After": "15E54FA42EB4F954B97FC4DC2569D95C1325BC37A0DB44A0B9AA5C51CB26F2B6",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T153358Z-eef20fd8.results.csv",
+      "sha256Before": "74A1838DBF1597437D358FE21C714A1676F3575E9EF71B034743A391A45807A1",
+      "sha256After": "74A1838DBF1597437D358FE21C714A1676F3575E9EF71B034743A391A45807A1",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-20261101T153358Z-eef20fd8.validation.json",
+      "sha256Before": "DE6A7D2DFA6AB86798E9430FBD73D3CD49729AEF639F4AE21723AC3D71F70B73",
+      "sha256After": "DE6A7D2DFA6AB86798E9430FBD73D3CD49729AEF639F4AE21723AC3D71F70B73",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-diagnostic-20261101T135456Z-1508bb9e.csv",
+      "sha256Before": "A50E26B0096767E2F78929F2689B8D7B0970E891ED65ABC6C0504B359D3298FF",
+      "sha256After": "A50E26B0096767E2F78929F2689B8D7B0970E891ED65ABC6C0504B359D3298FF",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl",
+      "sha256Before": "C5C5A50AF0063C8DA0BBD9B4135DDD076DDDE16EA930DFC22A0FD5BBE5B551A3",
+      "sha256After": "C5C5A50AF0063C8DA0BBD9B4135DDD076DDDE16EA930DFC22A0FD5BBE5B551A3",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl.manifest.json",
+      "sha256Before": "6C9526D23F491CFFE47A130D0345A4E508CC67D0BB61409AD096A5E31DA5AAE9",
+      "sha256After": "6C9526D23F491CFFE47A130D0345A4E508CC67D0BB61409AD096A5E31DA5AAE9",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-diagnostic-20261101T135456Z-1508bb9e.provenance.json",
+      "sha256Before": "EC0BD81BB814EF5CE5A054C83C31C068D465A4E707BCA35187E91EED39C10C3E",
+      "sha256After": "EC0BD81BB814EF5CE5A054C83C31C068D465A4E707BCA35187E91EED39C10C3E",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search_facts_evaluation_scenarios.csv",
+      "sha256Before": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sha256After": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "byteIdentical": true,
+      "priorHashMatched": true
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.jsonl",
+      "sha256Before": "0790CB1B43D9B3A224943227351228865BF58DE9A4942D33C14728BF299A30D5",
+      "sha256After": "0790CB1B43D9B3A224943227351228865BF58DE9A4942D33C14728BF299A30D5",
+      "byteIdentical": true,
+      "priorHashMatched": false
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.jsonl.manifest.json",
+      "sha256Before": "8922CB4B67D0B29C0A7E8A2688FF0421D02EABD664DE04406503B71E146475A1",
+      "sha256After": "8922CB4B67D0B29C0A7E8A2688FF0421D02EABD664DE04406503B71E146475A1",
+      "byteIdentical": true,
+      "priorHashMatched": false
+    },
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.corpus-context.json",
+      "sha256Before": "247FD629A09816F92D9A59C9F60708FAD60583F30FBD0CD4D0B4A28794EB42D0",
+      "sha256After": "247FD629A09816F92D9A59C9F60708FAD60583F30FBD0CD4D0B4A28794EB42D0",
+      "byteIdentical": true,
+      "priorHashMatched": false
+    }
+  ],
+  "checks": [
+    {
+      "name": "parsing",
+      "result": "pass"
+    },
+    {
+      "name": "source_hash",
+      "result": "pass"
+    },
+    {
+      "name": "inputs",
+      "result": "pass"
+    },
+    {
+      "name": "ids",
+      "result": "pass"
+    },
+    {
+      "name": "scope",
+      "result": "pass"
+    },
+    {
+      "name": "linkage",
+      "result": "pass"
+    },
+    {
+      "name": "counts",
+      "result": "pass"
+    },
+    {
+      "name": "exclusivity",
+      "result": "pass"
+    },
+    {
+      "name": "prior_hashes",
+      "result": "pass"
+    },
+    {
+      "name": "recorded_corpus",
+      "result": "pass"
+    },
+    {
+      "name": "recorded_binary",
+      "result": "pass"
+    },
+    {
+      "name": "times",
+      "result": "pass"
+    },
+    {
+      "name": "preservation_A",
+      "result": "pass"
+    },
+    {
+      "name": "typed_responses",
+      "result": "pass"
+    },
+    {
+      "name": "research",
+      "result": "pass"
+    },
+    {
+      "name": "messages_structure",
+      "result": "pass"
+    },
+    {
+      "name": "messages_count",
+      "result": "pass"
+    },
+    {
+      "name": "safe_causes",
+      "result": "pass"
+    },
+    {
+      "name": "specific_causes",
+      "result": "pass"
+    },
+    {
+      "name": "cause_groups",
+      "result": "pass"
+    },
+    {
+      "name": "cost_sessions",
+      "result": "pass"
+    },
+    {
+      "name": "cost_totals",
+      "result": "pass"
+    },
+    {
+      "name": "credential_scan",
+      "result": "pass"
+    },
+    {
+      "name": "csv_schema",
+      "result": "pass"
+    },
+    {
+      "name": "csv_reread",
+      "result": "pass"
+    },
+    {
+      "name": "json_cells",
+      "result": "pass"
+    },
+    {
+      "name": "csv_scan",
+      "result": "pass"
+    },
+    {
+      "name": "preservation_D",
+      "result": "pass"
+    },
+    {
+      "name": "final_csv",
+      "result": "pass"
+    },
+    {
+      "name": "final_hashes",
+      "result": "pass"
+    }
+  ],
+  "checkCounts": {
+    "pass": 30,
+    "fail": 0,
+    "pending": 0,
+    "skipped": 0
+  },
+  "failedChecks": [],
+  "pendingChecks": [],
+  "skippedChecks": [],
+  "safety": {
+    "credentialPatternMatches": 0,
+    "scanned": "16 originals + CSV; provider/bearer/private-key/assignment/URI patterns",
+    "propertyHits": [
+      {
+        "file": "search-facts-evaluation-20261101T153358Z-eef20fd8.corpus-context.json",
+        "property": "authorization",
+        "classification": "Execution-authorization narrative; known action label, no bearer/basic or remaining long token-like word; no dump"
+      }
+    ],
+    "piiClearanceClaim": false,
+    "maxChainNodes": 8,
+    "maxObservedChainNodes": 3,
+    "stageVocabulary": [
+      "Coverage",
+      "Initialization",
+      "Model",
+      "ResultParsing",
+      "Revalidation",
+      "Synthesis",
+      "Session"
+    ]
+  },
+  "derivatives": {
+    "csv": {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.results.csv",
+      "bytes": 2292069,
+      "sha256": "0AF6504425B88CE5690FF64BDCC2DF955BDAD29C52E6BC0300D12E9B073C5C1E",
+      "encoding": "UTF-8 BOM",
+      "creationMode": "open xb / CreateNew",
+      "rows": 50,
+      "columns": [
+        "question",
+        "category",
+        "type",
+        "ordinal",
+        "outcome",
+        "agent_content",
+        "research_status",
+        "normalized_error",
+        "root_reason",
+        "execution_stage",
+        "causal_chain_json",
+        "agent_failure_json",
+        "error_category",
+        "error_code",
+        "agent_failure_category",
+        "agent_failure_exception_type",
+        "agent_failure_http_status",
+        "agent_failure_provider_code",
+        "run_id",
+        "scenario_id",
+        "input_sha256",
+        "started_utc",
+        "ended_utc",
+        "duration_ms",
+        "scenario_json",
+        "response_json",
+        "error_json",
+        "returned_messages_json",
+        "cost_snapshot_json",
+        "scope_json",
+        "original_record_json"
+      ],
+      "jsonColumns": [
+        "causal_chain_json",
+        "agent_failure_json",
+        "scenario_json",
+        "response_json",
+        "error_json",
+        "returned_messages_json",
+        "cost_snapshot_json",
+        "scope_json",
+        "original_record_json"
+      ],
+      "jsonCellsReconciled": 450,
+      "escapedCells": 0,
+      "formulaRule": "Apostrophe for =,+,-,@ after whitespace/BOM or leading tab/CR/LF",
+      "cellsOver32767": 23,
+      "oversizedCells": [
+        {
+          "ordinal": 1,
+          "column": "original_record_json",
+          "characters": 55584
+        },
+        {
+          "ordinal": 2,
+          "column": "returned_messages_json",
+          "characters": 34250
+        },
+        {
+          "ordinal": 2,
+          "column": "original_record_json",
+          "characters": 55776
+        },
+        {
+          "ordinal": 10,
+          "column": "original_record_json",
+          "characters": 48662
+        },
+        {
+          "ordinal": 17,
+          "column": "original_record_json",
+          "characters": 55577
+        },
+        {
+          "ordinal": 18,
+          "column": "returned_messages_json",
+          "characters": 34157
+        },
+        {
+          "ordinal": 18,
+          "column": "original_record_json",
+          "characters": 49629
+        },
+        {
+          "ordinal": 19,
+          "column": "original_record_json",
+          "characters": 62299
+        },
+        {
+          "ordinal": 21,
+          "column": "returned_messages_json",
+          "characters": 34114
+        },
+        {
+          "ordinal": 21,
+          "column": "original_record_json",
+          "characters": 48526
+        },
+        {
+          "ordinal": 22,
+          "column": "original_record_json",
+          "characters": 56423
+        },
+        {
+          "ordinal": 25,
+          "column": "returned_messages_json",
+          "characters": 34645
+        },
+        {
+          "ordinal": 25,
+          "column": "original_record_json",
+          "characters": 51868
+        },
+        {
+          "ordinal": 29,
+          "column": "original_record_json",
+          "characters": 60029
+        },
+        {
+          "ordinal": 30,
+          "column": "returned_messages_json",
+          "characters": 35622
+        },
+        {
+          "ordinal": 30,
+          "column": "original_record_json",
+          "characters": 63848
+        },
+        {
+          "ordinal": 35,
+          "column": "original_record_json",
+          "characters": 45786
+        },
+        {
+          "ordinal": 38,
+          "column": "returned_messages_json",
+          "characters": 34081
+        },
+        {
+          "ordinal": 38,
+          "column": "original_record_json",
+          "characters": 51760
+        },
+        {
+          "ordinal": 39,
+          "column": "original_record_json",
+          "characters": 50212
+        },
+        {
+          "ordinal": 42,
+          "column": "returned_messages_json",
+          "characters": 36113
+        },
+        {
+          "ordinal": 42,
+          "column": "original_record_json",
+          "characters": 62401
+        },
+        {
+          "ordinal": 48,
+          "column": "original_record_json",
+          "characters": 37054
+        }
+      ],
+      "maxCellCharacters": 63848,
+      "truncatedCells": 0
+    },
+    "validation": {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.validation.json",
+      "encoding": "UTF-8",
+      "creationMode": "open xb / CreateNew"
+    }
+  },
+  "limitations": [
+    "Offline: no network/DB/provider calls, extra tests/builds, edits, repairs, scoring, orchestration or commits.",
+    "Completed=terminal capture; research labels not correctness. Messages=returned projections, not wire/in-flight trace; JSONL authoritative.",
+    "Bounded first-branch chain; stage surface boundary; no model-choice inference. Corpus/source gaps/entry8/binary equality recorded, not fresh DB/source/binary checks.",
+    "Estimates not billing; scans not secret/PII clearance. Source/model text sensitive. Excel oversized cells untruncated.",
+    "T4 tests/build not rerun; passive export no meaningful RED; parser/hash/accounting checks observed. Engram tools unavailable."
+  ],
+  "executionEvidence": {
+    "command": "python in-memory here-documents; exact bodies in tool transcript",
+    "phases": "A13/B4/C5/D6/E2=30",
+    "resolvedAttempts": "Null/string TypeError; ENAMETOOLONG; five transport SyntaxErrors; model alias assumption; authorization property classification. Failed attempts wrote nothing.",
+    "testBuildCommandsRun": []
+  },
+  "reportComplete": true
+}

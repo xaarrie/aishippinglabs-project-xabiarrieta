@@ -38,6 +38,7 @@ const integerLimits = ['maxModelCalls', 'maxToolCalls', 'maxDistinctFacts',
 
 // Explanations come from validated server categories, never from rejected model content.
 function outcomeMessage(research, showAnswer, rejected) {
+  if (research?.status === 'Refused') return 'This request cannot be answered by read-only timeline fact search.';
   const narrative = rejected
     ? 'The model narrative was withheld because citation references could not be verified. Try searching again.'
     : showAnswer ? 'A cited agent summary is available.'
@@ -58,8 +59,9 @@ function outcomeMessage(research, showAnswer, rejected) {
 
 function normalizeResearch(value) {
   if (value == null) return null; // Legacy responses have no research metadata.
-  if (!['Complete', 'Empty', 'InsufficientEvidence', 'Partial'].includes(value.status) ||
-      ![null, 'NoEligibleFacts', 'NoEvidence', 'ProviderCallLimit', 'ToolOrEvidenceLimit', 'EvidenceTruncated'].includes(value.stopReason) ||
+  if (!['Complete', 'Empty', 'InsufficientEvidence', 'Partial', 'Refused'].includes(value.status) ||
+      ![null, 'NoEligibleFacts', 'NoEvidence', 'ProviderCallLimit', 'ToolOrEvidenceLimit', 'EvidenceTruncated', 'SafeRefusal'].includes(value.stopReason) ||
+      ((value.status === 'Refused') !== (value.stopReason === 'SafeRefusal')) ||
       !['modelCalls', 'toolCalls', 'searchQueries'].every(key => count(value[key])) ||
       typeof value.evidenceTruncated !== 'boolean' || typeof value.budgetExhausted !== 'boolean' ||
       !Array.isArray(value.warnings) || !value.warnings.every(x => typeof x === 'string') ||
@@ -89,6 +91,9 @@ export function normalizeTimelineSearch(value) {
   const rawContexts = value.sourceContexts === undefined ? [] : value.sourceContexts;
   const rawContextCitations = value.contextCitations === undefined ? [] : value.contextCitations;
   if (!Array.isArray(rawContexts) || !Array.isArray(rawContextCitations)) throw evidenceError();
+  if (research?.status === 'Refused' && (facts.length || value.citations.length || rawContexts.length ||
+      rawContextCitations.length || research.toolCalls !== 0 || research.searchQueries !== 0 ||
+      research.evidenceTruncated || research.budgetExhausted)) throw evidenceError();
   const contextIds = new Set(); const contextEntries = new Set();
   for (const context of rawContexts) {
     if (!context || !guid(context.evidenceId) || !text(context.entryId) ||
@@ -123,7 +128,7 @@ export function normalizeTimelineSearch(value) {
   }
   const warnings = [...new Set([...searchWarnings(coverage), ...(research?.warnings ?? [])])];
   if (rejected || rejectedContext) warnings.push('Some unverified citation references were omitted.');
-  const noFinalAnswer = research && (['Empty', 'InsufficientEvidence'].includes(research.status) ||
+  const noFinalAnswer = research && (['Empty', 'InsufficientEvidence', 'Refused'].includes(research.status) ||
     ['NoEligibleFacts', 'NoEvidence', 'ProviderCallLimit'].includes(research.stopReason));
   // Any rejected citation invalidates the mixed narrative, not the independently verified evidence.
   const showAnswer = text(value.content) && !noFinalAnswer && !rejected && !rejectedContext &&

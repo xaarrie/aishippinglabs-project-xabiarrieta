@@ -3,6 +3,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ProjectTimeline.BusinessLogic\ProjectTimeline.BusinessLogic.csproj" />
     <ProjectReference Include="..\..\src\ProjectTimeline.FactsInitializer\ProjectTimeline.FactsInitializer.csproj" />
+    <ProjectReference Include="..\..\src\ProjectTimeline.SearchFactsEvaluator\ProjectTimeline.SearchFactsEvaluator.csproj" />
+    <ProjectReference Include="..\..\src\ProjectTimeline.EvaluationLabeler\ProjectTimeline.EvaluationLabeler.csproj" />
+    <ProjectReference Include="..\..\src\ProjectTimeline.SearchFactsJudge\ProjectTimeline.SearchFactsJudge.csproj" />
     <ProjectReference Include="..\..\src\ProjectTimeline.UI.WebApi\ProjectTimeline.UI.WebApi.csproj" />
     <ProjectReference Include="..\..\src\ProjectTimeline.Database\ProjectTimeline.Database.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.0" />

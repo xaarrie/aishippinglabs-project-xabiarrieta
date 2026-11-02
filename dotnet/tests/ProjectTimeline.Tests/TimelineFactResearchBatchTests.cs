@@ -18,9 +18,40 @@ public sealed class TimelineFactResearchBatchTests
     private static async Task<JsonElement> Batch(TimelineFactInformationTools tools, string[] queries, int limit = 10) =>
         (JsonElement)(await tools.Functions[0].InvokeAsync(new AIFunctionArguments { ["queries"] = queries, ["limit"] = limit }))!;
     private static async Task<JsonElement> Sources(TimelineFactInformationTools tools, object? ids, string binding = "sdk-json") =>
+        binding == "server" ? await tools.FetchEmittedSourcesAsync() :
         binding == "direct" ? await tools.fetch_source_entry((Guid[])ids!) :
         (JsonElement)(await tools.Functions[1].InvokeAsync(new AIFunctionArguments { ["entryIds"] = binding switch
         { "sdk-array" => ids, "sdk-list" => ((Guid[])ids!).ToList(), _ => JsonSerializer.SerializeToElement(ids) } }))!;
+
+    [Fact]
+    public async Task Server_fetch_uses_complete_committed_emission_order_and_all_anchors_not_sorted_final_ledger()
+    {
+        await using var f = await TimelineFactReviewFixture.CreateAsync();
+        var first = await f.AcceptAsync("Alice owns delivery.", "alice");
+        await f.NewSourceAsync();
+        var second = await f.AcceptAsync("Bob owns testing.", "bob");
+        await f.NewSourceAsync();
+        var unemitted = await f.AcceptAsync("delivery.", "unemitted");
+        using var tools = await Tools(f);
+        // Ensure emission order differs from the GUID-sorted final ledger, not merely by chance.
+        var reverse = first.Id.CompareTo(second.Id) < 0;
+        var batch = await tools.search_facts_batch(reverse ? ["bob", "alice", "bob"] : ["alice", "bob", "alice"]);
+        var emitted = batch.GetProperty("Results").EnumerateArray().SelectMany(x => x.GetProperty("Facts").EnumerateArray()).ToArray();
+        var expected = emitted.Select(x => x.GetProperty("EntryId").GetGuid()).Distinct().ToArray();
+        var sources = await tools.FetchEmittedSourcesAsync();
+        var ledger = await tools.ValidateLedgerAsync();
+        Assert.Equal(expected, sources.GetProperty("Contexts").EnumerateArray().Select(x =>
+            ledger.Contexts.Single(c => c.EvidenceId == x.GetProperty("EvidenceId").GetGuid()).EntryId));
+        Assert.Equal(reverse ? new[] { second.EntryId, first.EntryId } : new[] { first.EntryId, second.EntryId }, expected);
+        Assert.DoesNotContain(ledger.Facts, fact => fact.Id == unemitted.Id);
+        Assert.NotEqual(expected, ledger.Facts.Select(x => x.EntryId).Distinct().ToArray());
+        foreach (var context in ledger.Contexts)
+            Assert.Equal(emitted.Where(x => x.GetProperty("EntryId").GetGuid() == context.EntryId)
+                .Select(x => x.GetProperty("Id").GetGuid()).Distinct(), context.AnchorFactIds);
+        Assert.Equal(2, ledger.ToolCalls);
+        Assert.Equal("InvalidResearchPhase", (await Assert.ThrowsAsync<TimelineFactResearchException>(() => tools.FetchEmittedSourcesAsync())).Code);
+        Assert.Equal("InvalidResearchPhase", (await Assert.ThrowsAsync<TimelineFactResearchException>(() => tools.ValidateLedgerAsync())).Code);
+    }
 
     [Fact]
     public async Task Single_pass_exposes_only_two_tools_and_entryIds_source_schema()
@@ -160,8 +191,10 @@ public sealed class TimelineFactResearchBatchTests
         Assert.Equal(error.Code, (await Assert.ThrowsAsync<TimelineFactResearchException>(() => tools.ValidateLedgerAsync())).Code);
     }
 
-    [Fact]
-    public async Task Source_batch_groups_all_same_entry_anchors_and_counts_only_actual_output()
+    [Theory]
+    [InlineData("sdk-json")]
+    [InlineData("server")]
+    public async Task Source_batch_groups_all_same_entry_anchors_and_counts_only_actual_output(string binding)
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         var service = new TimelineFactService(f.Db);
@@ -175,10 +208,11 @@ public sealed class TimelineFactResearchBatchTests
         var third = await f.AcceptAsync("Alice owns delivery.", "alice-later");
         using var tools = await Tools(f);
         var search = await Batch(tools, ["owns", "alice"]);
-        var batch = await Sources(tools, new[] { firstEntry, third.EntryId });
+        var batch = await Sources(tools, new[] { firstEntry, third.EntryId }, binding);
         var wire = batch.GetProperty("Contexts");
         Assert.Equal(2, wire.GetArrayLength());
-        Assert.Equal(anchors.Select(x => x.Id).Order(), wire[0].GetProperty("AnchorFactIds").EnumerateArray().Select(x => x.GetGuid()).Order());
+        var grouped = Assert.Single(wire.EnumerateArray(), x => x.GetProperty("AnchorFactIds").GetArrayLength() == 2);
+        Assert.Equal(anchors.Select(x => x.Id).Order(), grouped.GetProperty("AnchorFactIds").EnumerateArray().Select(x => x.GetGuid()).Order());
         var ledger = await tools.ValidateLedgerAsync();
         Assert.Equal(firstEntry, ledger.Contexts.Single(x => x.AnchorFactIds.Length == 2).EntryId);
         Assert.Equal(2, ledger.ToolCalls); Assert.Equal(2, ledger.SearchQueries);
@@ -271,8 +305,10 @@ public sealed class TimelineFactResearchBatchTests
         Assert.Equal(delta != 0, result.GetProperty("Truncated").GetBoolean());
     }
 
-    [Fact]
-    public async Task Global_budget_returns_explicit_omissions_without_old_context_text_caps()
+    [Theory]
+    [InlineData("sdk-json")]
+    [InlineData("server")]
+    public async Task Global_budget_returns_explicit_omissions_without_old_context_text_caps(string binding)
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         f.Entry.Content += new string('x', 15000);
@@ -289,7 +325,7 @@ public sealed class TimelineFactResearchBatchTests
         var batch = await Batch(tools, ["owns"]);
         var entries = batch.GetProperty("Results").EnumerateArray().SelectMany(x => x.GetProperty("Facts").EnumerateArray())
             .Select(x => x.GetProperty("EntryId").GetGuid()).Distinct().ToArray();
-        var result = await Sources(tools, entries.Concat(entries).ToArray());
+        var result = await Sources(tools, entries.Concat(entries).ToArray(), binding);
         Assert.Equal("Partial", result.GetProperty("Status").GetString());
         Assert.True(result.GetProperty("Truncated").GetBoolean());
         Assert.NotEmpty(result.GetProperty("OmittedEntryIds").EnumerateArray());
@@ -307,6 +343,8 @@ public sealed class TimelineFactResearchBatchTests
     [InlineData("fact")]
     [InlineData("access")]
     [InlineData("revision")]
+    [InlineData("server-source")]
+    [InlineData("server-fact")]
     public async Task Invalid_last_entry_is_checked_even_when_global_budget_would_omit_it(string change)
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
@@ -316,17 +354,39 @@ public sealed class TimelineFactResearchBatchTests
         using var tools = await Tools(f, new(maxTotalSerializedToolEvidenceChars: 1600));
         await Batch(tools, ["owns"]);
         using var raw = f.Unguarded();
-        if (change == "source") raw.Set<TimelineEntry>().Single(x => x.Id == last.EntryId).Content += "PRIVATE_CHANGED";
-        if (change == "fact") raw.Set<TimelineFact>().Single(x => x.Id == last.Id).Valid = false;
+        if (change is "source" or "server-source") raw.Set<TimelineEntry>().Single(x => x.Id == last.EntryId).Content += "PRIVATE_CHANGED";
+        if (change is "fact" or "server-fact") raw.Set<TimelineFact>().Single(x => x.Id == last.Id).Valid = false;
         if (change == "access") raw.Set<User>().Single().IsActive = false;
         if (change == "revision") raw.Set<Timeline>().Single().FactRevision++;
         raw.SaveChanges();
-        var error = await Assert.ThrowsAsync<TimelineFactResearchException>(() =>
-            tools.fetch_source_entry([first.EntryId, change == "unknown" ? Guid.NewGuid() : last.EntryId]));
-        Assert.Equal(change switch { "unknown" => "UnknownOrInvalidEntryIds", "source" => "SourceContextUnavailable",
-            "fact" => "EvidenceChanged", "revision" => "FactRevisionChanged", _ => "AccessDenied" }, error.Code);
+        var error = await Assert.ThrowsAsync<TimelineFactResearchException>(() => change.StartsWith("server-", StringComparison.Ordinal)
+            ? tools.FetchEmittedSourcesAsync()
+            : tools.fetch_source_entry([first.EntryId, change == "unknown" ? Guid.NewGuid() : last.EntryId]));
+        Assert.Equal(change switch { "unknown" => "UnknownOrInvalidEntryIds", "source" or "server-source" => "SourceContextUnavailable",
+            "fact" or "server-fact" => "EvidenceChanged", "revision" => "FactRevisionChanged", _ => "AccessDenied" }, error.Code);
         Assert.DoesNotContain("PRIVATE", error.Message);
         await Assert.ThrowsAsync<TimelineFactResearchException>(() => tools.ValidateLedgerAsync());
+    }
+
+    [Fact]
+    public async Task Server_fetch_can_omit_all_contexts_but_still_finally_validates_every_emitted_source()
+    {
+        await using var f = await TimelineFactReviewFixture.CreateAsync();
+        var fact = await f.AcceptAsync("Alice owns delivery.", "alice");
+        using var full = await Tools(f);
+        var searchSize = (await full.search_facts_batch(["alice"])).GetRawText().Length;
+        var reserve = JsonSerializer.SerializeToElement(new
+        { Status = "Available", Facts = Array.Empty<object>(), Contexts = Array.Empty<object>(), OmittedEntryIds = new[] { fact.EntryId }, Truncated = false });
+        using var tools = await Tools(f, new(maxTotalSerializedToolEvidenceChars: searchSize + reserve.GetRawText().Length));
+        await tools.search_facts_batch(["alice"]);
+        var sources = await tools.FetchEmittedSourcesAsync();
+        Assert.Empty(sources.GetProperty("Contexts").EnumerateArray());
+        Assert.Equal(fact.EntryId, Assert.Single(sources.GetProperty("OmittedEntryIds").EnumerateArray()).GetGuid());
+        var ledger = await tools.ValidateLedgerAsync();
+        Assert.Single(ledger.Facts); Assert.Empty(ledger.Contexts); Assert.True(ledger.Truncated);
+        using var raw = f.Unguarded();
+        raw.Set<TimelineEntry>().Single().Content += "PRIVATE_CHANGED"; raw.SaveChanges();
+        Assert.Equal("SourceContextUnavailable", (await Assert.ThrowsAsync<TimelineFactResearchException>(() => tools.ValidateLedgerAsync())).Code);
     }
 
     [Fact]

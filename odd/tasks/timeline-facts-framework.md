@@ -1,0 +1,49 @@
+# Timeline facts framework integration and deployment
+
+## Objective and authorization
+User approves dedicated fact extraction agent via existing Agents/Framework abstractions, reusable numerical embedding API in CustomOpenAIClient, thin ITimelineFactProvider adapter; then apply required direct-extraction migration and run console. Actual paid extraction authorized after source verification. Embeddings remain QUEUED ONLY. No commits, resets/deletes, historical migration rewrites or general background queue drain.
+
+## Design
+Use existing ICustomChatClient.GetChatClient(model) path with strict ChatOptions JSON schema and bounded OpenAI-specific finish/refusal metadata handling inside extraction agent. Reusable separate embedding interface returns float[] via SDK, not HTTP or Pgvector types. Preserve existing caller/injected test behavior, credentials privately injected, cancellation/timeouts/diagnostic vocabulary/source quote/candidate limits. Keep PostgreSQL serialization in persistence. Do not add generic engine/parallel direct HTTP fallback or broaden migration scope.
+
+## Tasks
+- [x] F1 (done): Implement dedicated extraction agent, embedding client interface/injection seam, thin provider and composition wiring with RED/GREEN fake SDK tests and docs.
+- [x] F2 (done): Assess and independently verify focused regressions, full offline fact suite and isolated console build/help; review strict schema/metadata/embedding transport compatibility.
+- [x] F3 (done): Read live migration history/schema and eligible metadata privately; create and verify backup; reconcile historical IDs, review exact SQL, then apply only authorized missing direct-extraction migration safely.
+- [ ] F4 (blocked: partial runtime result): Run dry-run with explicit actor and same verified private configuration; if valid launch apply ONCE, observe results/diagnostics, embeddings not executed. Report exact outcomes and remaining limitations.
+
+## Acceptance/checks
+F1: all remote fact extraction uses dedicated agent on framework client, no HTTP in adapter; embedding API reuses OpenAI SDK/injected transport and returns validated1536 finite nonzero numeric vector. Strict json_schema preserved, refuse/truncation/capacity/quotes/unknown metadata safe failures with closed diagnostics; token/input limits and no invention instructions retained. Fake tests RED/GREEN incl schema transport, cancellation, embedding parse/dimension, queue-only no embedding execution; normal client factories unaffected.
+F2: existing cache/no restores/downloads; isolated output under FactsInitializer/artifacts; exclude real PostgreSQL and LiveModel; independent verifier per assessment. Fake fixtures not semantic completeness proof.
+F3: do not infer deployed initial migration from placeholder comment; inspect actual __EFMigrationsHistory and schema. Backup without credentials in argv/logs, verify archive/list+exit. Abort on incompatible history/schema, no reset or history manipulation. No production-like unidentified target. New migration20261018000200 preserving origins/history, only after safe SQL inspection. Migration failure stops before extraction.
+F4: actor0e6047b4-385d-4d7c-bbcf-4926e7c8fc70, WebApi appsettings connection and Properties/launchSettings key loaded in-process/env only, never output. User manually removed failed jobs/facts; recheck actual selection. Never auto-reset existing jobs or enrich existing accepted evidence. Capture status/log with safe codes and no secrets. No retry replay after ambiguous apply.
+
+## Evidence
+Previous direct-extraction implementation independently274 offline passes, build0 warnings/errors. Migration not applied; historical202610180001 placeholder versus20261018000100 identity unknown. Current framework ICustomChatClient has GetChatClient and CustomOpenAIClient injects IChatClient; SDK9.5 ChatOptions.ResponseFormat supports schema but raw OpenAI shape must be verified/tested. Existing provider is direct HTTP; Hosting and console construct it directly.
+
+## Next step
+Delegate F1 single writer. Parent maintains file/mirror/todo. Execution/deployment occur after F2, not during source work. Work-unit commits withheld, no user request.
+
+## Typed agent contract clarification
+User explicitly requested result CLASS like existing agents and approved continuation. Use Agents/AgentModels/TimelineFactExtractionResult and dedicated Agents/TimelineFactExtractionAgent following framework conventions. Derive strict JSON schema from DTO, no separately maintained manual schema. Typed deserialization not substitute for source/quote/candidate/refusal/truncation diagnostics. Bounded framework extension allowed as needed, avoid generic engine and parallel HTTP. F1 delegated with exact surfaces for framework four files, separate embedding interface, agent/DTO, adapter/composition/tests/docs; source-only no DB/paid/migrations.
+
+## F1 result / F2 start
+Typed DTO-derived strict schema via AIJsonUtilities, dedicated agent on ICustomChatClient (ICustomAgent would hide options/cancel/raw metadata), SDK numerical embeddings interface/transport injection, thin adapter and deferred host/console composition. Provider has no direct HTTP. Actual SDK raw ChatCompletion guards refusal/finish and transport response bounds; explicit-credential SDK retries disabled. RED behavior42 pass1 fail, GREEN43, final298 offline passes0 failed0 skipped, console build0 warnings/errors and help0. No DB/paid calls/migrations/restores/commits. Timeout90s implemented not waited90s in tests, live semantic completeness unknown. ASSESS failed due undeclared existing untracked scope; RDD off conservative independent verifier required. F2 underway, F3/F4 not started.
+
+## F2 verified / F3 transition
+Independent PASS298 tests0 failed0 skipped, isolated build0 warnings/errors and help0. No source blocker. Verified DTO-derived schema wire strictness, SDK raw finish/refusal guards, thin provider,1536 numerical embeddings, deferred composition/queue-only console and existing injection isolation. Parent help spot-check0. Historical RED writer-only; live completeness/90s expiry not proven. No DB yet. F3 starts authenticated read-only history/schema+tool inventory, then backup/approved migration if compatible. Preserve historical IDs; no whole-worktree approval implied by unavailable native assessment.
+
+## F3 deployment evidence / F4 start
+Read-only preflight verified canonical20261018000100 history (placeholder202610180001 absent), all5 migrations ProductVersion10.0.0,62 baseline columns/types/nullability match, PostgreSQL18.6/vector0.8.7. User cleanup left8 Draft entries,0 facts/jobs,1 Accepted proposal;7 eligible fresh entries. Actor active/admin/write allowed. No blockers/unknown migration IDs.
+Parent created custom pg_dump backup at C:/Users/biarunxa/AppData/Local/ProjectTimeline/backups/before-direct-extraction-20261018-184907-919490.dump (52665 bytes, SHA25666bb4c93d82ac76865181d68c42931229080606cf546ccd76da79f9b760707ce). pg_restore --list succeeded; restore NOT tested. Exact reviewed migration Up SQL plus history record executed atomically via psql single transaction, locked history and asserted baseline. Apply exit0, postchecks passed:history,4 new columns,2 nullable review IDs,2 constraints,1 unique index. No deletion/reset/rewrite or embeddings. F3 done; F4 dryrun then single apply next.
+
+## F4 launch evidence
+Parent dry-run exit0:WouldSave7,ExistingWork1 (existing accepted proposal preserved). Launched --apply exactly once using updated framework SDK path; supervisorPID2624,consolePID33544, status observed running at C:/Users/biarunxa/AppData/Local/Temp/facts-framework-extraction-tafphvlu. Dedicated read-only verifier waits once on supervisor for completion then reads final log/status and optional read-only DB aggregate. No relaunch/retry or embeddings. Final result pending; do not claim success until observed.
+
+## F4 partial completion and blocker
+Apply process completed exit2, not running:Saved2,ExtractionFailed5,ExistingWork1. All5 diagnostics UnsupportedQuote. Source validation at TimelineFactProcessing.cs219-221 rejects any candidate quote not an exact ordinal substring of title or content; actual failed payloads not retained, no specific whitespace/paraphrase cause proven. No automatic retry/relauch.
+Parent read-only postrun aggregates exit0:10facts,all direct origin,0review-created,2entries with facts (entry2=6,entry7=4);10Pending embeddings attempts0;2Completed extraction jobs attempts1;5Retry extraction jobs attempts1;1pre-existingAccepted proposal preserved, no new extraction reviews. This proves direct persistence and queue-only embeddings, not exhaustive extraction. Status completed at C:/Users/biarunxa/AppData/Local/Temp/facts-framework-extraction-tafphvlu.
+F4 full initialization remains incomplete:fix/diagnose source-evidence selection without weakening quote validation, then explicit bounded retry of5existing jobs may incur costs. Existing entry6 blocked by prior Accepted proposal after user deletion; do not delete audit or bypass it. No new source changes or paid calls after failure. Next action user decision on corrective work/operational handling; do not claim feature initialization complete or rerun automatically.
+
+## Explicit single-entry relaunch
+User reports deleting old accepted proposal and explicitly authorized relaunch of formerly blocked entry. Parent dry-run exit0 confirmed exactly entry76fd2ca7-096a-4e08-b772-c8d5fcf269ac WouldSave1,existing failed jobs ExistingWork5. Ran apply once, completed exit0 Saved1 ExistingWork5, no retry calls for the five failures, embeddings queue-only. Status C:/Users/biarunxa/AppData/Local/Temp/facts-single-entry-m8cuvuyt; supervisor15464/console65508 completed, no ongoing process. New fact count not queried. Remaining5UnsupportedQuote recovery still pending; full initialization not complete. User request for this one entry successfully completed.

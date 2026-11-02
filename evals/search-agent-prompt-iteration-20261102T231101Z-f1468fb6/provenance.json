@@ -1,0 +1,570 @@
+{
+  "createdUtc": "2026-11-02T23:11:29.0869260+00:00",
+  "originalSource": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-citation-allowlists-20261102T062417Z-f35d9311.jsonl",
+  "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+  "originalLabels": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-citation-allowlists-20261102T062417Z-f35d9311.labels.csv",
+  "originalLabelsSha256": "a704ba82d039461ac6d76a71aea1beeaa42f72dcdb2502e416257ef5da23aabe",
+  "historicalScenarioCsv": "C:\\Data\\formacion\\TimelineSpecifications\\search_facts_evaluation_scenarios.csv",
+  "historicalScenarioCsvSha256": "25bec02395d327d76f8b212bf3edf69c3e00dc59ffa45146a619fb5265c2dd0c",
+  "historicalPredictions": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-citation-allowlists-20261102T062417Z-f35d9311.judge-20261102T2237495800801Z\\predictions.jsonl",
+  "historicalPredictionsSha256": "4e0997876d78c6325283fecb20e3a44eaf8163eef7738079cb3d19a012ca5633",
+  "derivedCsvSha256": "ea80f6ffce0225d5640c530ca2c7b9f0b7f944251e0b4649d5812de2a5d0f5b6",
+  "sourceRows": 50,
+  "selectedRows": 17,
+  "roundtrip": "Python strict CSV parse, all questions/ordered original fields exactly preserved; not production .NET parser execution",
+  "metadataHeaders": [
+    "sourceRunId",
+    "sourceScenarioId",
+    "sourceOrdinal",
+    "sourceInputSha256",
+    "sourceDatasetSha256"
+  ],
+  "corrections": [
+    {
+      "sourceOrdinal": 1,
+      "reason": "User-confirmed OLD-answer wrong refusal; not prompt improvement",
+      "fields": {
+        "label": {
+          "before": "Good",
+          "after": "Bad"
+        },
+        "failureCategory": {
+          "before": "",
+          "after": "incorrect-answer"
+        },
+        "revision": {
+          "before": "3",
+          "after": "4"
+        },
+        "updatedUtc": {
+          "before": "2026-11-02T21:00:44.0291392+00:00",
+          "after": "2026-11-02T23:11:29.0869260+00:00"
+        }
+      }
+    },
+    {
+      "sourceOrdinal": 3,
+      "reason": "User-confirmed OLD-answer wrong refusal; not prompt improvement",
+      "fields": {
+        "label": {
+          "before": "Good",
+          "after": "Bad"
+        },
+        "failureCategory": {
+          "before": "",
+          "after": "incorrect-answer"
+        },
+        "revision": {
+          "before": "1",
+          "after": "2"
+        },
+        "updatedUtc": {
+          "before": "2026-11-02T21:01:13.0783893+00:00",
+          "after": "2026-11-02T23:11:29.0869260+00:00"
+        }
+      }
+    },
+    {
+      "sourceOrdinal": 17,
+      "reason": "User-confirmed OLD-answer wrong refusal; not prompt improvement",
+      "fields": {
+        "label": {
+          "before": "Good",
+          "after": "Bad"
+        },
+        "failureCategory": {
+          "before": "",
+          "after": "incorrect-answer"
+        },
+        "revision": {
+          "before": "1",
+          "after": "2"
+        },
+        "updatedUtc": {
+          "before": "2026-11-02T21:15:32.2046046+00:00",
+          "after": "2026-11-02T23:11:29.0869260+00:00"
+        }
+      }
+    }
+  ],
+  "correctedOldLabelsSha256": "1d5c5f2bb19c60a0548247c15a86721991d8e685db7aff92ef9864c91f69b707",
+  "categoryChoice": "incorrect-answer is documented and consistent with prior wrong-refusal labels",
+  "mapping": [
+    {
+      "derivedOrdinal": 1,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0001",
+      "sourceOrdinal": "1",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "How do the specified password-recovery request and password-reset screens differ, and should they have separate URLs?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "How do the specified password-recovery request and password-reset screens differ, and should they have separate URLs?"
+        },
+        {
+          "header": "category",
+          "value": "authentication"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 2,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0002",
+      "sourceOrdinal": "2",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "Should the ProjectTimeline login screen display the application's normal navigation header and menus?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "Should the ProjectTimeline login screen display the application's normal navigation header and menus?"
+        },
+        {
+          "header": "category",
+          "value": "authentication"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 3,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0003",
+      "sourceOrdinal": "3",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "What behavior is required for the collapsible left toolbar, especially when ProjectTimeline is used on a mobile device?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "What behavior is required for the collapsible left toolbar, especially when ProjectTimeline is used on a mobile device?"
+        },
+        {
+          "header": "category",
+          "value": "navigation"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 4,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0004",
+      "sourceOrdinal": "4",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "Which separate pages are specified for Profile, Users, and Projects navigation?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "Which separate pages are specified for Profile, Users, and Projects navigation?"
+        },
+        {
+          "header": "category",
+          "value": "navigation"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 5,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0005",
+      "sourceOrdinal": "5",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "Which actions should the initial maintenance grid provide for creating, editing, consulting, and deleting records?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "Which actions should the initial maintenance grid provide for creating, editing, consulting, and deleting records?"
+        },
+        {
+          "header": "category",
+          "value": "maintenance_screens"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 6,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0006",
+      "sourceOrdinal": "6",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "How should the maintenance screens distinguish creating or editing a record from consulting it?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "How should the maintenance screens distinguish creating or editing a record from consulting it?"
+        },
+        {
+          "header": "category",
+          "value": "maintenance_screens"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 7,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0007",
+      "sourceOrdinal": "7",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "Which fields may a non-admin user change on their own User record?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "Which fields may a non-admin user change on their own User record?"
+        },
+        {
+          "header": "category",
+          "value": "user_permissions"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 8,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0008",
+      "sourceOrdinal": "8",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "Which User fields can an administrator maintain, and which identifier must remain unchanged?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "Which User fields can an administrator maintain, and which identifier must remain unchanged?"
+        },
+        {
+          "header": "category",
+          "value": "user_permissions"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 9,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0009",
+      "sourceOrdinal": "9",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "What does UserRole.IsAdmin mean, and which application roles are listed in the initial specification?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "What does UserRole.IsAdmin mean, and which application roles are listed in the initial specification?"
+        },
+        {
+          "header": "category",
+          "value": "application_roles"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 10,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0010",
+      "sourceOrdinal": "10",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "How is a user's application role linked through User.IDUserRole, and should UserRoles contain a UserId field?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "How is a user's application role linked through User.IDUserRole, and should UserRoles contain a UserId field?"
+        },
+        {
+          "header": "category",
+          "value": "application_roles"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 11,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0011",
+      "sourceOrdinal": "11",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "Which projects should appear in a user's project list, and how should the list distinguish owned projects from invitations?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "Which projects should appear in a user's project list, and how should the list distinguish owned projects from invitations?"
+        },
+        {
+          "header": "category",
+          "value": "project_visibility"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 12,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0012",
+      "sourceOrdinal": "12",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "Which Project fields identify the user who created the project and the project's main timeline?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "Which Project fields identify the user who created the project and the project's main timeline?"
+        },
+        {
+          "header": "category",
+          "value": "project_visibility"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 13,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0013",
+      "sourceOrdinal": "13",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "Who is allowed to add ProjectParticipant records, and from which maintenance screen are participants managed?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "Who is allowed to add ProjectParticipant records, and from which maintenance screen are participants managed?"
+        },
+        {
+          "header": "category",
+          "value": "project_participants"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 14,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0014",
+      "sourceOrdinal": "14",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "Which ProjectRole values are specified for participants, and can a participant's assigned project role be changed?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "Which ProjectRole values are specified for participants, and can a participant's assigned project role be changed?"
+        },
+        {
+          "header": "category",
+          "value": "project_participants"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 15,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0015",
+      "sourceOrdinal": "15",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "How many timelines may a Project have, and how many of them may be its main timeline?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "How many timelines may a Project have, and how many of them may be its main timeline?"
+        },
+        {
+          "header": "category",
+          "value": "timeline_structure"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 16,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0016",
+      "sourceOrdinal": "16",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "What review and conflict-resolution requirements are specified before merging changes from one timeline into another?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "What review and conflict-resolution requirements are specified before merging changes from one timeline into another?"
+        },
+        {
+          "header": "category",
+          "value": "timeline_structure"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    },
+    {
+      "derivedOrdinal": 17,
+      "sourceRunId": "5913302c-3f71-4696-b72a-d5bc7796b256",
+      "sourceScenarioId": "5913302c3f714696b72ad5bc7796b256:0017",
+      "sourceOrdinal": "17",
+      "sourceInputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+      "sourceDatasetSha256": "e136e2f53cd7157e791a0a6ae9baf99daa2b751b92433cc49ff9ae99dcb2d2f2",
+      "question": "How many characters of entry content should the timeline list preview, and how should attached files be accessible?",
+      "orderedSourceFields": [
+        {
+          "header": "question",
+          "value": "How many characters of entry content should the timeline list preview, and how should attached files be accessible?"
+        },
+        {
+          "header": "category",
+          "value": "entry_display"
+        },
+        {
+          "header": "type",
+          "value": "happy_path"
+        }
+      ],
+      "scope": {
+        "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+        "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+        "projectId": "8d3559af-77d8-476d-b763-5f085889861d"
+      }
+    }
+  ]
+}

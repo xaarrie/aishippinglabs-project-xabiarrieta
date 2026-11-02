@@ -1,0 +1,16 @@
+{
+  "session": "C:\\Users\\biarunxa\\.gentle-shell\\agent\\gentle-agents\\sessions\\2026-11-02T23-07-17-590Z_01a19e84-5ed5-72ca-b730-a9cf0ef48d0b.jsonl",
+  "generatedHarnessBuild": [
+    {
+      "sessionLine": 110,
+      "command": "dotnet build C:/Data/formacion/TimelineSpecifications/search-agent-prompt-iteration-20261102T231101Z-f1468fb6/replay-20261102T231930Z-75d2ae90/judge-harness/UnlabeledJudge.csproj -c Release --configfile C:/Data/formacion/TimelineSpecifications/search-agent-prompt-iteration-20261102T231101Z-f1468fb6/replay-20261102T231930Z-75d2ae90/judge-harness/NuGet.Config --artifacts-path C:/Data/formacion/TimelineSpecifications/search-agent-prompt-iteration-20261102T231101Z-f1468fb6/replay-20261102T231930Z-75d2ae90/harness-build"
+    }
+  ],
+  "preflightArgvFile": "preflight.json",
+  "searchArgvFile": "paid-search-attempt.json",
+  "judgeArgvFile": "paid-judge-attempt.json",
+  "searchResultFile": "search-process-result.json",
+  "judgeResultFile": "judge-process-result.json",
+  "buildResult": "Observed success: 0 warnings, 0 errors; package sources cleared, references only existing built assemblies.",
+  "noRepeatedTestsOrProductionBuilds": true
+}

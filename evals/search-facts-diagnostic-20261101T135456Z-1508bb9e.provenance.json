@@ -1,0 +1,22 @@
+{
+  "purpose": "One separately authorized diagnostic scenario; not a second 50-row evaluation",
+  "originalDatasetPath": "C:/Data/formacion/TimelineSpecifications/search_facts_evaluation_scenarios.csv",
+  "originalDatasetSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+  "originalOrdinal": 1,
+  "diagnosticInputPath": "C:/Data/formacion/TimelineSpecifications/search-facts-diagnostic-20261101T135456Z-1508bb9e.csv",
+  "diagnosticInputSha256": "A50E26B0096767E2F78929F2689B8D7B0970E891ED65ABC6C0504B359D3298FF",
+  "originalHeadersAndFieldsPreserved": true,
+  "scenarioCount": 1,
+  "maximumInvocations": 1,
+  "automaticRetries": false,
+  "originalArtifactSha256Before": {
+    "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl": "f11ffb68306c1d183bbf26e769cace920169f44c399a1ad7055ab13eb255cec1",
+    "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl.manifest.json": "c5a92b13fff2c4ab6446c5b483a462a33bc5a90fa335177ad2a112b84162c0a5",
+    "search-facts-evaluation-20261101T131839Z-facf1f8b.corpus-context.json": "f08ca0c3d2bdc76e71bc946595653991f46bc149ce96780606affd0905fd1f49"
+  },
+  "corpusFingerprintRecipe": "timeline-corpus-v1",
+  "baselineCorpusFingerprint": "5b9d9545036c2c502f95a20cafd9a93c7592d0dc58f399567f6e7f954f727502",
+  "baselineCheckedUtc": "2026-11-01T13:53:32.276077+00:00",
+  "outputPath": "C:/Data/formacion/TimelineSpecifications/search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl",
+  "manifestPath": "C:/Data/formacion/TimelineSpecifications/search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl.manifest.json"
+}

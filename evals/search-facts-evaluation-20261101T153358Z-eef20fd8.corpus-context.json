@@ -1,0 +1,283 @@
+{
+  "schemaVersion": 1,
+  "runId": "1fb7cd9e-9356-4fee-bae8-42e1e7f44ee9",
+  "authorization": "credential_updated_rerun; new explicit human authorization for one complete pass; no automatic retry",
+  "scope": {
+    "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+    "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+    "projectId": "8d3559af-77d8-476d-b763-5f085889861d",
+    "role": "Admin",
+    "coverage": {
+      "entries": 8,
+      "entriesWithoutCompletedExtraction": 0,
+      "pendingReviews": 0,
+      "acceptedValidFacts": 40,
+      "truncated": false,
+      "warnings": [
+        "Timeline-wide latest-valid extracted or accepted-review facts only; lexical/entity matching is not exhaustive or contradiction detection.",
+        "Matching uses PostgreSQL simple whole lexemes from any of the first 12 distinct searchable terms (at least two characters each), ranked by relevance; no stemming, typo tolerance, synonyms or accent folding.",
+        "Grounded direct extraction is effective immediately. Pending reviews are excluded. Fact search is facts-only; separately verified source-entry context is not fact proof."
+      ]
+    }
+  },
+  "projectCode": "001",
+  "projectName": "ProjectTimelineApplication",
+  "timelineCode": "MAIN",
+  "inputPath": "C:\\Data\\formacion\\TimelineSpecifications\\search_facts_evaluation_scenarios.csv",
+  "inputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+  "inputRows": 50,
+  "outputPath": "C:/Data/formacion/TimelineSpecifications/search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl",
+  "manifestPath": "C:/Data/formacion/TimelineSpecifications/search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl.manifest.json",
+  "baselineCheckedUtc": "2026-11-01T15:33:24.970047+00:00",
+  "postrunCheckedUtc": "2026-11-01T15:40:23.480049+00:00",
+  "entryMetadata": [
+    {
+      "id": "cc0394d2-019b-4fb2-a68d-4402f4333663",
+      "entryNumber": 1,
+      "title": "Project structure",
+      "status": "Draft",
+      "sourceFile": "1.ProjectTimeline.txt",
+      "databaseCharacters": 1144,
+      "sourceCharacters": 5693,
+      "sourceContentMatches": false,
+      "eligibleFacts": 5
+    },
+    {
+      "id": "393a2a04-21a7-4bc9-8064-3909b978bdeb",
+      "entryNumber": 2,
+      "title": "Login Screen",
+      "status": "Draft",
+      "sourceFile": "2.LoginScreen.txt",
+      "databaseCharacters": 323,
+      "sourceCharacters": 323,
+      "sourceContentMatches": true,
+      "eligibleFacts": 4
+    },
+    {
+      "id": "6eef5fb9-0877-410c-92f8-8caeedf6103f",
+      "entryNumber": 3,
+      "title": "Landing page",
+      "status": "Draft",
+      "sourceFile": "3.LandingPage.txt",
+      "databaseCharacters": 428,
+      "sourceCharacters": 433,
+      "sourceContentMatches": false,
+      "eligibleFacts": 8
+    },
+    {
+      "id": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+      "entryNumber": 4,
+      "title": "Maintenance screens",
+      "status": "Draft",
+      "sourceFile": "4.PantallasMantenimiento.txt",
+      "databaseCharacters": 381,
+      "sourceCharacters": 381,
+      "sourceContentMatches": true,
+      "eligibleFacts": 5
+    },
+    {
+      "id": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+      "entryNumber": 5,
+      "title": "TimeLine Maintenance",
+      "status": "Draft",
+      "sourceFile": "5.TimeLineMaintenance.txt",
+      "databaseCharacters": 621,
+      "sourceCharacters": 621,
+      "sourceContentMatches": true,
+      "eligibleFacts": 11
+    },
+    {
+      "id": "7a218ad3-5739-435a-91d9-666613ff09fe",
+      "entryNumber": 6,
+      "title": "TimeLine Maintenance Details",
+      "status": "Draft",
+      "sourceFile": "6. TimeLineMaintenance Details.txt",
+      "databaseCharacters": 137,
+      "sourceCharacters": 0,
+      "sourceContentMatches": false,
+      "eligibleFacts": 3
+    },
+    {
+      "id": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+      "entryNumber": 7,
+      "title": "User Roles Maintenance",
+      "status": "Draft",
+      "sourceFile": "7.UserRolesMaintenance.txt",
+      "databaseCharacters": 239,
+      "sourceCharacters": 239,
+      "sourceContentMatches": true,
+      "eligibleFacts": 4
+    },
+    {
+      "id": "c6d377d9-976b-49aa-a79b-a2a002771250",
+      "entryNumber": 8,
+      "title": "Timeline entry and snapshots",
+      "status": "Draft",
+      "sourceFile": "8.TimelineEntryAndSnapshots.txt",
+      "databaseCharacters": 1585,
+      "sourceCharacters": 1593,
+      "sourceContentMatches": true,
+      "eligibleFacts": 0
+    }
+  ],
+  "entryMetadataEvidence": "Reconfirmed by current pre-run READ ONLY SELECT; metadata matches preserved earlier context. No source content copied.",
+  "sourceComparison": "MD5 equality after CRLF-to-LF normalization and trimming surrounding ASCII whitespace; source length uses UTF-8-sig decoded universal-newline text, database length uses char_length(Content).",
+  "preflightCoverage": {
+    "entries": 8,
+    "entriesWithoutCompletedExtraction": 0,
+    "pendingReviews": 0,
+    "acceptedValidFacts": 40,
+    "truncated": false,
+    "warnings": [
+      "Timeline-wide latest-valid extracted or accepted-review facts only; lexical/entity matching is not exhaustive or contradiction detection.",
+      "Matching uses PostgreSQL simple whole lexemes from any of the first 12 distinct searchable terms (at least two characters each), ranked by relevance; no stemming, typo tolerance, synonyms or accent folding.",
+      "Grounded direct extraction is effective immediately. Pending reviews are excluded. Fact search is facts-only; separately verified source-entry context is not fact proof."
+    ]
+  },
+  "preflightExitCode": 0,
+  "preflightProviderKeyRemoved": true,
+  "preflightCreatedArtifacts": false,
+  "pendingEmbeddingJobs": 48,
+  "baselineRowCounts": {
+    "projects": 1,
+    "timelines": 1,
+    "entries": 8,
+    "facts": 48,
+    "validFacts": 40
+  },
+  "postrunRowCounts": {
+    "projects": 1,
+    "timelines": 1,
+    "entries": 8,
+    "facts": 48,
+    "validFacts": 40
+  },
+  "fingerprint": {
+    "recipe": "timeline-corpus-v1",
+    "algorithm": "SHA-256 of UTF8 PostgreSQL jsonb document text; arrays ID-sorted",
+    "baseline": "5b9d9545036c2c502f95a20cafd9a93c7592d0dc58f399567f6e7f954f727502",
+    "postrun": "5b9d9545036c2c502f95a20cafd9a93c7592d0dc58f399567f6e7f954f727502",
+    "matches": true,
+    "excludedProjectTimelineEntryFields": [
+      "CreatedAtUtc",
+      "UpdatedAtUtc"
+    ],
+    "excludedFactFields": [
+      "CreatedAtUtc",
+      "UpdatedAtUtc",
+      "InvalidatedAtUtc",
+      "Embedding",
+      "EmbeddingModel",
+      "EmbeddedAtUtc"
+    ],
+    "jobQueueRecordsExcluded": true,
+    "readOnly": "on",
+    "isolation": "repeatable read"
+  },
+  "protectedArtifactSha256Before": {
+    "search-facts-evaluation-20261101T131839Z-facf1f8b.corpus-context.json": "f08ca0c3d2bdc76e71bc946595653991f46bc149ce96780606affd0905fd1f49",
+    "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl": "f11ffb68306c1d183bbf26e769cace920169f44c399a1ad7055ab13eb255cec1",
+    "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl.manifest.json": "c5a92b13fff2c4ab6446c5b483a462a33bc5a90fa335177ad2a112b84162c0a5",
+    "search-facts-diagnostic-20261101T135456Z-1508bb9e.csv": "a50e26b0096767e2f78929f2689b8d7b0970e891ed65abc6c0504b359d3298ff",
+    "search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl": "c5c5a50af0063c8da0bbd9b4135ddd076ddde16ea930dfc22a0fd5bbe5b551a3",
+    "search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl.manifest.json": "6c9526d23f491cffe47a130d0345a4e508cc67d0bb61409ad096a5e31da5aae9",
+    "search-facts-diagnostic-20261101T135456Z-1508bb9e.provenance.json": "ec0bd81bb814ef5ce5a054c83c31c068d465a4e707bca35187e91eed39c10c3e"
+  },
+  "protectedArtifactSha256After": {
+    "search-facts-evaluation-20261101T131839Z-facf1f8b.corpus-context.json": "f08ca0c3d2bdc76e71bc946595653991f46bc149ce96780606affd0905fd1f49",
+    "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl": "f11ffb68306c1d183bbf26e769cace920169f44c399a1ad7055ab13eb255cec1",
+    "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl.manifest.json": "c5a92b13fff2c4ab6446c5b483a462a33bc5a90fa335177ad2a112b84162c0a5",
+    "search-facts-diagnostic-20261101T135456Z-1508bb9e.csv": "a50e26b0096767e2f78929f2689b8d7b0970e891ed65abc6c0504b359d3298ff",
+    "search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl": "c5c5a50af0063c8da0bbd9b4135ddd076ddde16ea930dfc22a0fd5bbe5b551a3",
+    "search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl.manifest.json": "6c9526d23f491cffe47a130d0345a4e508cc67d0bb61409ad096a5e31da5aae9",
+    "search-facts-diagnostic-20261101T135456Z-1508bb9e.provenance.json": "ec0bd81bb814ef5ce5a054c83c31c068d465a4e707bca35187e91eed39c10c3e"
+  },
+  "allSevenPriorArtifactsUnchanged": true,
+  "caveats": [
+    "Current specification files 1, 3 and 6 differ from persisted entry contents; file 6 is empty.",
+    "Entry 8 has zero eligible facts although its latest extraction is Completed.",
+    "Five specification contents match after documented normalization; source files were not treated as authority to change the selected persisted corpus.",
+    "48 pending embedding jobs are excluded from the integrity fingerprint; production Search uses lexical fact matching.",
+    "No alignment, import, extraction, activation, source edits, agent fixes, provider changes or correctness scoring performed.",
+    "Final-state digest equality does not detect temporary mutations later reverted."
+  ],
+  "execution": {
+    "passCountUnderThisAuthorization": 1,
+    "cliExitCode": 2,
+    "model": "gpt-4o-mini",
+    "startedUtc": "2026-11-01T15:34:03.8086978+00:00",
+    "endedUtc": "2026-11-01T15:39:07.8332137+00:00",
+    "launcherStartedUtc": "2026-11-01T15:34:02.048622+00:00",
+    "launcherEndedUtc": "2026-11-01T15:39:07.883882+00:00",
+    "launcherElapsedSeconds": 305.8349201999954,
+    "sumRowElapsedMilliseconds": 303459.048,
+    "timeoutSeconds": 7800,
+    "configurationReloadedInNewProcess": true,
+    "automaticRetries": false,
+    "externalTelemetryExportersDisabled": true,
+    "status": "Completed",
+    "counts": {
+      "scenarioCount": 50,
+      "persisted": 50,
+      "returned": 20,
+      "failed": 30,
+      "cancelled": 0,
+      "unstarted": 0
+    },
+    "researchStatusDistribution": {
+      "Partial": 14,
+      "Complete": 5,
+      "InsufficientEvidence": 1
+    },
+    "safeErrors": [
+      {
+        "type": "Agent",
+        "code": "SynthesisUnavailable",
+        "count": 30
+      }
+    ],
+    "safeAgentFailures": [
+      {
+        "category": "Other",
+        "exceptionType": "Other",
+        "httpStatus": null,
+        "providerCode": null,
+        "count": 26
+      },
+      {
+        "category": "HttpProvider",
+        "exceptionType": "ClientResultException",
+        "httpStatus": null,
+        "providerCode": null,
+        "count": 1
+      }
+    ],
+    "failedWithoutAgentFailure": 3,
+    "returnedMessageProjectionCount": 105,
+    "interpretation": "All 50 terminal records persisted; 20 returned responses and 30 execution failures. Research labels are captured statuses, not correctness judgments. Other/null diagnostics do not establish an underlying cause."
+  },
+  "observedUsageAndCost": {
+    "sessions": 50,
+    "distinctSessionIds": 50,
+    "currency": "USD",
+    "callCount": 115,
+    "inFlightCallCount": 0,
+    "unknownUsageCallCount": 1,
+    "unknownCostCallCount": 1,
+    "inputTokenCount": null,
+    "outputTokenCount": null,
+    "totalTokenCount": null,
+    "knownEstimatedCost": "0.09103170",
+    "estimatedTotalCost": null,
+    "usageComplete": false,
+    "estimatedCostComplete": false,
+    "completeUsageSessionCount": 49,
+    "tokensAcrossCompleteUsageSessionsOnly": {
+      "inputTokenCount": 635234,
+      "outputTokenCount": 18431,
+      "totalTokenCount": 653665
+    },
+    "callsAcrossCompleteUsageSessionsOnly": 114,
+    "note": "Known cost components are observed production estimates, not invoices. Complete-session token subset is not a complete run total."
+  }
+}

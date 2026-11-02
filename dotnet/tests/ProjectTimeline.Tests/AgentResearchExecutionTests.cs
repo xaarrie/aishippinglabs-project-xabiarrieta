@@ -248,6 +248,27 @@ public sealed class AgentResearchExecutionTests
     }
 
     [Fact]
+    public async Task Search_leaf_admission_is_request_local_and_never_reaches_provider_options()
+    {
+        var chat = new Chat();
+        var leaf = Boundary(chat);
+        var counts = new int[8];
+        var options = Enumerable.Range(0, counts.Length).Select(index =>
+        {
+            var value = new ChatOptions { AdditionalProperties = new() { ["tag"] = index } };
+            typeof(CustomOpenAIClient).GetMethod("RequireSearchResponseAdmission",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)!.Invoke(null,
+                [value, (Action<ChatResponse>)(_ => Interlocked.Increment(ref counts[index]))]);
+            return value;
+        }).ToArray();
+        await Task.WhenAll(options.Select(value => leaf.GetResponseAsync([], value)));
+        await leaf.GetResponseAsync([], new ChatOptions { AdditionalProperties = new() { ["tag"] = -1 } });
+        Assert.All(counts, value => Assert.Equal(1, value));
+        Assert.All(options, value => Assert.Equal(2, value.AdditionalProperties!.Count)); // No mutation of caller options.
+        Assert.All(chat.Options, value => Assert.Equal("tag", Assert.Single(value!.AdditionalProperties!).Key));
+    }
+
+    [Fact]
     public async Task No_budget_is_transparent_including_options_token_response_errors_and_streaming()
     {
         var response = Response();

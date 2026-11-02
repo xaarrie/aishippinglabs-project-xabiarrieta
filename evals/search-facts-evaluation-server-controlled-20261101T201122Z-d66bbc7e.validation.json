@@ -1,0 +1,728 @@
+{
+  "schemaVersion": 1,
+  "status": "pass",
+  "kind": "Offline artifact reconciliation, not correctness evaluation",
+  "runId": "da0ff88c-dfef-427f-8b80-e2f176b72501",
+  "previousRunId": "8728e5c0-0eaf-4eac-a182-e86865d97f9a",
+  "inputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+  "checks": [
+    {
+      "name": "source_hash_and_all50_original_ordered_fields",
+      "status": "pass"
+    },
+    {
+      "name": "unique_ids_scope_role_and_run_ids",
+      "status": "pass"
+    },
+    {
+      "name": "utc_times_sequential_rows_and_duration_reconciliation",
+      "status": "pass"
+    },
+    {
+      "name": "manifest_terminal_and_cost_snapshots",
+      "status": "pass"
+    },
+    {
+      "name": "terminal_response_error_and_causal_chain_shapes",
+      "status": "pass"
+    },
+    {
+      "name": "fixed_safe_refusal_and_zero_proof",
+      "status": "pass"
+    },
+    {
+      "name": "proof_references_and_recorded_entry_metadata_not_fresh_grounding",
+      "status": "pass"
+    },
+    {
+      "name": "research_counters_and_published_budgets",
+      "status": "pass"
+    },
+    {
+      "name": "current_and_previous_expected_distributions",
+      "status": "pass"
+    },
+    {
+      "name": "causes_derived_from_causal_chains_not_top_level_reason",
+      "status": "pass"
+    },
+    {
+      "name": "session_model_usage_cost_nullability_and_totals",
+      "status": "pass"
+    },
+    {
+      "name": "requested_alias_and_resolved_snapshot_model_family",
+      "status": "pass"
+    },
+    {
+      "name": "context_accounting_matches_jsonl_manifest",
+      "status": "pass"
+    },
+    {
+      "name": "recorded_corpus_fingerprint_counts_source_gaps_and_binary_evidence",
+      "status": "pass"
+    },
+    {
+      "name": "all18_prior_hashes_match_before_after_and_current",
+      "status": "pass"
+    },
+    {
+      "name": "credential_pattern_property_scan_no_values_emitted",
+      "status": "pass"
+    },
+    {
+      "name": "csv_full_representation_50_rows_and_every_json_column",
+      "status": "pass"
+    },
+    {
+      "name": "formula_escaping_and_excel_oversize_accounting",
+      "status": "pass"
+    },
+    {
+      "name": "all50_comparison_ordinals_and_transitions",
+      "status": "pass"
+    },
+    {
+      "name": "original_hashes_unchanged_after_input_reconciliation",
+      "status": "pass"
+    },
+    {
+      "name": "original_hashes_unchanged_after_derivative_export",
+      "status": "pass"
+    }
+  ],
+  "pendingChecks": [
+    {
+      "name": "semantic_correctness_and_over_refusal",
+      "status": "pending",
+      "reason": "Not performed; no semantic oracle authorized."
+    },
+    {
+      "name": "fresh_database_and_source_document_verification",
+      "status": "pending",
+      "reason": "Not authorized; recorded evidence only."
+    },
+    {
+      "name": "pii_clearance",
+      "status": "pending",
+      "reason": "Not established by a credential-pattern scan."
+    },
+    {
+      "name": "invoice_reconciliation",
+      "status": "pending",
+      "reason": "Only observed estimates are available."
+    }
+  ],
+  "current": {
+    "scenarioCount": 50,
+    "persisted": 50,
+    "returned": 48,
+    "failed": 2,
+    "cancelled": 0,
+    "unstarted": 0,
+    "researchStatuses": {
+      "Complete": 0,
+      "Partial": 23,
+      "Refused": 25,
+      "Empty": 0,
+      "InsufficientEvidence": 0
+    },
+    "statusStopReasons": [
+      {
+        "status": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "count": 12
+      },
+      {
+        "status": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "count": 11
+      },
+      {
+        "status": "Refused",
+        "stopReason": "SafeRefusal",
+        "count": 25
+      }
+    ],
+    "refusedOrdinals": [
+      1,
+      2,
+      3,
+      5,
+      6,
+      11,
+      17,
+      24,
+      26,
+      28,
+      31,
+      32,
+      37,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50
+    ],
+    "causeOrdinals": {
+      "UnknownContextCitation": [
+        12,
+        14
+      ]
+    },
+    "stageCounts": {
+      "Synthesis": 2
+    },
+    "messageProjectionCount": 75
+  },
+  "previous": {
+    "scenarioCount": 50,
+    "persisted": 50,
+    "returned": 20,
+    "failed": 30,
+    "cancelled": 0,
+    "unstarted": 0,
+    "researchStatuses": {
+      "Complete": 5,
+      "Partial": 15,
+      "Refused": 0,
+      "Empty": 0,
+      "InsufficientEvidence": 0
+    },
+    "statusStopReasons": [
+      {
+        "status": "Complete",
+        "stopReason": null,
+        "count": 5
+      },
+      {
+        "status": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "count": 9
+      },
+      {
+        "status": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "count": 6
+      }
+    ],
+    "refusedOrdinals": [],
+    "causeOrdinals": {
+      "FormatException": [
+        3
+      ],
+      "InvalidResearchPhase": [
+        7,
+        11,
+        23,
+        24,
+        41,
+        49
+      ],
+      "MissingResearchPhase": [
+        40,
+        46,
+        47
+      ],
+      "UnknownOrInvalidEntryIds": [
+        4,
+        5,
+        6,
+        8,
+        12,
+        13,
+        14,
+        15,
+        16,
+        20,
+        26,
+        28,
+        31,
+        32,
+        34,
+        36,
+        37,
+        43,
+        44,
+        45
+      ]
+    },
+    "stageCounts": {
+      "ResultParsing": 1,
+      "Revalidation": 29
+    },
+    "messageProjectionCount": 108
+  },
+  "observedUsageAndCost": {
+    "sessions": 50,
+    "distinctSessionIds": 50,
+    "currency": "USD",
+    "requestedModel": "gpt-4o-mini",
+    "observedModelIds": [
+      "gpt-4o-mini-2024-07-18"
+    ],
+    "observedModelSessionCounts": {
+      "gpt-4o-mini-2024-07-18": 50
+    },
+    "callCount": 75,
+    "inFlightCallCount": 0,
+    "unknownUsageCallCount": 0,
+    "unknownCostCallCount": 0,
+    "inputTokenCount": 257816,
+    "outputTokenCount": 9246,
+    "totalTokenCount": 267062,
+    "cachedInputTokenCount": 0,
+    "reasoningTokenCount": 0,
+    "knownEstimatedCost": "0.04422000",
+    "estimatedTotalCost": "0.04422000",
+    "usageComplete": true,
+    "estimatedCostComplete": true,
+    "perSessionCallCountDistribution": {
+      "1": 25,
+      "2": 25
+    },
+    "note": "Observed tariff estimates, not an invoice; native unknowns remain null. Cache/reasoning are subsets, not extra tokens."
+  },
+  "failedOrdinalsAndDiagnostics": [
+    {
+      "ordinal": 12,
+      "error": {
+        "type": "Agent",
+        "code": "SynthesisUnavailable"
+      },
+      "rootCause": {
+        "category": "Synthesis",
+        "exceptionType": "TimelineFactInformationSynthesisException",
+        "httpStatus": null,
+        "providerCode": null,
+        "reason": "UnknownContextCitation"
+      },
+      "agentFailure": {
+        "category": "Synthesis",
+        "exceptionType": "TimelineFactInformationSynthesisException",
+        "httpStatus": null,
+        "providerCode": null,
+        "reason": "UnknownContextCitation",
+        "executionStage": "Synthesis",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownContextCitation"
+          }
+        ]
+      }
+    },
+    {
+      "ordinal": 14,
+      "error": {
+        "type": "Agent",
+        "code": "SynthesisUnavailable"
+      },
+      "rootCause": {
+        "category": "Synthesis",
+        "exceptionType": "TimelineFactInformationSynthesisException",
+        "httpStatus": null,
+        "providerCode": null,
+        "reason": "UnknownContextCitation"
+      },
+      "agentFailure": {
+        "category": "Synthesis",
+        "exceptionType": "TimelineFactInformationSynthesisException",
+        "httpStatus": null,
+        "providerCode": null,
+        "reason": "UnknownContextCitation",
+        "executionStage": "Synthesis",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownContextCitation"
+          }
+        ]
+      }
+    }
+  ],
+  "recordedCorpusEvidence": {
+    "freshDatabaseVerification": false,
+    "scope": {
+      "actorId": "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+      "timelineId": "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+      "projectId": "8d3559af-77d8-476d-b763-5f085889861d",
+      "role": "Admin",
+      "coverage": {
+        "entries": 8,
+        "entriesWithoutCompletedExtraction": 0,
+        "pendingReviews": 0,
+        "acceptedValidFacts": 40,
+        "truncated": false,
+        "warnings": [
+          "Timeline-wide latest-valid extracted or accepted-review facts only; lexical/entity matching is not exhaustive or contradiction detection.",
+          "Matching uses PostgreSQL simple whole lexemes from any of the first 12 distinct searchable terms (at least two characters each), ranked by relevance; no stemming, typo tolerance, synonyms or accent folding.",
+          "Grounded direct extraction is effective immediately. Pending reviews are excluded. Fact search is facts-only; separately verified source-entry context is not fact proof."
+        ]
+      }
+    },
+    "fingerprint": {
+      "recipe": "timeline-corpus-v1",
+      "algorithm": "SHA-256 of UTF8 PostgreSQL jsonb document text; arrays ID-sorted",
+      "baseline": "5b9d9545036c2c502f95a20cafd9a93c7592d0dc58f399567f6e7f954f727502",
+      "postrun": "5b9d9545036c2c502f95a20cafd9a93c7592d0dc58f399567f6e7f954f727502",
+      "matches": true,
+      "excludedProjectTimelineEntryFields": [
+        "CreatedAtUtc",
+        "UpdatedAtUtc"
+      ],
+      "excludedFactFields": [
+        "CreatedAtUtc",
+        "UpdatedAtUtc",
+        "InvalidatedAtUtc",
+        "Embedding",
+        "EmbeddingModel",
+        "EmbeddedAtUtc"
+      ],
+      "jobQueueRecordsExcluded": true,
+      "readOnly": "on",
+      "isolation": "repeatable read"
+    },
+    "baselineRowCounts": {
+      "projects": 1,
+      "timelines": 1,
+      "entries": 8,
+      "facts": 48,
+      "validFacts": 40
+    },
+    "postrunRowCounts": {
+      "projects": 1,
+      "timelines": 1,
+      "entries": 8,
+      "facts": 48,
+      "validFacts": 40
+    },
+    "entryMetadata": [
+      {
+        "entryNumber": 1,
+        "status": "Draft",
+        "databaseCharacters": 1144,
+        "sourceCharacters": 5693,
+        "sourceContentMatches": false,
+        "eligibleFacts": 5
+      },
+      {
+        "entryNumber": 2,
+        "status": "Draft",
+        "databaseCharacters": 323,
+        "sourceCharacters": 323,
+        "sourceContentMatches": true,
+        "eligibleFacts": 4
+      },
+      {
+        "entryNumber": 3,
+        "status": "Draft",
+        "databaseCharacters": 428,
+        "sourceCharacters": 433,
+        "sourceContentMatches": false,
+        "eligibleFacts": 8
+      },
+      {
+        "entryNumber": 4,
+        "status": "Draft",
+        "databaseCharacters": 381,
+        "sourceCharacters": 381,
+        "sourceContentMatches": true,
+        "eligibleFacts": 5
+      },
+      {
+        "entryNumber": 5,
+        "status": "Draft",
+        "databaseCharacters": 621,
+        "sourceCharacters": 621,
+        "sourceContentMatches": true,
+        "eligibleFacts": 11
+      },
+      {
+        "entryNumber": 6,
+        "status": "Draft",
+        "databaseCharacters": 137,
+        "sourceCharacters": 0,
+        "sourceContentMatches": false,
+        "eligibleFacts": 3
+      },
+      {
+        "entryNumber": 7,
+        "status": "Draft",
+        "databaseCharacters": 239,
+        "sourceCharacters": 239,
+        "sourceContentMatches": true,
+        "eligibleFacts": 4
+      },
+      {
+        "entryNumber": 8,
+        "status": "Draft",
+        "databaseCharacters": 1585,
+        "sourceCharacters": 1593,
+        "sourceContentMatches": true,
+        "eligibleFacts": 0
+      }
+    ],
+    "sourceGapEntryNumbers": [
+      1,
+      3,
+      6
+    ],
+    "zeroEligibleFactEntryNumbers": [
+      8
+    ],
+    "pendingEmbeddingJobs": 48,
+    "sourceComparison": "MD5 equality after CRLF-to-LF normalization and trimming surrounding ASCII whitespace; source length uses UTF-8-sig decoded universal-newline text, database length uses char_length(Content).",
+    "caveats": [
+      "Current specification files 1, 3 and 6 differ from persisted entry contents; file 6 is empty.",
+      "Entry 8 has zero eligible facts although its latest extraction is Completed.",
+      "Five specification contents match after documented normalization; source files were not treated as authority to change the selected persisted corpus.",
+      "48 pending embedding jobs are excluded from the integrity fingerprint; production Search uses lexical fact matching.",
+      "No alignment, import, extraction, activation, source edits, agent fixes, provider changes or correctness scoring performed.",
+      "Final-state digest equality does not detect temporary mutations later reverted."
+    ],
+    "recordedBinarySha256Before": "3b852be1b3121af7f6b272cfe4742012408518b9987082723cd9b6ec80ccbf20",
+    "recordedBinarySha256After": "3b852be1b3121af7f6b272cfe4742012408518b9987082723cd9b6ec80ccbf20"
+  },
+  "recordedExecutionTimes": {
+    "startedUtc": "2026-11-01T20:11:23.4435647+00:00",
+    "endedUtc": "2026-11-01T20:13:40.7804196+00:00",
+    "launcherStartedUtc": "2026-11-01T20:11:22.173862+00:00",
+    "launcherEndedUtc": "2026-11-01T20:13:40.815210+00:00",
+    "launcherElapsedSeconds": 138.64104100002442,
+    "sumRowElapsedMilliseconds": 136651.8112
+  },
+  "privacyScan": {
+    "status": "pass",
+    "filesScanned": 21,
+    "findingCount": 0,
+    "patternRules": [
+      "provider_key",
+      "bearer",
+      "private_key",
+      "credential_uri",
+      "credential_assignment"
+    ],
+    "propertyScan": true,
+    "documentedMetadataNarratives": [
+      {
+        "file": "search-facts-evaluation-20261101T153358Z-eef20fd8.corpus-context.json",
+        "jsonPointer": "/authorization",
+        "matchKind": "documented_evaluation_authorization_narrative",
+        "valueType": "str"
+      }
+    ],
+    "limitations": "Heuristic credential scan only; no values emitted. Not PII clearance or proof of secret absence. The one documented root authorization narrative is property-only exempt; all credential-value patterns still apply."
+  },
+  "derivativePrivacyScan": {
+    "status": "pass",
+    "filesScanned": 2,
+    "findingCount": 0,
+    "patternRules": [
+      "provider_key",
+      "bearer",
+      "private_key",
+      "credential_uri",
+      "credential_assignment"
+    ],
+    "propertyScan": true,
+    "documentedMetadataNarratives": [],
+    "limitations": "Heuristic credential scan only; no values emitted. Not PII clearance or proof of secret absence. The one documented root authorization narrative is property-only exempt; all credential-value patterns still apply."
+  },
+  "csv": {
+    "rows": 50,
+    "columns": [
+      "question",
+      "category",
+      "type",
+      "ordinal",
+      "outcome",
+      "content",
+      "research_status",
+      "stop_reason",
+      "error_type",
+      "error_code",
+      "root_cause",
+      "execution_stage",
+      "fact_count",
+      "citation_count",
+      "source_context_count",
+      "context_citation_count",
+      "message_count",
+      "call_count",
+      "input_tokens",
+      "output_tokens",
+      "total_tokens",
+      "currency",
+      "estimated_cost",
+      "started_utc",
+      "ended_utc",
+      "elapsed_milliseconds",
+      "run_id",
+      "scenario_id",
+      "input_sha256",
+      "original_fields_json",
+      "scenario_json",
+      "response_json",
+      "facts_json",
+      "citations_json",
+      "source_contexts_json",
+      "context_citations_json",
+      "research_json",
+      "error_json",
+      "causal_chain_json",
+      "agent_failure_json",
+      "messages_json",
+      "cost_json",
+      "scope_json",
+      "raw_record_json"
+    ],
+    "encoding": "UTF-8 with BOM",
+    "jsonColumns": [
+      "original_fields_json",
+      "scenario_json",
+      "response_json",
+      "facts_json",
+      "citations_json",
+      "source_contexts_json",
+      "context_citations_json",
+      "research_json",
+      "error_json",
+      "causal_chain_json",
+      "agent_failure_json",
+      "messages_json",
+      "cost_json",
+      "scope_json",
+      "raw_record_json"
+    ],
+    "formulaEscapedCellCount": 0,
+    "formulaEscapedCells": [],
+    "excelOversizedCellCount": 0,
+    "excelOversizedCells": [],
+    "truncatedCells": 0,
+    "rawJsonlAuthoritative": true,
+    "nullScalarDisplay": "blank; native nulls retained in full JSON columns"
+  },
+  "hashes": {
+    "originalsBefore": {
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.csv": "A50E26B0096767E2F78929F2689B8D7B0970E891ED65ABC6C0504B359D3298FF",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl": "C5C5A50AF0063C8DA0BBD9B4135DDD076DDDE16EA930DFC22A0FD5BBE5B551A3",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl.manifest.json": "6C9526D23F491CFFE47A130D0345A4E508CC67D0BB61409AD096A5E31DA5AAE9",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.provenance.json": "EC0BD81BB814EF5CE5A054C83C31C068D465A4E707BCA35187E91EED39C10C3E",
+      "search-facts-evaluation-20261101T131839Z-facf1f8b.corpus-context.json": "F08CA0C3D2BDC76E71BC946595653991F46BC149CE96780606AFFD0905FD1F49",
+      "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl": "F11FFB68306C1D183BBF26E769CACE920169F44C399A1AD7055AB13EB255CEC1",
+      "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl.manifest.json": "C5A92B13FFF2C4AB6446C5B483A462A33BC5A90FA335177AD2A112B84162C0A5",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.corpus-context.json": "15E54FA42EB4F954B97FC4DC2569D95C1325BC37A0DB44A0B9AA5C51CB26F2B6",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl": "A77BCE9398935706130A6B3B7A31065E509C68101C789C66B08A7C3DB5E21A77",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl.manifest.json": "C2F6747C83997EA7B668B392230D82FE473AAE37B0E20B1ADF1B679CC3E45277",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.results.csv": "74A1838DBF1597437D358FE21C714A1676F3575E9EF71B034743A391A45807A1",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.validation.json": "DE6A7D2DFA6AB86798E9430FBD73D3CD49729AEF639F4AE21723AC3D71F70B73",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.corpus-context.json": "247FD629A09816F92D9A59C9F60708FAD60583F30FBD0CD4D0B4A28794EB42D0",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.jsonl": "0790CB1B43D9B3A224943227351228865BF58DE9A4942D33C14728BF299A30D5",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.jsonl.manifest.json": "8922CB4B67D0B29C0A7E8A2688FF0421D02EABD664DE04406503B71E146475A1",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.results.csv": "0AF6504425B88CE5690FF64BDCC2DF955BDAD29C52E6BC0300D12E9B073C5C1E",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.validation.json": "F835527ED9847061260D1BAFE6709B32FDC50421E0AFA16F242B94A5B5E9C091",
+      "search-facts-evaluation-server-controlled-20261101T201122Z-d66bbc7e.corpus-context.json": "635F29AED047F3656C2590ADC992BFBAA7A72C6523034F1C00FA4556B2062CFC",
+      "search-facts-evaluation-server-controlled-20261101T201122Z-d66bbc7e.jsonl": "456819EF6F8BA0AA4BBBCF3ACF0A2171C507EF70BC4D7805FCC7DD7B26EBB9D2",
+      "search-facts-evaluation-server-controlled-20261101T201122Z-d66bbc7e.jsonl.manifest.json": "38EEA77687E61B49AC95AF7026312F158BE0BA68FFA9425C96435691390B8A51",
+      "search_facts_evaluation_scenarios.csv": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C"
+    },
+    "originalsAfter": {
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.csv": "A50E26B0096767E2F78929F2689B8D7B0970E891ED65ABC6C0504B359D3298FF",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl": "C5C5A50AF0063C8DA0BBD9B4135DDD076DDDE16EA930DFC22A0FD5BBE5B551A3",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl.manifest.json": "6C9526D23F491CFFE47A130D0345A4E508CC67D0BB61409AD096A5E31DA5AAE9",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.provenance.json": "EC0BD81BB814EF5CE5A054C83C31C068D465A4E707BCA35187E91EED39C10C3E",
+      "search-facts-evaluation-20261101T131839Z-facf1f8b.corpus-context.json": "F08CA0C3D2BDC76E71BC946595653991F46BC149CE96780606AFFD0905FD1F49",
+      "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl": "F11FFB68306C1D183BBF26E769CACE920169F44C399A1AD7055AB13EB255CEC1",
+      "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl.manifest.json": "C5A92B13FFF2C4AB6446C5B483A462A33BC5A90FA335177AD2A112B84162C0A5",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.corpus-context.json": "15E54FA42EB4F954B97FC4DC2569D95C1325BC37A0DB44A0B9AA5C51CB26F2B6",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl": "A77BCE9398935706130A6B3B7A31065E509C68101C789C66B08A7C3DB5E21A77",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl.manifest.json": "C2F6747C83997EA7B668B392230D82FE473AAE37B0E20B1ADF1B679CC3E45277",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.results.csv": "74A1838DBF1597437D358FE21C714A1676F3575E9EF71B034743A391A45807A1",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.validation.json": "DE6A7D2DFA6AB86798E9430FBD73D3CD49729AEF639F4AE21723AC3D71F70B73",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.corpus-context.json": "247FD629A09816F92D9A59C9F60708FAD60583F30FBD0CD4D0B4A28794EB42D0",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.jsonl": "0790CB1B43D9B3A224943227351228865BF58DE9A4942D33C14728BF299A30D5",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.jsonl.manifest.json": "8922CB4B67D0B29C0A7E8A2688FF0421D02EABD664DE04406503B71E146475A1",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.results.csv": "0AF6504425B88CE5690FF64BDCC2DF955BDAD29C52E6BC0300D12E9B073C5C1E",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.validation.json": "F835527ED9847061260D1BAFE6709B32FDC50421E0AFA16F242B94A5B5E9C091",
+      "search-facts-evaluation-server-controlled-20261101T201122Z-d66bbc7e.corpus-context.json": "635F29AED047F3656C2590ADC992BFBAA7A72C6523034F1C00FA4556B2062CFC",
+      "search-facts-evaluation-server-controlled-20261101T201122Z-d66bbc7e.jsonl": "456819EF6F8BA0AA4BBBCF3ACF0A2171C507EF70BC4D7805FCC7DD7B26EBB9D2",
+      "search-facts-evaluation-server-controlled-20261101T201122Z-d66bbc7e.jsonl.manifest.json": "38EEA77687E61B49AC95AF7026312F158BE0BA68FFA9425C96435691390B8A51",
+      "search_facts_evaluation_scenarios.csv": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C"
+    },
+    "prior18RecordedBefore": {
+      "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl": "f11ffb68306c1d183bbf26e769cace920169f44c399a1ad7055ab13eb255cec1",
+      "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl.manifest.json": "c5a92b13fff2c4ab6446c5b483a462a33bc5a90fa335177ad2a112b84162c0a5",
+      "search-facts-evaluation-20261101T131839Z-facf1f8b.corpus-context.json": "f08ca0c3d2bdc76e71bc946595653991f46bc149ce96780606affd0905fd1f49",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl": "a77bce9398935706130a6b3b7a31065e509c68101c789c66b08a7c3db5e21a77",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl.manifest.json": "c2f6747c83997ea7b668b392230d82fe473aae37b0e20b1adf1b679cc3e45277",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.corpus-context.json": "15e54fa42eb4f954b97fc4dc2569d95c1325bc37a0db44a0b9aa5c51cb26f2b6",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.results.csv": "74a1838dbf1597437d358fe21c714a1676f3575e9ef71b034743a391a45807a1",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.validation.json": "de6a7d2dfa6ab86798e9430fbd73d3cd49729aef639f4ae21723ac3d71f70b73",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.csv": "a50e26b0096767e2f78929f2689b8d7b0970e891ed65abc6c0504b359d3298ff",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl": "c5c5a50af0063c8da0bbd9b4135ddd076ddde16ea930dfc22a0fd5bbe5b551a3",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl.manifest.json": "6c9526d23f491cffe47a130d0345a4e508cc67d0bb61409ad096a5e31da5aae9",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.provenance.json": "ec0bd81bb814ef5ce5a054c83c31c068d465a4e707bca35187e91eed39c10c3e",
+      "search_facts_evaluation_scenarios.csv": "25bec02395d327d76f8b212bf3edf69c3e00dc59ffa45146a619fb5265c2dd0c",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.corpus-context.json": "247fd629a09816f92d9a59c9f60708fad60583f30fbd0cd4d0b4a28794eb42d0",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.jsonl": "0790cb1b43d9b3a224943227351228865bf58de9a4942d33c14728bf299a30d5",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.jsonl.manifest.json": "8922cb4b67d0b29c0a7e8a2688ff0421d02eabd664de04406503b71e146475a1",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.results.csv": "0af6504425b88ce5690ff64bdcc2df955bdad29c52e6bc0300d12e9b073c5c1e",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.validation.json": "f835527ed9847061260d1bafe6709b32fdc50421e0afa16f242b94a5b5e9c091"
+    },
+    "prior18RecordedAfter": {
+      "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl": "f11ffb68306c1d183bbf26e769cace920169f44c399a1ad7055ab13eb255cec1",
+      "search-facts-evaluation-20261101T131839Z-facf1f8b.jsonl.manifest.json": "c5a92b13fff2c4ab6446c5b483a462a33bc5a90fa335177ad2a112b84162c0a5",
+      "search-facts-evaluation-20261101T131839Z-facf1f8b.corpus-context.json": "f08ca0c3d2bdc76e71bc946595653991f46bc149ce96780606affd0905fd1f49",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl": "a77bce9398935706130a6b3b7a31065e509c68101c789c66b08a7c3db5e21a77",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.jsonl.manifest.json": "c2f6747c83997ea7b668b392230d82fe473aae37b0e20b1adf1b679cc3e45277",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.corpus-context.json": "15e54fa42eb4f954b97fc4dc2569d95c1325bc37a0db44a0b9aa5c51cb26f2b6",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.results.csv": "74a1838dbf1597437d358fe21c714a1676f3575e9ef71b034743a391a45807a1",
+      "search-facts-evaluation-20261101T153358Z-eef20fd8.validation.json": "de6a7d2dfa6ab86798e9430fbd73d3cd49729aef639f4ae21723ac3d71f70b73",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.csv": "a50e26b0096767e2f78929f2689b8d7b0970e891ed65abc6c0504b359d3298ff",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl": "c5c5a50af0063c8da0bbd9b4135ddd076ddde16ea930dfc22a0fd5bbe5b551a3",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.jsonl.manifest.json": "6c9526d23f491cffe47a130d0345a4e508cc67d0bb61409ad096a5e31da5aae9",
+      "search-facts-diagnostic-20261101T135456Z-1508bb9e.provenance.json": "ec0bd81bb814ef5ce5a054c83c31c068d465a4e707bca35187e91eed39c10c3e",
+      "search_facts_evaluation_scenarios.csv": "25bec02395d327d76f8b212bf3edf69c3e00dc59ffa45146a619fb5265c2dd0c",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.corpus-context.json": "247fd629a09816f92d9a59c9f60708fad60583f30fbd0cd4d0b4a28794eb42d0",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.jsonl": "0790cb1b43d9b3a224943227351228865bf58de9a4942d33c14728bf299a30d5",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.jsonl.manifest.json": "8922cb4b67d0b29c0a7e8a2688ff0421d02eabd664de04406503b71e146475a1",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.results.csv": "0af6504425b88ce5690ff64bdcc2df955bdad29c52e6bc0300d12e9b073c5c1e",
+      "search-facts-evaluation-causes-20261101T171828Z-4ecbe1e6.validation.json": "f835527ed9847061260d1bafe6709b32fdc50421e0afa16f242b94a5b5e9c091"
+    },
+    "derivatives": {
+      "search-facts-evaluation-server-controlled-20261101T201122Z-d66bbc7e.results.csv": "8A2A4AD038B468B84FC5A4EECBF1DCF69CE982C5DD01747A2CF2C5F4D603A40C",
+      "search-facts-evaluation-server-controlled-20261101T201122Z-d66bbc7e.comparison.json": "C3A327EE14650EFDE6FACB92B220162D23AD9FB09FB6B11014997F10A1A334EE"
+    }
+  },
+  "outputPaths": [
+    "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-server-controlled-20261101T201122Z-d66bbc7e.results.csv",
+    "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-server-controlled-20261101T201122Z-d66bbc7e.validation.json",
+    "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-server-controlled-20261101T201122Z-d66bbc7e.comparison.json"
+  ],
+  "limitations": [
+    "No semantic correctness scoring, oracle, or refusal-classification judgment; returned does not mean correct.",
+    "Corpus, authorization preflight, source gaps, binary stability, and execution-policy evidence are recorded T3 assertions, not fresh DB/source-document/binary verification.",
+    "Corpus fingerprint exclusions and job-queue exclusions remain as documented in the original context artifact.",
+    "Credential scan is heuristic, not PII clearance or a guarantee of secret absence.",
+    "Only returned message projections are available; no wire traces, hidden reasoning, or uncaptured provider responses are inferred.",
+    "Observed tariff estimates are not invoices; unknown usage and cost stay null, not zero or fabricated totals.",
+    "CSV text cells with dangerous leading characters receive one apostrophe; undo only the recorded coordinates. Original source and JSONL remain authoritative.",
+    "Excel cells above 32767 UTF-16 code units are reported, never truncated; use a CSV/JSON parser instead of Excel for full evidence.",
+    "CreateNew is per file, not a three-file transaction. Races or I/O interruptions may leave reserved/incomplete derivatives; never automatically delete or overwrite them.",
+    "Validation report cannot contain its own hash. Its complete expected contents and all three derivatives are reconciled by --verify-only."
+  ]
+}

@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../ProjectTimeline.BusinessLogic/ProjectTimeline.BusinessLogic.csproj" />
+  </ItemGroup>
+</Project>

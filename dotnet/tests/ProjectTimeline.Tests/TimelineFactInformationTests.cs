@@ -174,9 +174,11 @@ public sealed class TimelineFactInformationTests
         const string question = "  What does ALICE own?  ";
         var result = await new SearchEntriesAgent(f.Db, new(f.Project.Id, f.Timeline.Id), f.Actor.Id, false, () => fake).RunAsync(question);
         Assert.Equal(question, JsonDocument.Parse(fake.Message!).RootElement.GetProperty("question").GetString());
-        Assert.DoesNotContain("Bob owns testing", fake.Message);
+        var input = JsonDocument.Parse(fake.Message!).RootElement;
+        Assert.DoesNotContain("Bob owns testing", input.GetProperty("matches").GetRawText());
+        Assert.Contains("Bob owns testing", input.GetProperty("sources").GetRawText());
         Assert.Contains("untrusted DATA", fake.Instructions);
-        Assert.Equal(new[] { "fetch_source_entry", "search_facts_batch" }, fake.Tools.Select(x => x.Name).Order());
+        Assert.Empty(fake.Tools);
         Assert.False(JsonDocument.Parse(fake.Message!).RootElement.TryGetProperty("facts", out _));
         var citation = Assert.Single(result.Citations);
         Assert.Equal(fact.Id, citation.FactId); Assert.Equal(f.Entry.Id, citation.EntryId);
@@ -194,6 +196,11 @@ public sealed class TimelineFactInformationTests
     [InlineData("malformed")]
     [InlineData("blank")]
     [InlineData("oversized")]
+    [InlineData("missing-facts")]
+    [InlineData("missing-contexts")]
+    [InlineData("too-many-facts")]
+    [InlineData("too-many-contexts")]
+    [InlineData("duplicate-contexts")]
     public async Task Malformed_or_unsupported_citations_are_rejected(string kind)
     {
         await using var f = await TimelineFactReviewFixture.CreateAsync();
@@ -206,8 +213,75 @@ public sealed class TimelineFactInformationTests
         if (kind == "oversized") fake.Result.Content = new string('a', 12001);
         if (kind == "null") fake.Json = "null";
         if (kind == "malformed") fake.Json = "{\"CitedFactIds\":[\"not-an-id\"]}";
-        await Assert.ThrowsAsync<TimelineFactInformationSynthesisException>(() => new SearchEntriesAgent(f.Db,
+        if (kind == "missing-facts") fake.Result.CitedFactIds = null!;
+        if (kind == "missing-contexts") fake.Result.CitedContextEvidenceIds = null!;
+        if (kind == "too-many-facts") fake.Result.CitedFactIds = Enumerable.Repeat(fact.Id, 41).ToList();
+        if (kind == "too-many-contexts") fake.Result.CitedContextEvidenceIds = Enumerable.Repeat(Guid.NewGuid(), 41).ToList();
+        if (kind == "duplicate-contexts") fake.Result.CitedContextEvidenceIds = Enumerable.Repeat(Guid.NewGuid(), 2).ToList();
+        var error = await Assert.ThrowsAsync<TimelineFactInformationSynthesisException>(() => new SearchEntriesAgent(f.Db,
             new(f.Project.Id, f.Timeline.Id), f.Actor.Id, false, () => fake).RunAsync("Alice"));
+        TimelineFactSynthesisFailureReason? reason = kind switch
+        {
+            "unsupported" => TimelineFactSynthesisFailureReason.UnknownFactCitation,
+            "empty" => TimelineFactSynthesisFailureReason.MissingCitations,
+            "duplicate" => TimelineFactSynthesisFailureReason.DuplicateFactCitations,
+            "blank" => TimelineFactSynthesisFailureReason.MissingContent,
+            "oversized" => TimelineFactSynthesisFailureReason.ContentTooLong,
+            "missing-facts" => TimelineFactSynthesisFailureReason.MissingFactCitations,
+            "missing-contexts" => TimelineFactSynthesisFailureReason.MissingContextCitations,
+            "too-many-facts" => TimelineFactSynthesisFailureReason.TooManyFactCitations,
+            "too-many-contexts" => TimelineFactSynthesisFailureReason.TooManyContextCitations,
+            "duplicate-contexts" => TimelineFactSynthesisFailureReason.DuplicateContextCitations,
+            _ => null // The SDK rejects malformed/null JSON during lazy Result access, before BuildResponse.
+        };
+        Assert.Equal(reason, error.Reason);
+        Assert.Equal(reason is null ? TimelineFactExecutionStage.ResultParsing : TimelineFactExecutionStage.Synthesis,
+            TimelineFactFailureContext.Stage(error));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Search_translation_preserves_original_exception_identity(bool initialization)
+    {
+        await using var f = await TimelineFactReviewFixture.CreateAsync();
+        await f.AcceptAsync("Alice owns delivery.", "alice");
+        var original = new InvalidOperationException("PRIVATE_ORIGINAL_CAUSE");
+        var fake = new InformationFakeAgent { Script = () => throw original };
+        var error = await Assert.ThrowsAsync<TimelineFactInformationSynthesisException>(() => new SearchEntriesAgent(f.Db,
+            new(f.Project.Id, f.Timeline.Id), f.Actor.Id, false, () => initialization ? throw original : fake).RunAsync("Alice"));
+        Assert.Same(original, error.InnerException);
+        Assert.Equal("Fact information synthesis unavailable or invalid.", error.Message);
+    }
+
+    [Theory]
+    [InlineData("AccessDenied", typeof(UnauthorizedAccessException))]
+    [InlineData("ScopeUnavailable", typeof(KeyNotFoundException))]
+    [InlineData("EvidenceChanged", typeof(TimelineFactConflictException))]
+    [InlineData("cancel", typeof(TimelineFactInformationTimeoutException))]
+    public async Task Normalized_domain_and_timeout_errors_keep_the_identical_inner_cause(string code, Type publicType)
+    {
+        await using var f = await TimelineFactReviewFixture.CreateAsync();
+        await f.AcceptAsync("Alice owns delivery.", "alice");
+        Exception original = code == "cancel" ? new OperationCanceledException("PRIVATE_CAUSE") : new TimelineFactResearchException(code);
+        var fake = new InformationFakeAgent { Script = () => throw original };
+        var error = await Record.ExceptionAsync(() => new SearchEntriesAgent(f.Db, new(f.Project.Id, f.Timeline.Id),
+            f.Actor.Id, false, () => fake).RunAsync("Alice"));
+        Assert.IsType(publicType, error);
+        Assert.Same(original, error!.InnerException);
+        Assert.Equal(TimelineFactExecutionStage.Model, TimelineFactFailureContext.Stage(error));
+    }
+
+    [Fact]
+    public async Task Already_meaningful_synthesis_failure_is_not_normalized_twice()
+    {
+        await using var f = await TimelineFactReviewFixture.CreateAsync();
+        await f.AcceptAsync("Alice owns delivery.", "alice");
+        var original = new TimelineFactInformationSynthesisException();
+        var fake = new InformationFakeAgent { Script = () => throw original };
+        var error = await Record.ExceptionAsync(() => new SearchEntriesAgent(f.Db, new(f.Project.Id, f.Timeline.Id),
+            f.Actor.Id, false, () => fake).RunAsync("Alice"));
+        Assert.Same(original, error);
     }
 
     [Fact]
@@ -527,18 +601,21 @@ internal sealed class InformationFakeAgent : ICustomAgent
     { Instructions = instructions; Tools = tools; }
     public Task<AgentResponse> RunAsync(string message) => throw new NotSupportedException();
     public Task<AgentResponse<T>> RunAsync<T>(string message) where T : class => RunAsync<T>(message, CancellationToken.None);
+    public Task<AgentResponse<T>> RunAsync<T>(string message, StructuredAgentRunOptions options, CancellationToken ct) where T : class =>
+        RunAsync<T>(message, ct);
     public async Task<AgentResponse<T>> RunAsync<T>(string message, CancellationToken ct) where T : class
     {
         Message = message;
         ct.ThrowIfCancellationRequested();
-        // Preserve legacy grounding/auth assertions, but obtain the allowlist through the real tool.
-        var query = JsonDocument.Parse(message).RootElement.GetProperty("question").GetString();
-        var batch = (JsonElement)(await Tools.OfType<AIFunction>().Single(x => x.Name == "search_facts_batch")
-            .InvokeAsync(new AIFunctionArguments { ["queries"] = new[] { query } }, ct))!;
-        var entries = batch.GetProperty("Results").EnumerateArray().SelectMany(x => x.GetProperty("Facts").EnumerateArray())
-            .Select(x => x.GetProperty("EntryId").GetGuid()).Distinct().ToArray();
-        if (entries.Length > 0) await Tools.OfType<AIFunction>().Single(x => x.Name == "fetch_source_entry")
-            .InvokeAsync(new AIFunctionArguments { ["entryIds"] = entries }, ct);
+        Assert.Empty(Tools);
+        // This deliberately lazy fake retains final BuildResponse predicate/causal tests.
+        // Actual structured admission is exercised through the offline SDK transport tests.
+        if (typeof(T) == typeof(TimelineFactInformationPlan))
+        {
+            var query = JsonDocument.Parse(message).RootElement.GetProperty("question").GetString();
+            return new AgentResponse<T>(new AgentResponse(new ChatMessage(ChatRole.Assistant, JsonSerializer.Serialize(new
+            { Decision = "Search", Queries = new[] { query }, RefusalReason = (string?)null }))), JsonSerializerOptions.Default);
+        }
         if (EmitEvent) handlers?.Invoke(this, new FunctionCallEventArgs { Function = new FunctionCall { ID = "fake", Name = "fake", Executed = true } });
         if (Script is not null) await Script();
         ct.ThrowIfCancellationRequested();

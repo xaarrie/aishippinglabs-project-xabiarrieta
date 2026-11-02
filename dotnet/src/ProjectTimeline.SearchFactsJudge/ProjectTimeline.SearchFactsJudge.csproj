@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ProjectTimeline.BusinessLogic\ProjectTimeline.BusinessLogic.csproj" />
+    <ProjectReference Include="..\ProjectTimeline.EvaluationLabeler\ProjectTimeline.EvaluationLabeler.csproj" />
+    <!-- Share the labeler's internal reversible CSV codec without opening a writable LabelStore. -->
+    <Compile Include="..\ProjectTimeline.EvaluationLabeler\Csv.cs" Link="LabelerCsv.cs" />
+    <None Update="Prompts\SearchResponseJudge.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

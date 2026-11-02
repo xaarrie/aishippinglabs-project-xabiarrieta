@@ -1,0 +1,4512 @@
+{
+  "schemaVersion": 1,
+  "kind": "Operational comparison only",
+  "inputSha256": "25BEC02395D327D76F8B212BF3EDF69C3E00DC59FFA45146A619FB5265C2DD0C",
+  "previousRunId": "8728e5c0-0eaf-4eac-a182-e86865d97f9a",
+  "currentRunId": "da0ff88c-dfef-427f-8b80-e2f176b72501",
+  "correctnessScore": null,
+  "semanticJudgmentsPerformed": false,
+  "limitations": [
+    "No semantic oracle, correctness score, paid judge, or answer-quality classification.",
+    "A returned, Complete, or Refused outcome is not a correctness judgment.",
+    "Complete-to-Refused and refused-by-type expose possible over-refusal for human review, not proven misclassification.",
+    "Recorded corpus evidence is not fresh database verification; sampling does not prove future protocol-error absence."
+  ],
+  "previous": {
+    "scenarioCount": 50,
+    "persisted": 50,
+    "returned": 20,
+    "failed": 30,
+    "cancelled": 0,
+    "unstarted": 0,
+    "researchStatuses": {
+      "Complete": 5,
+      "Partial": 15,
+      "Refused": 0,
+      "Empty": 0,
+      "InsufficientEvidence": 0
+    },
+    "statusStopReasons": [
+      {
+        "status": "Complete",
+        "stopReason": null,
+        "count": 5
+      },
+      {
+        "status": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "count": 9
+      },
+      {
+        "status": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "count": 6
+      }
+    ],
+    "refusedOrdinals": [],
+    "causeOrdinals": {
+      "FormatException": [
+        3
+      ],
+      "InvalidResearchPhase": [
+        7,
+        11,
+        23,
+        24,
+        41,
+        49
+      ],
+      "MissingResearchPhase": [
+        40,
+        46,
+        47
+      ],
+      "UnknownOrInvalidEntryIds": [
+        4,
+        5,
+        6,
+        8,
+        12,
+        13,
+        14,
+        15,
+        16,
+        20,
+        26,
+        28,
+        31,
+        32,
+        34,
+        36,
+        37,
+        43,
+        44,
+        45
+      ]
+    },
+    "stageCounts": {
+      "ResultParsing": 1,
+      "Revalidation": 29
+    },
+    "messageProjectionCount": 108
+  },
+  "current": {
+    "scenarioCount": 50,
+    "persisted": 50,
+    "returned": 48,
+    "failed": 2,
+    "cancelled": 0,
+    "unstarted": 0,
+    "researchStatuses": {
+      "Complete": 0,
+      "Partial": 23,
+      "Refused": 25,
+      "Empty": 0,
+      "InsufficientEvidence": 0
+    },
+    "statusStopReasons": [
+      {
+        "status": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "count": 12
+      },
+      {
+        "status": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "count": 11
+      },
+      {
+        "status": "Refused",
+        "stopReason": "SafeRefusal",
+        "count": 25
+      }
+    ],
+    "refusedOrdinals": [
+      1,
+      2,
+      3,
+      5,
+      6,
+      11,
+      17,
+      24,
+      26,
+      28,
+      31,
+      32,
+      37,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50
+    ],
+    "causeOrdinals": {
+      "UnknownContextCitation": [
+        12,
+        14
+      ]
+    },
+    "stageCounts": {
+      "Synthesis": 2
+    },
+    "messageProjectionCount": 75
+  },
+  "previousUsageAndCost": {
+    "sessions": 50,
+    "distinctSessionIds": 50,
+    "currency": "USD",
+    "requestedModel": "gpt-4o-mini",
+    "observedModelIds": [
+      "gpt-4o-mini-2024-07-18"
+    ],
+    "observedModelSessionCounts": {
+      "gpt-4o-mini-2024-07-18": 50
+    },
+    "callCount": 116,
+    "inFlightCallCount": 0,
+    "unknownUsageCallCount": 0,
+    "unknownCostCallCount": 0,
+    "inputTokenCount": 667183,
+    "outputTokenCount": 18070,
+    "totalTokenCount": 685253,
+    "cachedInputTokenCount": 204928,
+    "reasoningTokenCount": 0,
+    "knownEstimatedCost": "0.09554985",
+    "estimatedTotalCost": "0.09554985",
+    "usageComplete": true,
+    "estimatedCostComplete": true,
+    "perSessionCallCountDistribution": {
+      "1": 6,
+      "2": 22,
+      "3": 22
+    },
+    "note": "Observed tariff estimates, not an invoice; native unknowns remain null. Cache/reasoning are subsets, not extra tokens."
+  },
+  "currentUsageAndCost": {
+    "sessions": 50,
+    "distinctSessionIds": 50,
+    "currency": "USD",
+    "requestedModel": "gpt-4o-mini",
+    "observedModelIds": [
+      "gpt-4o-mini-2024-07-18"
+    ],
+    "observedModelSessionCounts": {
+      "gpt-4o-mini-2024-07-18": 50
+    },
+    "callCount": 75,
+    "inFlightCallCount": 0,
+    "unknownUsageCallCount": 0,
+    "unknownCostCallCount": 0,
+    "inputTokenCount": 257816,
+    "outputTokenCount": 9246,
+    "totalTokenCount": 267062,
+    "cachedInputTokenCount": 0,
+    "reasoningTokenCount": 0,
+    "knownEstimatedCost": "0.04422000",
+    "estimatedTotalCost": "0.04422000",
+    "usageComplete": true,
+    "estimatedCostComplete": true,
+    "perSessionCallCountDistribution": {
+      "1": 25,
+      "2": 25
+    },
+    "note": "Observed tariff estimates, not an invoice; native unknowns remain null. Cache/reasoning are subsets, not extra tokens."
+  },
+  "returnedDelta": 28,
+  "failedDelta": -28,
+  "transitions": {
+    "outcome": [
+      {
+        "from": "Failed",
+        "to": "Failed",
+        "count": 2
+      },
+      {
+        "from": "Failed",
+        "to": "Returned",
+        "count": 28
+      },
+      {
+        "from": "Returned",
+        "to": "Returned",
+        "count": 20
+      }
+    ],
+    "researchStatus": [
+      {
+        "from": "Complete",
+        "to": "Partial",
+        "count": 4
+      },
+      {
+        "from": "Complete",
+        "to": "Refused",
+        "count": 1
+      },
+      {
+        "from": "Partial",
+        "to": "Partial",
+        "count": 9
+      },
+      {
+        "from": "Partial",
+        "to": "Refused",
+        "count": 6
+      },
+      {
+        "from": null,
+        "to": "Partial",
+        "count": 10
+      },
+      {
+        "from": null,
+        "to": "Refused",
+        "count": 18
+      },
+      {
+        "from": null,
+        "to": null,
+        "count": 2
+      }
+    ],
+    "stopReason": [
+      {
+        "from": "EvidenceTruncated",
+        "to": "EvidenceTruncated",
+        "count": 3
+      },
+      {
+        "from": "EvidenceTruncated",
+        "to": "SafeRefusal",
+        "count": 4
+      },
+      {
+        "from": "EvidenceTruncated",
+        "to": "ToolOrEvidenceLimit",
+        "count": 2
+      },
+      {
+        "from": "ToolOrEvidenceLimit",
+        "to": "EvidenceTruncated",
+        "count": 1
+      },
+      {
+        "from": "ToolOrEvidenceLimit",
+        "to": "SafeRefusal",
+        "count": 2
+      },
+      {
+        "from": "ToolOrEvidenceLimit",
+        "to": "ToolOrEvidenceLimit",
+        "count": 3
+      },
+      {
+        "from": null,
+        "to": "EvidenceTruncated",
+        "count": 8
+      },
+      {
+        "from": null,
+        "to": "SafeRefusal",
+        "count": 19
+      },
+      {
+        "from": null,
+        "to": "ToolOrEvidenceLimit",
+        "count": 6
+      },
+      {
+        "from": null,
+        "to": null,
+        "count": 2
+      }
+    ],
+    "cause": [
+      {
+        "from": "FormatException",
+        "to": null,
+        "count": 1
+      },
+      {
+        "from": "InvalidResearchPhase",
+        "to": null,
+        "count": 6
+      },
+      {
+        "from": "MissingResearchPhase",
+        "to": null,
+        "count": 3
+      },
+      {
+        "from": "UnknownOrInvalidEntryIds",
+        "to": "UnknownContextCitation",
+        "count": 2
+      },
+      {
+        "from": "UnknownOrInvalidEntryIds",
+        "to": null,
+        "count": 18
+      },
+      {
+        "from": null,
+        "to": null,
+        "count": 20
+      }
+    ],
+    "executionStage": [
+      {
+        "from": "ResultParsing",
+        "to": null,
+        "count": 1
+      },
+      {
+        "from": "Revalidation",
+        "to": "Synthesis",
+        "count": 2
+      },
+      {
+        "from": "Revalidation",
+        "to": null,
+        "count": 27
+      },
+      {
+        "from": null,
+        "to": null,
+        "count": 20
+      }
+    ]
+  },
+  "oldCompleteToNewRefused": {
+    "count": 1,
+    "ordinals": [
+      50
+    ]
+  },
+  "refusedByType": {
+    "breaking": {
+      "count": 7,
+      "ordinals": [
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50
+      ]
+    },
+    "edge_case": {
+      "count": 1,
+      "ordinals": [
+        37
+      ]
+    },
+    "happy_path": {
+      "count": 8,
+      "ordinals": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        11,
+        17,
+        24
+      ]
+    },
+    "out_of_scope": {
+      "count": 5,
+      "ordinals": [
+        39,
+        40,
+        41,
+        42,
+        43
+      ]
+    },
+    "varied_phrasing": {
+      "count": 4,
+      "ordinals": [
+        26,
+        28,
+        31,
+        32
+      ]
+    }
+  },
+  "previousByType": {
+    "breaking": {
+      "scenarioCount": 7,
+      "persisted": 7,
+      "returned": 2,
+      "failed": 5,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 1,
+        "Partial": 1,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Complete",
+          "stopReason": null,
+          "count": 1
+        },
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "InvalidResearchPhase": [
+          49
+        ],
+        "MissingResearchPhase": [
+          46,
+          47
+        ],
+        "UnknownOrInvalidEntryIds": [
+          44,
+          45
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 5
+      },
+      "messageProjectionCount": 12
+    },
+    "edge_case": {
+      "scenarioCount": 6,
+      "persisted": 6,
+      "returned": 3,
+      "failed": 3,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 1,
+        "Partial": 2,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Complete",
+          "stopReason": null,
+          "count": 1
+        },
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 1
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownOrInvalidEntryIds": [
+          34,
+          36,
+          37
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 3
+      },
+      "messageProjectionCount": 15
+    },
+    "happy_path": {
+      "scenarioCount": 24,
+      "persisted": 24,
+      "returned": 9,
+      "failed": 15,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 2,
+        "Partial": 7,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Complete",
+          "stopReason": null,
+          "count": 2
+        },
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 4
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 3
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "FormatException": [
+          3
+        ],
+        "InvalidResearchPhase": [
+          7,
+          11,
+          23,
+          24
+        ],
+        "UnknownOrInvalidEntryIds": [
+          4,
+          5,
+          6,
+          8,
+          12,
+          13,
+          14,
+          15,
+          16,
+          20
+        ]
+      },
+      "stageCounts": {
+        "ResultParsing": 1,
+        "Revalidation": 14
+      },
+      "messageProjectionCount": 50
+    },
+    "out_of_scope": {
+      "scenarioCount": 5,
+      "persisted": 5,
+      "returned": 2,
+      "failed": 3,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 2,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 1
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "InvalidResearchPhase": [
+          41
+        ],
+        "MissingResearchPhase": [
+          40
+        ],
+        "UnknownOrInvalidEntryIds": [
+          43
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 3
+      },
+      "messageProjectionCount": 11
+    },
+    "varied_phrasing": {
+      "scenarioCount": 8,
+      "persisted": 8,
+      "returned": 4,
+      "failed": 4,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 1,
+        "Partial": 3,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Complete",
+          "stopReason": null,
+          "count": 1
+        },
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 2
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownOrInvalidEntryIds": [
+          26,
+          28,
+          31,
+          32
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 4
+      },
+      "messageProjectionCount": 20
+    }
+  },
+  "currentByType": {
+    "breaking": {
+      "scenarioCount": 7,
+      "persisted": 7,
+      "returned": 7,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 7,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 7
+        }
+      ],
+      "refusedOrdinals": [
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 7
+    },
+    "edge_case": {
+      "scenarioCount": 6,
+      "persisted": 6,
+      "returned": 6,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 5,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 4
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        },
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        37
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 11
+    },
+    "happy_path": {
+      "scenarioCount": 24,
+      "persisted": 24,
+      "returned": 22,
+      "failed": 2,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 14,
+        "Refused": 8,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 5
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 9
+        },
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 8
+        }
+      ],
+      "refusedOrdinals": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        11,
+        17,
+        24
+      ],
+      "causeOrdinals": {
+        "UnknownContextCitation": [
+          12,
+          14
+        ]
+      },
+      "stageCounts": {
+        "Synthesis": 2
+      },
+      "messageProjectionCount": 40
+    },
+    "out_of_scope": {
+      "scenarioCount": 5,
+      "persisted": 5,
+      "returned": 5,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 5,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 5
+        }
+      ],
+      "refusedOrdinals": [
+        39,
+        40,
+        41,
+        42,
+        43
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 5
+    },
+    "varied_phrasing": {
+      "scenarioCount": 8,
+      "persisted": 8,
+      "returned": 8,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 4,
+        "Refused": 4,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 3
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        },
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 4
+        }
+      ],
+      "refusedOrdinals": [
+        26,
+        28,
+        31,
+        32
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 12
+    }
+  },
+  "previousByCategory": {
+    "account_actions": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 0,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "MissingResearchPhase": [
+          40
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 1
+      },
+      "messageProjectionCount": 1
+    },
+    "application_roles": {
+      "scenarioCount": 4,
+      "persisted": 4,
+      "returned": 4,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 4,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Complete",
+          "stopReason": null,
+          "count": 4
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 20
+    },
+    "architecture_and_search_requirements": {
+      "scenarioCount": 2,
+      "persisted": 2,
+      "returned": 0,
+      "failed": 2,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "InvalidResearchPhase": [
+          23,
+          24
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 2
+      },
+      "messageProjectionCount": 0
+    },
+    "authentication": {
+      "scenarioCount": 2,
+      "persisted": 2,
+      "returned": 2,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 2,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 1
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 10
+    },
+    "batch_isolation": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 0,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownOrInvalidEntryIds": [
+          44
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 1
+      },
+      "messageProjectionCount": 0
+    },
+    "code_generation": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 1,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 5
+    },
+    "entry_artifact_schema": {
+      "scenarioCount": 5,
+      "persisted": 5,
+      "returned": 2,
+      "failed": 3,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 2,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 2
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownOrInvalidEntryIds": [
+          20,
+          28,
+          37
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 3
+      },
+      "messageProjectionCount": 10
+    },
+    "entry_dates": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 0,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownOrInvalidEntryIds": [
+          34
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 1
+      },
+      "messageProjectionCount": 0
+    },
+    "entry_display": {
+      "scenarioCount": 3,
+      "persisted": 3,
+      "returned": 2,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 2,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 1
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownOrInvalidEntryIds": [
+          32
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 1
+      },
+      "messageProjectionCount": 10
+    },
+    "external_product_research": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 0,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "InvalidResearchPhase": [
+          41
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 1
+      },
+      "messageProjectionCount": 0
+    },
+    "fabricated_citations": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 0,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "MissingResearchPhase": [
+          46
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 1
+      },
+      "messageProjectionCount": 1
+    },
+    "false_completeness": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 1,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Complete",
+          "stopReason": null,
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 5
+    },
+    "invented_specification_details": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 0,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "InvalidResearchPhase": [
+          49
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 1
+      },
+      "messageProjectionCount": 0
+    },
+    "live_database_access": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 1,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 5
+    },
+    "maintenance_screens": {
+      "scenarioCount": 2,
+      "persisted": 2,
+      "returned": 0,
+      "failed": 2,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownOrInvalidEntryIds": [
+          5,
+          6
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 2
+      },
+      "messageProjectionCount": 0
+    },
+    "missing_specification_content": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 0,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownOrInvalidEntryIds": [
+          36
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 1
+      },
+      "messageProjectionCount": 0
+    },
+    "navigation": {
+      "scenarioCount": 3,
+      "persisted": 3,
+      "returned": 0,
+      "failed": 3,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "FormatException": [
+          3
+        ],
+        "UnknownOrInvalidEntryIds": [
+          4,
+          31
+        ]
+      },
+      "stageCounts": {
+        "ResultParsing": 1,
+        "Revalidation": 2
+      },
+      "messageProjectionCount": 5
+    },
+    "project_isolation": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 0,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownOrInvalidEntryIds": [
+          45
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 1
+      },
+      "messageProjectionCount": 0
+    },
+    "project_participants": {
+      "scenarioCount": 3,
+      "persisted": 3,
+      "returned": 1,
+      "failed": 2,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 1,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownOrInvalidEntryIds": [
+          13,
+          14
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 2
+      },
+      "messageProjectionCount": 5
+    },
+    "project_visibility": {
+      "scenarioCount": 2,
+      "persisted": 2,
+      "returned": 0,
+      "failed": 2,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "InvalidResearchPhase": [
+          11
+        ],
+        "UnknownOrInvalidEntryIds": [
+          12
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 2
+      },
+      "messageProjectionCount": 0
+    },
+    "prompt_injection": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 0,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "MissingResearchPhase": [
+          47
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 1
+      },
+      "messageProjectionCount": 1
+    },
+    "retrieval_tool_misuse": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 1,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 5
+    },
+    "snapshot_creation": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 0,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownOrInvalidEntryIds": [
+          43
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 1
+      },
+      "messageProjectionCount": 0
+    },
+    "snapshots": {
+      "scenarioCount": 4,
+      "persisted": 4,
+      "returned": 4,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 4,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 3
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 20
+    },
+    "timeline_structure": {
+      "scenarioCount": 2,
+      "persisted": 2,
+      "returned": 0,
+      "failed": 2,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownOrInvalidEntryIds": [
+          15,
+          16
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 2
+      },
+      "messageProjectionCount": 0
+    },
+    "user_permissions": {
+      "scenarioCount": 4,
+      "persisted": 4,
+      "returned": 1,
+      "failed": 3,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 1,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "InvalidResearchPhase": [
+          7
+        ],
+        "UnknownOrInvalidEntryIds": [
+          8,
+          26
+        ]
+      },
+      "stageCounts": {
+        "Revalidation": 3
+      },
+      "messageProjectionCount": 5
+    }
+  },
+  "currentByCategory": {
+    "account_actions": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        40
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 1
+    },
+    "application_roles": {
+      "scenarioCount": 4,
+      "persisted": 4,
+      "returned": 4,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 4,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 3
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 8
+    },
+    "architecture_and_search_requirements": {
+      "scenarioCount": 2,
+      "persisted": 2,
+      "returned": 2,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 1,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 1
+        },
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        24
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 3
+    },
+    "authentication": {
+      "scenarioCount": 2,
+      "persisted": 2,
+      "returned": 2,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 2,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 2
+        }
+      ],
+      "refusedOrdinals": [
+        1,
+        2
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 2
+    },
+    "batch_isolation": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        44
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 1
+    },
+    "code_generation": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        42
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 1
+    },
+    "entry_artifact_schema": {
+      "scenarioCount": 5,
+      "persisted": 5,
+      "returned": 5,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 3,
+        "Refused": 2,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 2
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        },
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 2
+        }
+      ],
+      "refusedOrdinals": [
+        28,
+        37
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 8
+    },
+    "entry_dates": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 1,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 2
+    },
+    "entry_display": {
+      "scenarioCount": 3,
+      "persisted": 3,
+      "returned": 3,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 1,
+        "Refused": 2,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 1
+        },
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 2
+        }
+      ],
+      "refusedOrdinals": [
+        17,
+        32
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 4
+    },
+    "external_product_research": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        41
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 1
+    },
+    "fabricated_citations": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        46
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 1
+    },
+    "false_completeness": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        50
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 1
+    },
+    "invented_specification_details": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        49
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 1
+    },
+    "live_database_access": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        39
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 1
+    },
+    "maintenance_screens": {
+      "scenarioCount": 2,
+      "persisted": 2,
+      "returned": 2,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 2,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 2
+        }
+      ],
+      "refusedOrdinals": [
+        5,
+        6
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 2
+    },
+    "missing_specification_content": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 1,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 2
+    },
+    "navigation": {
+      "scenarioCount": 3,
+      "persisted": 3,
+      "returned": 3,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 1,
+        "Refused": 2,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        },
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 2
+        }
+      ],
+      "refusedOrdinals": [
+        3,
+        31
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 4
+    },
+    "project_isolation": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        45
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 1
+    },
+    "project_participants": {
+      "scenarioCount": 3,
+      "persisted": 3,
+      "returned": 2,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 2,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 1
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {
+        "UnknownContextCitation": [
+          14
+        ]
+      },
+      "stageCounts": {
+        "Synthesis": 1
+      },
+      "messageProjectionCount": 6
+    },
+    "project_visibility": {
+      "scenarioCount": 2,
+      "persisted": 2,
+      "returned": 1,
+      "failed": 1,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        11
+      ],
+      "causeOrdinals": {
+        "UnknownContextCitation": [
+          12
+        ]
+      },
+      "stageCounts": {
+        "Synthesis": 1
+      },
+      "messageProjectionCount": 3
+    },
+    "prompt_injection": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        47
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 1
+    },
+    "retrieval_tool_misuse": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        48
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 1
+    },
+    "snapshot_creation": {
+      "scenarioCount": 1,
+      "persisted": 1,
+      "returned": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 0,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        43
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 1
+    },
+    "snapshots": {
+      "scenarioCount": 4,
+      "persisted": 4,
+      "returned": 4,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 4,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "EvidenceTruncated",
+          "count": 2
+        },
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 2
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 8
+    },
+    "timeline_structure": {
+      "scenarioCount": 2,
+      "persisted": 2,
+      "returned": 2,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 2,
+        "Refused": 0,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 2
+        }
+      ],
+      "refusedOrdinals": [],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 4
+    },
+    "user_permissions": {
+      "scenarioCount": 4,
+      "persisted": 4,
+      "returned": 4,
+      "failed": 0,
+      "cancelled": 0,
+      "unstarted": 0,
+      "researchStatuses": {
+        "Complete": 0,
+        "Partial": 3,
+        "Refused": 1,
+        "Empty": 0,
+        "InsufficientEvidence": 0
+      },
+      "statusStopReasons": [
+        {
+          "status": "Partial",
+          "stopReason": "ToolOrEvidenceLimit",
+          "count": 3
+        },
+        {
+          "status": "Refused",
+          "stopReason": "SafeRefusal",
+          "count": 1
+        }
+      ],
+      "refusedOrdinals": [
+        26
+      ],
+      "causeOrdinals": {},
+      "stageCounts": {},
+      "messageProjectionCount": 7
+    }
+  },
+  "alignedOrdinals": [
+    {
+      "ordinal": 1,
+      "category": "authentication",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0001",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0001",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 2,
+      "category": "authentication",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0002",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0002",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 3,
+      "category": "navigation",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0003",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "FormatException",
+        "rootCause": {
+          "category": "JsonSchemaParse",
+          "exceptionType": "FormatException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": null
+        },
+        "executionStage": "ResultParsing",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "JsonSchemaParse",
+            "exceptionType": "JsonException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "JsonSchemaParse",
+            "exceptionType": "FormatException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0003",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 4,
+      "category": "navigation",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0004",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0004",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 5,
+      "category": "maintenance_screens",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0005",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0005",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 6,
+      "category": "maintenance_screens",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0006",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0006",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 7,
+      "category": "user_permissions",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0007",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "InvalidResearchPhase",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "InvalidResearchPhase"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "InvalidResearchPhase"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0007",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 8,
+      "category": "user_permissions",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0008",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0008",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 9,
+      "category": "application_roles",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0009",
+        "outcome": "Returned",
+        "researchStatus": "Complete",
+        "stopReason": null,
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0009",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 10,
+      "category": "application_roles",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0010",
+        "outcome": "Returned",
+        "researchStatus": "Complete",
+        "stopReason": null,
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0010",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 11,
+      "category": "project_visibility",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0011",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "InvalidResearchPhase",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "InvalidResearchPhase"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "InvalidResearchPhase"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0011",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 12,
+      "category": "project_visibility",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0012",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0012",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownContextCitation",
+        "rootCause": {
+          "category": "Synthesis",
+          "exceptionType": "TimelineFactInformationSynthesisException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownContextCitation"
+        },
+        "executionStage": "Synthesis",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownContextCitation"
+          }
+        ]
+      }
+    },
+    {
+      "ordinal": 13,
+      "category": "project_participants",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0013",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0013",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 14,
+      "category": "project_participants",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0014",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0014",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownContextCitation",
+        "rootCause": {
+          "category": "Synthesis",
+          "exceptionType": "TimelineFactInformationSynthesisException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownContextCitation"
+        },
+        "executionStage": "Synthesis",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownContextCitation"
+          }
+        ]
+      }
+    },
+    {
+      "ordinal": 15,
+      "category": "timeline_structure",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0015",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0015",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 16,
+      "category": "timeline_structure",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0016",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0016",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 17,
+      "category": "entry_display",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0017",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0017",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 18,
+      "category": "entry_display",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0018",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0018",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 19,
+      "category": "entry_artifact_schema",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0019",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0019",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 20,
+      "category": "entry_artifact_schema",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0020",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0020",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 21,
+      "category": "snapshots",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0021",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0021",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 22,
+      "category": "snapshots",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0022",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0022",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 23,
+      "category": "architecture_and_search_requirements",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0023",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "InvalidResearchPhase",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "InvalidResearchPhase"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "InvalidResearchPhase"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0023",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 24,
+      "category": "architecture_and_search_requirements",
+      "type": "happy_path",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0024",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "InvalidResearchPhase",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "InvalidResearchPhase"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "InvalidResearchPhase"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0024",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 25,
+      "category": "user_permissions",
+      "type": "varied_phrasing",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0025",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0025",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 26,
+      "category": "user_permissions",
+      "type": "varied_phrasing",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0026",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0026",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 27,
+      "category": "application_roles",
+      "type": "varied_phrasing",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0027",
+        "outcome": "Returned",
+        "researchStatus": "Complete",
+        "stopReason": null,
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0027",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 28,
+      "category": "entry_artifact_schema",
+      "type": "varied_phrasing",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0028",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0028",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 29,
+      "category": "entry_artifact_schema",
+      "type": "varied_phrasing",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0029",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0029",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 30,
+      "category": "snapshots",
+      "type": "varied_phrasing",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0030",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0030",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 31,
+      "category": "navigation",
+      "type": "varied_phrasing",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0031",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0031",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 32,
+      "category": "entry_display",
+      "type": "varied_phrasing",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0032",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0032",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 33,
+      "category": "application_roles",
+      "type": "edge_case",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0033",
+        "outcome": "Returned",
+        "researchStatus": "Complete",
+        "stopReason": null,
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0033",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 34,
+      "category": "entry_dates",
+      "type": "edge_case",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0034",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0034",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 35,
+      "category": "snapshots",
+      "type": "edge_case",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0035",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0035",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 36,
+      "category": "missing_specification_content",
+      "type": "edge_case",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0036",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0036",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 37,
+      "category": "entry_artifact_schema",
+      "type": "edge_case",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0037",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0037",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 38,
+      "category": "project_participants",
+      "type": "edge_case",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0038",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0038",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 39,
+      "category": "live_database_access",
+      "type": "out_of_scope",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0039",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0039",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 40,
+      "category": "account_actions",
+      "type": "out_of_scope",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0040",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "MissingResearchPhase",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "MissingResearchPhase"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "MissingResearchPhase"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0040",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 41,
+      "category": "external_product_research",
+      "type": "out_of_scope",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0041",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "InvalidResearchPhase",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "InvalidResearchPhase"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "InvalidResearchPhase"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0041",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 42,
+      "category": "code_generation",
+      "type": "out_of_scope",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0042",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "ToolOrEvidenceLimit",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0042",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 43,
+      "category": "snapshot_creation",
+      "type": "out_of_scope",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0043",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0043",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 44,
+      "category": "batch_isolation",
+      "type": "breaking",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0044",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0044",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 45,
+      "category": "project_isolation",
+      "type": "breaking",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0045",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "UnknownOrInvalidEntryIds",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "UnknownOrInvalidEntryIds"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "UnknownOrInvalidEntryIds"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0045",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 46,
+      "category": "fabricated_citations",
+      "type": "breaking",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0046",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "MissingResearchPhase",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "MissingResearchPhase"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "MissingResearchPhase"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0046",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 47,
+      "category": "prompt_injection",
+      "type": "breaking",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0047",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "MissingResearchPhase",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "MissingResearchPhase"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "MissingResearchPhase"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0047",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 48,
+      "category": "retrieval_tool_misuse",
+      "type": "breaking",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0048",
+        "outcome": "Returned",
+        "researchStatus": "Partial",
+        "stopReason": "EvidenceTruncated",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0048",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 49,
+      "category": "invented_specification_details",
+      "type": "breaking",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0049",
+        "outcome": "Failed",
+        "researchStatus": null,
+        "stopReason": null,
+        "error": {
+          "type": "Agent",
+          "code": "SynthesisUnavailable"
+        },
+        "cause": "InvalidResearchPhase",
+        "rootCause": {
+          "category": "Research",
+          "exceptionType": "TimelineFactResearchException",
+          "httpStatus": null,
+          "providerCode": null,
+          "reason": "InvalidResearchPhase"
+        },
+        "executionStage": "Revalidation",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": null
+          },
+          {
+            "category": "Research",
+            "exceptionType": "TimelineFactResearchException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "InvalidResearchPhase"
+          }
+        ]
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0049",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    },
+    {
+      "ordinal": 50,
+      "category": "false_completeness",
+      "type": "breaking",
+      "previous": {
+        "scenarioId": "8728e5c00eaf4eaca182e86865d97f9a:0050",
+        "outcome": "Returned",
+        "researchStatus": "Complete",
+        "stopReason": null,
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      },
+      "current": {
+        "scenarioId": "da0ff88cdfef427f8b80e2f176b72501:0050",
+        "outcome": "Returned",
+        "researchStatus": "Refused",
+        "stopReason": "SafeRefusal",
+        "error": null,
+        "cause": null,
+        "rootCause": null,
+        "executionStage": null,
+        "causalChain": null
+      }
+    }
+  ]
+}

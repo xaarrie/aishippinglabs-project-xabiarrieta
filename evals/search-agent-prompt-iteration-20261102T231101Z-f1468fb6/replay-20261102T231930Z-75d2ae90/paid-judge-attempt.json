@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "dotnet",
+    "C:\\Data\\formacion\\TimelineSpecifications\\search-agent-prompt-iteration-20261102T231101Z-f1468fb6\\replay-20261102T231930Z-75d2ae90\\harness-build\\bin\\UnlabeledJudge\\release\\UnlabeledJudge.dll",
+    "C:\\Data\\formacion\\TimelineSpecifications\\search-agent-prompt-iteration-20261102T231101Z-f1468fb6\\replay-20261102T231930Z-75d2ae90\\output.jsonl",
+    "C:\\Data\\formacion\\TimelineSpecifications\\search-agent-prompt-iteration-20261102T231101Z-f1468fb6\\replay-20261102T231930Z-75d2ae90\\unlabeled-judge.jsonl",
+    "C:\\Data\\formacion\\TimelineSpecifications\\search-agent-prompt-iteration-20261102T231101Z-f1468fb6\\provenance.json",
+    "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-citation-allowlists-20261102T062417Z-f35d9311.judge-20261102T2237495800801Z\\rubric.md"
+  ],
+  "maxCalls": 17,
+  "singlePassNoRetry": true,
+  "newHumanLabels": null,
+  "datasetSha256": "166b630ab266b59054a388f962e8ac4095be21f29d7852585da47a00c61f499c",
+  "startedUnix": 1793661754.0436096
+}

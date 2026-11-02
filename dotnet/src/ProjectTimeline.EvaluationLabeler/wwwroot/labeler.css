@@ -1,0 +1,22 @@
+:root { color-scheme: light; font: 17px/1.55 system-ui, sans-serif; color: #182638; background: #edf1f5; }
+body { margin: 0; }
+main { max-width: 1100px; margin: auto; padding: 1.4rem; }
+h1, h2 { line-height: 1.25; }
+h2 { font-size: 1.2rem; }
+section, details { background: white; border: 1px solid #bac7d4; border-radius: .5rem; padding: 1rem; margin: 1rem 0; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; overflow: auto; max-height: 65vh; font: .95rem/1.6 ui-monospace, monospace; tab-size: 4; }
+.metadata { white-space: pre-wrap; overflow-wrap: anywhere; }
+.hint { color: #3a5066; }
+nav, form { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; }
+#current-label { flex-basis: 100%; margin: 0; font-weight: 650; }
+button, select { font: inherit; padding: .55rem .8rem; border: 1px solid #657c92; border-radius: .3rem; background: white; color: #182638; max-width: 100%; }
+button { cursor: pointer; }
+button[aria-pressed="true"] { background: #d5e8fa; border: 2px solid #245886; }
+button:disabled, select:disabled { cursor: not-allowed; opacity: .6; }
+:focus-visible { outline: 3px solid #a94300; outline-offset: 3px; }
+summary { cursor: pointer; font-weight: 600; }
+#save-status { font-weight: 650; }
+#save-status[data-state="failed"], #save-status[data-state="uncertain"], #no-final-answer { color: #8b210e; }
+#progress { font-weight: 650; }
+a { color: #16558a; }
+@media (max-width: 600px) { main { padding: .7rem; } section { padding: .7rem; } pre { max-height: 70vh; } }

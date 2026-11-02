@@ -1,0 +1,76 @@
+@page
+@model IndexModel
+@{ Layout = null; var a = Model.Annotation; var r = Model.Record; }
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Evaluation labeler</title>
+    <link rel="stylesheet" href="/labeler.css" />
+    <script src="/labeler.js" defer></script>
+</head>
+<body>
+<main>
+    <h1>Evaluation labeler</h1>
+    <p id="progress" role="status">@Model.State.Labeled / @Model.Dataset.Records.Length labeled · @Model.State.Pending Bad needs category</p>
+    <nav aria-label="Record navigation">
+        <button type="button" id="previous" disabled="@(r.Index == 0)" data-target="@(r.Index - 1)">Previous</button>
+        <label for="jump">Jump to record</label>
+        <select id="jump">
+            @foreach (var item in Model.Dataset.Records)
+            {
+                var label = Model.State.Labels.GetValueOrDefault(item.Index);
+                var marker = label is null ? "Unlabeled" : label.Label + (label.FailureCategory == "uncategorized" ? " — needs category" : "");
+                <option value="@item.Index" selected="@(item.Index == r.Index)">@(item.Index + 1) — @marker</option>
+            }
+        </select>
+        <button type="button" id="next" disabled="@(r.Index == Model.Dataset.Records.Length - 1)" data-target="@(r.Index + 1)">Next</button>
+    </nav>
+    <p class="metadata">Record @(r.Index + 1) / @Model.Dataset.Records.Length · Ordinal @r.Ordinal<br />Run: @r.RunId · Scenario: @r.ScenarioId<br />Recorded outcome: @r.Outcome · Research status: @r.ResearchStatus<br />
+        Scenario type: <span id="scenario-type">@r.ScenarioType</span></p>
+    <p class="hint">Recorded status is metadata, not a human correctness label. Read the full answer before choosing.</p>
+    <section aria-labelledby="question-title">
+        <h2 id="question-title">Question</h2>
+        <pre id="question" tabindex="0"><span>@r.Question</span></pre>
+    </section>
+    <section aria-labelledby="response-title">
+        <h2 id="response-title">Full agent response</h2>
+        @if (r.Content is null)
+        {
+            <p id="no-final-answer">No final answer was saved. See saved failure details and messages below.</p>
+        }
+        else
+        {
+            <pre id="response" tabindex="0"><span>@r.Content</span></pre>
+            @if (r.Content.Length == 0) { <p>The saved final answer is empty.</p> }
+        }
+    </section>
+    <section aria-labelledby="decision-title">
+        <h2 id="decision-title">Human label</h2>
+        <form id="label-form" method="post" asp-antiforgery="false" action="/?handler=Label" data-record="@r.Index" data-revision="@(a?.Revision ?? 0)" data-label="@a?.Label" data-category="@a?.FailureCategory" data-total="@Model.Dataset.Records.Length">
+            @Html.AntiForgeryToken()
+            <p id="current-label">@(a is null ? "Unlabeled" : a.Label + (a.Label == "Bad" ? " — " + a.FailureCategory : ""))</p>
+            <button type="button" id="good" aria-pressed="@(a?.Label == "Good" ? "true" : "false")">Good</button>
+            <button type="button" id="bad" aria-pressed="@(a?.Label == "Bad" ? "true" : "false")">Bad</button>
+            <label for="category">Bad failure category</label>
+            <select id="category" disabled="@(a?.Label != "Bad")">
+                @foreach (var code in LabelStore.Categories)
+                {
+                    <option value="@code" selected="@(code == (a?.FailureCategory is { Length: > 0 } category ? category : "uncategorized"))">@(code == "uncategorized" ? "Uncategorized — needs category" : code)</option>
+                }
+            </select>
+        </form>
+        <p id="save-status" role="status" aria-live="polite">@(a is null ? "No human label yet." : "Loaded saved label.")</p>
+        <p class="hint">One click saves immediately. Bad starts uncategorized; selecting a category saves again. Navigation never advances automatically.</p>
+        <p><a id="reload" href="/?record=@r.Index">Reload saved state</a> · <a id="download" href="/?handler=Download">Download saved CSV</a> (available after the first saved label)</p>
+        <noscript>JavaScript is required for one-click saving. No annotation is submitted without it.</noscript>
+    </section>
+    @foreach (var detail in new[] { ("response", "Complete response JSON"), ("messages", "Saved messages"), ("error", "Saved error"), ("agentFailure", "Agent failure details"), ("citationDiagnostics", "Citation diagnostics") })
+    {
+        <details><summary>@detail.Item2</summary><pre tabindex="0"><span>@r.Detail(detail.Item1)</span></pre></details>
+    }
+    <details><summary>Complete raw record JSON</summary><pre id="raw-record" tabindex="0"><span>@r.Raw.GetRawText()</span></pre></details>
+</main>
+</body>
+</html>

@@ -1,0 +1,58 @@
+{
+  "maskedSearchSourceSha256": "87a6d7b28011e2de44d46daff4d0a055a5d508f9c6328ba0fc880ffd86323688",
+  "fullSearchSourceSha256": "432e52716dc4fa20720032f89a09e0d6a5ef11f1e20e31113681c91ffb29ca0b",
+  "testSourceSha256": "5bb5b8294cb268c8fbf50f33b3a9edf89e1b0a97d0ae94c2c2f0eb8710ba1d99",
+  "testMatchesWorkerWrittenBytes": true,
+  "gitStatusMatchesWorkerFinal": true,
+  "rubrics": [
+    {
+      "path": "C:\\Data\\formacion\\TimelineSpecifications\\search-facts-evaluation-citation-allowlists-20261102T062417Z-f35d9311.judge-20261102T2237495800801Z\\rubric.md",
+      "sha256": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+    },
+    {
+      "path": "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\Prompts\\SearchResponseJudge.md",
+      "sha256": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+    },
+    {
+      "path": "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-judge-build\\bin\\ProjectTimeline.Tests\\release\\Prompts\\SearchResponseJudge.md",
+      "sha256": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+    },
+    {
+      "path": "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-judge-build\\bin\\ProjectTimeline.SearchFactsJudge\\release\\Prompts\\SearchResponseJudge.md",
+      "sha256": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+    },
+    {
+      "path": "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.Tests\\release\\Prompts\\SearchResponseJudge.md",
+      "sha256": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+    },
+    {
+      "path": "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.SearchFactsJudge\\release\\Prompts\\SearchResponseJudge.md",
+      "sha256": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+    }
+  ],
+  "judgeFilesCurrentHashes": {
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\Program.cs": "798725cf313804d1810e6e1b64fca0079d035b78dd127417fb1c790b76cd1720",
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\ProjectTimeline.SearchFactsJudge.csproj": "025e9a7d2a93cd6675a6896c5dba9e1d18f4f84e86bda6e743a73b7baee8b92b",
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\README.md": "ffdb41d044f2c0a97f0077f68ad8b79b4e29910bb3a7c7e676d9adcc3f6001c1",
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\ReadOnlyLabeledDataset.cs": "d5d2662c63c7e58a8e30d800c758b7293e3e66cd5863bce5fa64f943aebe9866",
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\SearchJudgeCommand.cs": "4a984941011c925215c164f848b36e206f00afda7aaafadb65b4ec7a3b23acbd",
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\SearchJudgeConsole.cs": "09621f0a5f768141d7ae299384657693e61bc2b7f2d44b0e98379b1e38ae8db7",
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\SearchJudgeInput.cs": "17a66482a061b6f946d4ac5ea0cec98d5f24c12b4a7de2a49d3f944643636806",
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\SearchJudgeMetrics.cs": "9c3b3f0225d14e98151efd87b69d148786cabe5540d31d323846d825816fa341",
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\SearchJudgeRunner.cs": "188c7acd02845b0a5a2ab7ab85e53a60fc7eb8b749cba4cc9c22878e3dcc7803",
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\SearchResponseJudge.cs": "ed62f0b5f5fc9c0ab8e6c5daf80a55abe6bee91b4925ea7f95b9fc4d8d6f1309",
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\SearchResponseJudgment.cs": "2bbd85f8ee83073d166740fe304d7495abe4db9bd93105c0a0cf94d0d5a5ddb3",
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\src\\ProjectTimeline.SearchFactsJudge\\Prompts\\SearchResponseJudge.md": "4d9d3788a647bdeed81004c7b10391e8c04c4235f9d098e9fb1eef95a77c0992"
+  },
+  "attributionLimit": "Masked source bytes and exact worker-authored test independently verified; ambient worktree not attributed to S1. Judge entire-source historical snapshot not supplied; rubric historical bytes independently verified.",
+  "workerEvidence": {
+    "path": "C:\\Users\\biarunxa\\.gentle-shell\\agent\\gentle-agents\\sessions\\2026-11-02T23-00-45-475Z_01a19e7e-6322-718e-a00f-7ae0b655953d.jsonl",
+    "baselineLine": 27,
+    "redLine": 35,
+    "redContainsAssertionFailures": 15,
+    "redExistingPasses": 82,
+    "greenLine": 41,
+    "greenPasses": 97,
+    "preservationLine": 48
+  }
+}

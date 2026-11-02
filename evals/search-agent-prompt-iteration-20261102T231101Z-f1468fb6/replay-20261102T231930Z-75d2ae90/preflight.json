@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "dotnet",
+    "C:\\Data\\formacion\\aishippinglabs-project-xabiarrieta\\dotnet\\tests\\ProjectTimeline.Tests\\bin\\search-eval-build\\bin\\ProjectTimeline.SearchFactsEvaluator\\release\\ProjectTimeline.SearchFactsEvaluator.dll",
+    "--input",
+    "C:\\Data\\formacion\\TimelineSpecifications\\search-agent-prompt-iteration-20261102T231101Z-f1468fb6\\replay-20261102T231930Z-75d2ae90\\derived-17.csv",
+    "--actor-id",
+    "0e6047b4-385d-4d7c-bbcf-4926e7c8fc70",
+    "--timeline-id",
+    "76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c",
+    "--expected-project-id",
+    "8d3559af-77d8-476d-b763-5f085889861d",
+    "--output",
+    "C:\\Data\\formacion\\TimelineSpecifications\\search-agent-prompt-iteration-20261102T231101Z-f1468fb6\\replay-20261102T231930Z-75d2ae90\\output.jsonl",
+    "--preflight"
+  ],
+  "exitCode": 0,
+  "stdout": "{\"path\":\"C:\\\\Data\\\\formacion\\\\TimelineSpecifications\\\\search-agent-prompt-iteration-20261102T231101Z-f1468fb6\\\\replay-20261102T231930Z-75d2ae90\\\\derived-17.csv\",\"sha256\":\"EA80F6FFCE0225D5640C530CA2C7B9F0B7F944251E0B4649D5812DE2A5D0F5B6\",\"scenarioCount\":17,\"scope\":{\"actorId\":\"0e6047b4-385d-4d7c-bbcf-4926e7c8fc70\",\"timelineId\":\"76ba87c5-71a4-4bf6-a87b-d1a40a3ec86c\",\"projectId\":\"8d3559af-77d8-476d-b763-5f085889861d\",\"role\":\"Admin\",\"coverage\":{\"entries\":8,\"entriesWithoutCompletedExtraction\":0,\"pendingReviews\":0,\"acceptedValidFacts\":40,\"truncated\":false,\"warnings\":[\"Timeline-wide latest-valid extracted or accepted-review facts only; lexical/entity matching is not exhaustive or contradiction detection.\",\"Matching uses PostgreSQL simple whole lexemes from any of the first 12 distinct searchable terms (at least two characters each), ranked by relevance; no stemming, typo tolerance, synonyms or accent folding.\",\"Grounded direct extraction is effective immediately. Pending reviews are excluded. Fact search is facts-only; separately verified source-entry context is not fact proof.\"]}},\"model\":\"gpt-4o-mini\",\"mode\":\"Preflight\"}\n",
+  "stderr": ""
+}

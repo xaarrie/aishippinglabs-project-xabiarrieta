@@ -1,0 +1,10 @@
+{
+  "originalSourceAndLabelsUnchanged": true,
+  "searchSourceAndTestUnchangedDuringS2": true,
+  "allRubricCopiesAndCurrentJudgeFilesUnchangedDuringS2": true,
+  "derived17RoundtripAndHashesValid": true,
+  "worktreeStatusMatchesWorkerFinal": true,
+  "unexpectedMutationsObserved": false,
+  "preflightExecuted": false,
+  "paidCalls": 0
+}

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\labeler.js" LogicalName="Labeler.labeler.js" />
+    <EmbeddedResource Include="wwwroot\labeler.css" LogicalName="Labeler.labeler.css" />
+  </ItemGroup>
+</Project>

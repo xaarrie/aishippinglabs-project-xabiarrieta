@@ -214,6 +214,7 @@ public sealed class TimelineFactResearchToolsTests
         var error = await Assert.ThrowsAsync<TimelineFactResearchException>(async () =>
             await function.InvokeAsync(source ? new AIFunctionArguments { ["entryIds"] = new[] { "PRIVATE_not_a_guid" } } : new AIFunctionArguments()));
         Assert.Equal("EvidenceReadFailed", error.Code); Assert.DoesNotContain("PRIVATE", error.Message);
+        Assert.NotNull(error.InnerException);
         var retry = await Assert.ThrowsAsync<TimelineFactResearchException>(async () => await function.InvokeAsync(source
             ? new AIFunctionArguments { ["entryIds"] = new[] { fact.EntryId } } : new AIFunctionArguments { ["queries"] = new[] { "alice" } }));
         Assert.Equal(error.Code, retry.Code);
@@ -251,7 +252,9 @@ public sealed class TimelineFactResearchToolsTests
         if (query == "oversized") query = new string('x', 301);
         await using var f = await TimelineFactReviewFixture.CreateAsync();
         using var tools = await Tools(f);
-        Assert.Equal("InvalidQuery", (await Assert.ThrowsAsync<TimelineFactResearchException>(() => tools.search_facts_batch([query!]))).Code);
+        var error = await Assert.ThrowsAsync<TimelineFactResearchException>(() => tools.search_facts_batch([query!]));
+        Assert.Equal("InvalidQuery", error.Code);
+        Assert.IsAssignableFrom<ArgumentException>(error.InnerException);
         await Assert.ThrowsAsync<TimelineFactResearchException>(() => tools.search_facts_batch(["alice"]));
         await Assert.ThrowsAsync<TimelineFactResearchException>(() => tools.ValidateLedgerAsync());
     }
@@ -441,6 +444,44 @@ public sealed class TimelineFactResearchToolsTests
         cts.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => tools.search_facts_batch(["alice"]));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => tools.ValidateLedgerAsync());
+    }
+
+    [Theory]
+    [InlineData("authorization", "AccessDenied", false)]
+    [InlineData("scope", "ScopeUnavailable", false)]
+    [InlineData("read", "EvidenceReadFailed", false)]
+    [InlineData("authorization", "AccessDenied", true)]
+    [InlineData("scope", "ScopeUnavailable", true)]
+    [InlineData("read", "EvidenceReadFailed", true)]
+    public async Task Safe_translation_preserves_identical_original_and_fatal_ledger_error(string kind, string code, bool serverFetch)
+    {
+        await using var f = await TimelineFactReviewFixture.CreateAsync();
+        if (serverFetch) await f.AcceptAsync("Alice owns delivery.", "alice");
+        Exception original = kind switch
+        {
+            "authorization" => new UnauthorizedAccessException("PRIVATE_TOOL_CAUSE"),
+            "scope" => new KeyNotFoundException("PRIVATE_TOOL_CAUSE"),
+            _ => new InvalidOperationException("PRIVATE_TOOL_CAUSE")
+        };
+        var probe = new ThrowingQuery(original);
+        var options = (DbContextOptions<ProjectTimelineDbContext>)f.Db.GetService<IDbContextOptions>();
+        await using var db = new ProjectTimelineDbContext(new DbContextOptionsBuilder<ProjectTimelineDbContext>(options)
+            .EnableServiceProviderCaching(false).AddInterceptors(probe).Options);
+        using var tools = await TimelineFactInformationTools.CreateAsync(db, new(f.Project.Id, f.Timeline.Id), f.Actor.Id, false);
+        if (serverFetch) await tools.search_facts_batch(["alice"]);
+        probe.Armed = true;
+        var error = await Assert.ThrowsAsync<TimelineFactResearchException>(() => serverFetch
+            ? tools.FetchEmittedSourcesAsync() : tools.search_facts_batch(["alice"]));
+        Assert.Equal(code, error.Code);
+        Assert.Same(original, error.InnerException);
+        probe.Armed = false;
+        Assert.Same(error, await Assert.ThrowsAsync<TimelineFactResearchException>(() => tools.ValidateLedgerAsync()));
+    }
+
+    private sealed class ThrowingQuery(Exception error) : IQueryExpressionInterceptor
+    {
+        public bool Armed;
+        public Expression QueryCompilationStarting(Expression expression, QueryExpressionEventData eventData) => Armed ? throw error : expression;
     }
 
     private sealed class BlockingQuery : IQueryExpressionInterceptor, IDisposable

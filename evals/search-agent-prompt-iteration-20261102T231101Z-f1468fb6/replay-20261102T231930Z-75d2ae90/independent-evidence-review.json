@@ -1,0 +1,1716 @@
+{
+  "newHumanTruthAbsent": true,
+  "noNewPerformanceMetrics": true,
+  "reviews": [
+    {
+      "sourceOrdinal": 5,
+      "question": "Which actions should the initial maintenance grid provide for creating, editing, consulting, and deleting records?",
+      "oldAnswer": "This request cannot be answered by read-only timeline fact search.",
+      "newAnswer": "The initial maintenance grid should provide the following actions:\n\n1. **Creating Records**: The user can push a button to create a new record from the grid that displays existing data.\n   - Cited Facts: [5f663b21-1774-49f7-b87d-29bdb4535987, 0e45e929-4a41-4da9-9c39-af89c4130cc5, af3d2509-b7c5-4c20-8af5-3204dce6cc02]  \n   - Cited Context Evidence: [de3884e6-7e9a-44b4-87eb-0680d6e61401]\n\n2. **Editing Records**: The user can navigate to an existing record from the grid to update (edit) it.\n   - Cited Facts: [383cf24f-e833-406b-8bc5-3639730d1149, 0e45e929-4a41-4da9-9c39-af89c4130cc5, af3d2509-b7c5-4c20-8af5-3204dce6cc02]  \n   - Cited Context Evidence: [de3884e6-7e9a-44b4-87eb-0680d6e61401]\n\n3. **Consulting Records**: A grid with existing data should always be shown to the user when entering the maintenance screens, allowing them to easily consult records.\n   - Cited Facts: [0e45e929-4a41-4da9-9c39-af89c4130cc5, af3d2509-b7c5-4c20-8af5-3204dce6cc02, 383cf24f-e833-406b-8bc5-3639730d1149]  \n   - Cited Context Evidence: [de3884e6-7e9a-44b4-87eb-0680d6e61401]\n\n4. **Deleting Records**: The user can delete a record directly from the grid displayed in the maintenance screen.\n   - Cited Facts: [383cf24f-e833-406b-8bc5-3639730d1149, 0e45e929-4a41-4da9-9c39-af89c4130cc5, af3d2509-b7c5-4c20-8af5-3204dce6cc02]  \n   - Cited Context Evidence: [de3884e6-7e9a-44b4-87eb-0680d6e61401]",
+      "newOutcome": "Returned",
+      "newResearchStatus": "Partial",
+      "newError": null,
+      "oldEvidence": {
+        "citedFacts": [],
+        "citedContexts": []
+      },
+      "newEvidence": {
+        "citedFacts": [
+          {
+            "id": "0e45e929-4a41-4da9-9c39-af89c4130cc5",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "When entering maintenance screens, a grid with existing data should be shown.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "383cf24f-e833-406b-8bc5-3639730d1149",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "From the grid in maintenance screens, a user can delete a record or navigate to one to update it.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "5f663b21-1774-49f7-b87d-29bdb4535987",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "In maintenance screens, a user can push a button to create a new record.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "af3d2509-b7c5-4c20-8af5-3204dce6cc02",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "The editing and creating screens in maintenance are different from the consult screen where the grid is shown.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "de3884e6-7e9a-44b4-87eb-0680d6e61401",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "anchorFactIds": [
+              "af3d2509-b7c5-4c20-8af5-3204dce6cc02",
+              "0e45e929-4a41-4da9-9c39-af89c4130cc5",
+              "383cf24f-e833-406b-8bc5-3639730d1149",
+              "5f663b21-1774-49f7-b87d-29bdb4535987",
+              "6f5155c2-ceda-4829-8698-a062116a0a1a"
+            ],
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "text": "Maintenance screens\nThe screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating screens are different from the consult screen where the grid is shown.\n\nThis applies to projects, users, and timelines screens",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "fixedJudgePrediction": {
+        "reasoning": "The answer accurately outlines the actions that the initial maintenance grid should provide for creating, editing, consulting, and deleting records. Each action is supported by relevant citations from the source material, which confirm that a grid with existing data should be displayed, and that users can create, edit, consult, and delete records directly from this grid. The claims made in the answer are consistent with the evidence provided, and there are no significant limitations or unsupported assertions. Therefore, the response is well-grounded and meets the criteria for a good answer.",
+        "label": "good"
+      },
+      "fixedJudgeError": null,
+      "independentAssessmentNotHumanAnnotation": "Confirmed observed recovery from an unjustified refusal: the new core create/edit/consult/delete answer is supported by the cited maintenance-grid facts and source-entry context. Broad citation lists are verbose but relevant support exists. This is one observed improvement, not a general performance claim."
+    },
+    {
+      "sourceOrdinal": 6,
+      "question": "How should the maintenance screens distinguish creating or editing a record from consulting it?",
+      "oldAnswer": "This request cannot be answered by read-only timeline fact search.",
+      "newAnswer": "In maintenance screens, users can distinguish between creating or editing a record and consulting it by noting the following functionalities:\n\n1. **Grid Display**: Upon entering maintenance screens, a grid with existing data is displayed, allowing users to see records that can be navigated for updates or deletions.\n   - *Source: When entering maintenance screens, a grid with existing data should be shown (5f663b21-1774-49f7-b87d-29bdb4535987, 0e45e929-4a41-4da9-9c39-af89c4130cc5, 383cf24f-e833-406b-8bc5-3639730d1149).*  \n\n2. **Create and Update Functionality**: From this grid, users can delete a record or navigate to one for editing. Additionally, there is a button provided specifically for creating a new record. This clear distinction in functionality indicates that editing and creating screens serve different purposes compared to the consult screen.\n   - *Source: Users can delete a record or navigate to one to update it; also, you can push a button to create a new record (5f663b21-1774-49f7-b87d-29bdb4535987, af3d2509-b7c5-4c20-8af5-3204dce6cc02).*  \n\n3. **Differentiation from Consult Screen**: The maintenance screens are explicitly stated to have functionalities that are different from the consult screens, which only display the grid without additional options for creating new records or editing existing ones.\n   - *Source: The editing and creating screens in maintenance are different from the consult screen where the grid is shown (af3d2509-b7c5-4c20-8af5-3204dce6cc02, 6f5155c2-ceda-4829-8698-a062116a0a1a).*  \n\nTherefore, the maintenance screens feature distinct access points for creating and editing records compared to simply consulting them. This separation enhances user understanding of the available actions and improves workflow efficiency.\n",
+      "newOutcome": "Returned",
+      "newResearchStatus": "Partial",
+      "newError": null,
+      "oldEvidence": {
+        "citedFacts": [],
+        "citedContexts": []
+      },
+      "newEvidence": {
+        "citedFacts": [
+          {
+            "id": "0e45e929-4a41-4da9-9c39-af89c4130cc5",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "When entering maintenance screens, a grid with existing data should be shown.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "383cf24f-e833-406b-8bc5-3639730d1149",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "From the grid in maintenance screens, a user can delete a record or navigate to one to update it.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "5f663b21-1774-49f7-b87d-29bdb4535987",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "In maintenance screens, a user can push a button to create a new record.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "6f5155c2-ceda-4829-8698-a062116a0a1a",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "The maintenance screen functionality applies to projects, users, and timelines screens.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "creens are different from the consult screen where the grid is shown.\n\nThis applies to projects, users, and timelines screens",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "af3d2509-b7c5-4c20-8af5-3204dce6cc02",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "The editing and creating screens in maintenance are different from the consult screen where the grid is shown.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "ef40ab47-f93c-4c20-9549-8032655bfe01",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "anchorFactIds": [
+              "5f663b21-1774-49f7-b87d-29bdb4535987",
+              "383cf24f-e833-406b-8bc5-3639730d1149",
+              "0e45e929-4a41-4da9-9c39-af89c4130cc5",
+              "6f5155c2-ceda-4829-8698-a062116a0a1a",
+              "af3d2509-b7c5-4c20-8af5-3204dce6cc02"
+            ],
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "text": "Maintenance screens\nThe screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating screens are different from the consult screen where the grid is shown.\n\nThis applies to projects, users, and timelines screens",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "fixedJudgePrediction": {
+        "reasoning": "The answer accurately describes how maintenance screens differentiate between creating or editing a record and consulting it, supported by relevant evidence. It mentions the grid display, the functionalities for creating and updating records, and the distinction from consult screens, all of which are corroborated by the provided sources. The evidence clearly supports the claims made in the answer, making it a well-grounded response to the question.",
+        "label": "good"
+      },
+      "fixedJudgeError": null,
+      "independentAssessmentNotHumanAnnotation": "Retrieval/refusal recovery only, NOT a clean correctness fix. New claim that consult screens only display the grid without create/edit options is unsupported and conflicts with cited grid actions. The source says create/edit screens are separate, not that consult grid lacks those actions. Judge good is not reliable here."
+    },
+    {
+      "sourceOrdinal": 8,
+      "question": "Which User fields can an administrator maintain, and which identifier must remain unchanged?",
+      "oldAnswer": "An administrator can maintain various fields related to a user's role and settings. Key fields that the administrator can manage include:\n- The IDUserRole field must be selected from the UserRoles table, and the user should ideally hold the Admin role (citedFactIds: [23fefbf5-2e0e-41aa-8bf0-22aca091753c, bb635dfe-350e-4205-9a10-d33194bb681f, 7b0114db-1b8b-4109-bf34-ca2cf1d09cf7]). \n\nA critical identifier that must remain unchanged for a user is the User ID. It is stated that the User should not be assigned a UserId directly, as the IDUserRole plays a significant role in user management within the system, ensuring the user retains appropriate privileges (citedFactIds: [23fefbf5-2e0e-41aa-8bf0-22aca091753c]). \n\nThus, the administrator can maintain roles but must keep the User ID constant.",
+      "newAnswer": "An administrator can maintain the following fields related to users:\n- The User must have the IDUserRole field with a value selected from the UserRoles table, indicating their role (specifically, it mentions that the user should have the role of Admin) (Fact Id: 23fefbf5-2e0e-41aa-8bf0-22aca091753c).\n- From the grid in maintenance screens, a user can delete a record or navigate to one to update it, indicating that user entries can be modified (Fact Id: 383cf24f-e833-406b-8bc5-3639730d1149).\n- In maintenance screens, they can push a button to create a new record (Fact Id: 5f663b21-1774-49f7-b87d-29bdb4535987).\n\nThe identifier that must remain unchanged is the UserId, as it is indicated that the UserRoles table should not include the UserId (Fact Id: 9de17097-8135-47a7-9bc0-f6dbc2120af4).",
+      "newOutcome": "Returned",
+      "newResearchStatus": "Partial",
+      "newError": null,
+      "oldEvidence": {
+        "citedFacts": [
+          {
+            "id": "23fefbf5-2e0e-41aa-8bf0-22aca091753c",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "The User must have the IDUserRole field with a value selected from the UserRoles table.",
+            "entityKey": "User",
+            "entityType": "entity",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          },
+          {
+            "id": "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "In the table UserRoles, roles are selectable for a user.",
+            "entityKey": "UserRoles",
+            "entityType": "table",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          },
+          {
+            "id": "bb635dfe-350e-4205-9a10-d33194bb681f",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "In the existing record, the user should have the role Admin.",
+            "entityKey": "User",
+            "entityType": "entity",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "43ccd123-52d7-4d0c-8597-8b97de9acddc",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "anchorFactIds": [
+              "23fefbf5-2e0e-41aa-8bf0-22aca091753c",
+              "bb635dfe-350e-4205-9a10-d33194bb681f",
+              "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7"
+            ],
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "text": "User Roles Maintenance\nThe table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "newEvidence": {
+        "citedFacts": [
+          {
+            "id": "23fefbf5-2e0e-41aa-8bf0-22aca091753c",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "The User must have the IDUserRole field with a value selected from the UserRoles table.",
+            "entityKey": "User",
+            "entityType": "entity",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          },
+          {
+            "id": "383cf24f-e833-406b-8bc5-3639730d1149",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "From the grid in maintenance screens, a user can delete a record or navigate to one to update it.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "5f663b21-1774-49f7-b87d-29bdb4535987",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "In maintenance screens, a user can push a button to create a new record.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "9de17097-8135-47a7-9bc0-f6dbc2120af4",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "The UserRoles table should not include the UserId.",
+            "entityKey": "UserRoles",
+            "entityType": "table",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "5b07527b-9d1c-46a5-aa4a-19c7e8d2ccaf",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "anchorFactIds": [
+              "23fefbf5-2e0e-41aa-8bf0-22aca091753c",
+              "bb635dfe-350e-4205-9a10-d33194bb681f",
+              "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7",
+              "9de17097-8135-47a7-9bc0-f6dbc2120af4"
+            ],
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "text": "User Roles Maintenance\nThe table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "7ee215c9-1fe1-4e50-b24b-5084d9022aa9",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "anchorFactIds": [
+              "2120ca93-333a-4624-ab6c-ec81861c4c85",
+              "ebb2a2a2-e62b-4684-9bb1-91bbc65dcd93",
+              "89345f33-3623-497a-8eb4-0e844cabd91e",
+              "cfc1f388-deec-4939-9cc9-073bcf22623b",
+              "eb04cca1-b265-4821-893d-fd6301e4c360",
+              "6a040fbc-5a50-428b-9e2f-a8fd0cff3c73"
+            ],
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "text": "TimeLine Maintenance\nWhen we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated that text if they are available.\nWe could click on it to navigate to a full entry screen where we Will see:\nFull text of the entry\nThe user that created that entry\nLinks to download the artifacts(files) that created that entry\nAn option to add a new file to the entry\n\nWe Will see the same when creating the entry.\nSupported documents are: PDF, Word, Excel, .md files",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "b4ba1d9d-6f3e-478d-b071-afb96ea312c3",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "anchorFactIds": [
+              "383cf24f-e833-406b-8bc5-3639730d1149",
+              "5f663b21-1774-49f7-b87d-29bdb4535987"
+            ],
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "text": "Maintenance screens\nThe screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating screens are different from the consult screen where the grid is shown.\n\nThis applies to projects, users, and timelines screens",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "fixedJudgePrediction": {
+        "reasoning": "The answer accurately identifies the fields an administrator can maintain, specifically mentioning the IDUserRole field and the ability to delete or update records. It also correctly states that the UserId must remain unchanged. However, the claim about the UserRoles table not including the UserId is misleading; it should clarify that the UserId is not a selectable role but is still a necessary identifier for the user. Overall, the answer is mostly correct but contains a slight ambiguity regarding the UserId's role in the UserRoles table.",
+        "label": "good"
+      },
+      "fixedJudgeError": null,
+      "independentAssessmentNotHumanAnnotation": "Unresolved hallucination. New answer says UserId must remain unchanged because UserRoles should not include UserId. These are different entities/constraints; citation 9de17097 does not entail user-identifier immutability. Still generalizes Admin role beyond existing-record scope. Judge good misses this again."
+    },
+    {
+      "sourceOrdinal": 11,
+      "question": "Which projects should appear in a user's project list, and how should the list distinguish owned projects from invitations?",
+      "oldAnswer": "This request cannot be answered by read-only timeline fact search.",
+      "newAnswer": "This request cannot be answered by read-only timeline fact search.",
+      "newOutcome": "Returned",
+      "newResearchStatus": "Refused",
+      "newError": null,
+      "oldEvidence": {
+        "citedFacts": [],
+        "citedContexts": []
+      },
+      "newEvidence": {
+        "citedFacts": [],
+        "citedContexts": []
+      },
+      "fixedJudgePrediction": {
+        "reasoning": "The answer states that the request cannot be answered due to a read-only timeline fact search limitation. However, the question is about the criteria for projects appearing in a user's project list and how to distinguish owned projects from invitations, which could potentially be addressed with existing knowledge or guidelines. The refusal does not justify why the information cannot be provided, leading to a lack of transparency and an unjustified refusal. Therefore, the answer is marked as bad.",
+        "label": "bad"
+      },
+      "fixedJudgeError": null,
+      "independentAssessmentNotHumanAnnotation": "Unresolved false refusal. New final answer is exactly the old refusal; no retrieved/cited evidence."
+    },
+    {
+      "sourceOrdinal": 16,
+      "question": "What review and conflict-resolution requirements are specified before merging changes from one timeline into another?",
+      "oldAnswer": "The requirements for reviewing and resolving conflicts before merging changes from one timeline into another are outlined in the following evidence:\n\n1. **Entries Visibility**: For each entry in the timeline, only the first 500 characters are visible which means that users must consider the context of multiple entries rather than only the opening sections, as identified in the claim about timeline entries.\n   - Relevant source: The timeline shows different entries and specifically, the first 500 characters of the entry will be visible (cited Fact Ids: [89345f33-3623-497a-8eb4-0e844cabd91e], [75d66ef5-4c38-43d8-82c7-e27429ed5e77]).\n\n2. **Document Support**: The timelines can include documents of types such as PDF, Word, Excel, and .md files. Conflicts may arise based on the document types that are permitted for entries since not all file types may be acceptable during a merge.\n   - Relevant source: The supported document types for entries are listed as PDF, Word, Excel, and .md files (cited Fact Ids: [eb04cca1-b265-4821-893d-fd6301e4c360]).\n\n3. **Access Conditions**: Access to timelines is structured through project screens, implying that proper authorization and navigation are essential before any merging can occur. This may prevent unauthorized entries from being merged inadvertently.\n   - Relevant source: Timeline maintenance should be accessed from the Project consultation screen, not from the sidebar (cited Fact Ids: [27892b6b-a2b5-4c53-95f2-42e8593ed3e6], [a38ec519-bde8-47a8-9cf6-40753fd51d48]).\n\n4. **Interaction through Entries**: Merging must consider that interacting with timelines happens as a conversation, meaning the user needs to engage with multiple entries collaboratively.\n   - Relevant source: When entering a project, the timeline is seen as a conversation (cited Fact Ids: [9e7ecbac-45ce-4d23-ad80-130711385423]).\n\nThese steps outline the conditions necessary for merging timeline changes while upholding the proper processes for review and conflict resolution. \n\n**Cited Facts**: [89345f33-3623-497a-8eb4-0e844cabd91e, 75d66ef5-4c38-43d8-82c7-e27429ed5e77, eb04cca1-b265-4821-893d-fd6301e4c360, 27892b6b-a2b5-4c53-95f2-42e8593ed3e6, a38ec519-bde8-47a8-9cf6-40753fd51d48, 9e7ecbac-45ce-4d23-ad80-130711385423]",
+      "newAnswer": null,
+      "newOutcome": "Failed",
+      "newResearchStatus": null,
+      "newError": {
+        "category": "Synthesis",
+        "exceptionType": "TimelineFactInformationSynthesisException",
+        "httpStatus": null,
+        "providerCode": null,
+        "reason": "DuplicateContextCitations",
+        "executionStage": "Synthesis",
+        "causalChain": [
+          {
+            "category": "Synthesis",
+            "exceptionType": "TimelineFactInformationSynthesisException",
+            "httpStatus": null,
+            "providerCode": null,
+            "reason": "DuplicateContextCitations"
+          }
+        ]
+      },
+      "oldEvidence": {
+        "citedFacts": [
+          {
+            "id": "27892b6b-a2b5-4c53-95f2-42e8593ed3e6",
+            "entryId": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entryNumber": 6,
+            "claim": "You access a timeline inside a Project.",
+            "entityKey": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entityType": "TimelineMaintenance",
+            "sourceQuote": "Timeline maintenance should be accessed from the Project consultaton screen\nNot from the sidebar.\nYou Access a timeline inside a Project.",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "51438EFAEE0316E43A373F1D8E3500D9FC76918FE30F9241DEC1E17B5D4D4D13",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "e9257000-d229-4ed8-bf29-55bbe89773c3",
+            "extractionJobId": null
+          },
+          {
+            "id": "75d66ef5-4c38-43d8-82c7-e27429ed5e77",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "The timeline shows different entries.",
+            "entityKey": "timeline_entries",
+            "entityType": "Timeline",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "89345f33-3623-497a-8eb4-0e844cabd91e",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "For each entry in the timeline, the first 500 characters of the entry will be visible.",
+            "entityKey": "timeline_entry_characters",
+            "entityType": "TimelineEntry",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "9e7ecbac-45ce-4d23-ad80-130711385423",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "When entering a project, the timeline is seen as a conversation.",
+            "entityKey": "project_timeline",
+            "entityType": "Project",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "a38ec519-bde8-47a8-9cf6-40753fd51d48",
+            "entryId": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entryNumber": 6,
+            "claim": "Timeline maintenance should be accessed from the Project consultation screen.",
+            "entityKey": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entityType": "TimelineMaintenance",
+            "sourceQuote": "Timeline maintenance should be accessed from the Project consultaton screen\nNot from the sidebar.\nYou Access a timeline inside a Project.",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "51438EFAEE0316E43A373F1D8E3500D9FC76918FE30F9241DEC1E17B5D4D4D13",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "e9257000-d229-4ed8-bf29-55bbe89773c3",
+            "extractionJobId": null
+          },
+          {
+            "id": "eb04cca1-b265-4821-893d-fd6301e4c360",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "The supported document types for entries are PDF, Word, Excel, and .md files.",
+            "entityKey": "supported_documents",
+            "entityType": "DocumentSupport",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "5a23b268-d709-44f8-b853-85407bc3d668",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "anchorFactIds": [
+              "6f5155c2-ceda-4829-8698-a062116a0a1a",
+              "383cf24f-e833-406b-8bc5-3639730d1149",
+              "5f663b21-1774-49f7-b87d-29bdb4535987",
+              "af3d2509-b7c5-4c20-8af5-3204dce6cc02"
+            ],
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "text": "Maintenance screens\nThe screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating screens are different from the consult screen where the grid is shown.\n\nThis applies to projects, users, and timelines screens",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "7521374f-5b0e-43a0-9d1d-2868d333b6c2",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "anchorFactIds": [
+              "89345f33-3623-497a-8eb4-0e844cabd91e",
+              "eb04cca1-b265-4821-893d-fd6301e4c360",
+              "75d66ef5-4c38-43d8-82c7-e27429ed5e77",
+              "9e7ecbac-45ce-4d23-ad80-130711385423",
+              "cfc1f388-deec-4939-9cc9-073bcf22623b",
+              "6a040fbc-5a50-428b-9e2f-a8fd0cff3c73"
+            ],
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "text": "TimeLine Maintenance\nWhen we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated that text if they are available.\nWe could click on it to navigate to a full entry screen where we Will see:\nFull text of the entry\nThe user that created that entry\nLinks to download the artifacts(files) that created that entry\nAn option to add a new file to the entry\n\nWe Will see the same when creating the entry.\nSupported documents are: PDF, Word, Excel, .md files",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "92062191-e4eb-4aad-ba93-6343f9f09df4",
+            "entryId": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entryNumber": 6,
+            "anchorFactIds": [
+              "27892b6b-a2b5-4c53-95f2-42e8593ed3e6",
+              "a38ec519-bde8-47a8-9cf6-40753fd51d48",
+              "a51fdbf8-74d5-4380-9304-51fad81da96e"
+            ],
+            "sourceFingerprint": "51438EFAEE0316E43A373F1D8E3500D9FC76918FE30F9241DEC1E17B5D4D4D13",
+            "text": "TimeLine Maintenance Details\nTimeline maintenance should be accessed from the Project consultaton screen\nNot from the sidebar.\nYou Access a timeline inside a Project.",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "newEvidence": {
+        "citedFacts": [],
+        "citedContexts": []
+      },
+      "fixedJudgePrediction": null,
+      "fixedJudgeError": "NoAnswer",
+      "independentAssessmentNotHumanAnnotation": "No new released answer. Final runtime rejected DuplicateContextCitations after two calls. Do not score internal synthesis as a returned answer or claim hallucination fixed. Delivery failure relative to old returned-but-hallucinated answer."
+    },
+    {
+      "sourceOrdinal": 9,
+      "question": "What does UserRole.IsAdmin mean, and which application roles are listed in the initial specification?",
+      "oldAnswer": "UserRole.IsAdmin likely indicates that a user has administrative privileges within the application, although this specific meaning is not directly confirmed in the sourced data. The roles specified in the initial specification include at least the role of 'Admin', as noted in multiple entries related to the UserRoles table, which states that roles are selectable for users. In existing records, users should have the role of Admin assigned.",
+      "newAnswer": "The term `UserRole.IsAdmin` indicates that a user has the role of Admin within the application’s user roles framework. In the initial specification, the roles listed in the `UserRoles` table signify selectable roles for a user, with the specific mention that in the existing record, the user should have the role of Admin.",
+      "newOutcome": "Returned",
+      "newResearchStatus": "Complete",
+      "newError": null,
+      "oldEvidence": {
+        "citedFacts": [
+          {
+            "id": "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "In the table UserRoles, roles are selectable for a user.",
+            "entityKey": "UserRoles",
+            "entityType": "table",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          },
+          {
+            "id": "bb635dfe-350e-4205-9a10-d33194bb681f",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "In the existing record, the user should have the role Admin.",
+            "entityKey": "User",
+            "entityType": "entity",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "9558651a-ec8a-4ebc-8d8f-99fe210485cc",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "anchorFactIds": [
+              "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7",
+              "bb635dfe-350e-4205-9a10-d33194bb681f"
+            ],
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "text": "User Roles Maintenance\nThe table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "newEvidence": {
+        "citedFacts": [
+          {
+            "id": "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "In the table UserRoles, roles are selectable for a user.",
+            "entityKey": "UserRoles",
+            "entityType": "table",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          },
+          {
+            "id": "bb635dfe-350e-4205-9a10-d33194bb681f",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "In the existing record, the user should have the role Admin.",
+            "entityKey": "User",
+            "entityType": "entity",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "5fda176d-f279-439f-9306-9679cf9a2a0c",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "anchorFactIds": [
+              "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7",
+              "bb635dfe-350e-4205-9a10-d33194bb681f"
+            ],
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "text": "User Roles Maintenance\nThe table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "fixedJudgePrediction": {
+        "reasoning": "The answer correctly explains that `UserRole.IsAdmin` indicates a user has the Admin role within the application's user roles framework. It also mentions that the roles listed in the `UserRoles` table are selectable for a user and specifically states that in the existing record, the user should have the role of Admin. This aligns with the evidence provided, which confirms that the `UserRoles` table contains selectable roles and that the user should have the Admin role. However, the answer does not explicitly list all application roles from the initial specification, which is a limitation. Despite this, the core explanation regarding `UserRole.IsAdmin` is accurate and well-supported by the evidence.",
+        "label": "good"
+      },
+      "fixedJudgeError": null,
+      "independentAssessmentNotHumanAnnotation": "Regression in uncertainty wording: old explicitly said the meaning of IsAdmin was not directly confirmed; new asserts its meaning without that caveat. The two cited facts establish selectable roles and Admin on an existing record, not IsAdmin semantics. Judge good is unvalidated."
+    },
+    {
+      "sourceOrdinal": 7,
+      "question": "Which fields may a non-admin user change on their own User record?",
+      "oldAnswer": "Non-admin users can change their own User records, particularly fields related to their user profile from the maintenance screens. They can delete their existing records or navigate to update them. The User Profile is accessible from a toolbar on the landing page. It is implied that users have certain fields that can be modified, although specifics on which fields are changeable were not explicitly stated. Admin roles are specified separately from changeable user records, indicating non-admin users likely have constraints on role changes.",
+      "newAnswer": "A non-admin user can change certain fields in their User record, specifically the User Profile fields. While the details are not explicitly listed in the available evidence, the indications show that users have access to a User Profile page via a toolbar (from where they can manage their records). The functionalities that allow users to navigate to full entry screens to see and modify information also suggest the ability to update fields that are editable by them in their own records. However, permission details regarding specific fields are not explicitly detailed or confirmed within the current dataset, resulting in a partial answer regarding the exact fields capable of modification by non-admin users.",
+      "newOutcome": "Returned",
+      "newResearchStatus": "Partial",
+      "newError": null,
+      "oldEvidence": {
+        "citedFacts": [
+          {
+            "id": "16c422d7-8de8-41f4-a2df-2a01ee48570c",
+            "entryId": "6eef5fb9-0877-410c-92f8-8caeedf6103f",
+            "entryNumber": 3,
+            "claim": "The User Profile can be accessed from the toolbar",
+            "entityKey": "6eef5fb9-0877-410c-92f8-8caeedf6103f",
+            "entityType": "Landing Page",
+            "sourceQuote": "In the landing page we should have a left tool bar  with the different menus the user can Access.\nThat menú bar can be shown and hided with the hamburger button. So the screen can be used in mobile.\nThe User Profile should be on it's own page and be accese",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3AA6FE855BA33900F06271895CB3EC76A6EE5AADA0706F0D9348691037524BD4",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "447d8d68-1e61-4910-8cc4-a77315f5c447",
+            "extractionJobId": null
+          },
+          {
+            "id": "2120ca93-333a-4624-ab6c-ec81861c4c85",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "The full entry screen will show the user that created that entry.",
+            "entityKey": "entry_creator",
+            "entityType": "EntryScreen",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "383cf24f-e833-406b-8bc5-3639730d1149",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "From the grid in maintenance screens, a user can delete a record or navigate to one to update it.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "5f663b21-1774-49f7-b87d-29bdb4535987",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "In maintenance screens, a user can push a button to create a new record.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "1449b9eb-d06e-4e00-9055-ca12bdbe259d",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "anchorFactIds": [
+              "383cf24f-e833-406b-8bc5-3639730d1149",
+              "5f663b21-1774-49f7-b87d-29bdb4535987"
+            ],
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "text": "Maintenance screens\nThe screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating screens are different from the consult screen where the grid is shown.\n\nThis applies to projects, users, and timelines screens",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "34f79a44-bd59-4625-b887-f47b4cbe684e",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "anchorFactIds": [
+              "2120ca93-333a-4624-ab6c-ec81861c4c85",
+              "6a040fbc-5a50-428b-9e2f-a8fd0cff3c73",
+              "89345f33-3623-497a-8eb4-0e844cabd91e",
+              "eb04cca1-b265-4821-893d-fd6301e4c360"
+            ],
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "text": "TimeLine Maintenance\nWhen we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated that text if they are available.\nWe could click on it to navigate to a full entry screen where we Will see:\nFull text of the entry\nThe user that created that entry\nLinks to download the artifacts(files) that created that entry\nAn option to add a new file to the entry\n\nWe Will see the same when creating the entry.\nSupported documents are: PDF, Word, Excel, .md files",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "4518641d-f74c-4b09-93a8-74bff9738b92",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "anchorFactIds": [
+              "bb635dfe-350e-4205-9a10-d33194bb681f",
+              "23fefbf5-2e0e-41aa-8bf0-22aca091753c",
+              "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7"
+            ],
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "text": "User Roles Maintenance\nThe table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "9f25bd3e-549f-4626-b8ca-97ef50438756",
+            "entryId": "6eef5fb9-0877-410c-92f8-8caeedf6103f",
+            "entryNumber": 3,
+            "anchorFactIds": [
+              "16c422d7-8de8-41f4-a2df-2a01ee48570c",
+              "99624473-dc50-4dfd-b3cb-602c09af62b4",
+              "aa537da0-fac1-4fab-8ca0-a9df503920c1",
+              "2601bd8b-02a6-47a1-9817-cba51ce42e90"
+            ],
+            "sourceFingerprint": "3AA6FE855BA33900F06271895CB3EC76A6EE5AADA0706F0D9348691037524BD4",
+            "text": "Landing page\nIn the landing page we should have a left tool bar  with the different menus the user can Access.\nThat menú bar can be shown and hided with the hamburger button. So the screen can be used in mobile.\nThe User Profile should be on it's own page and be accesed from té toolbar\nThe Users sceeen should be on it's own page and be accesed from the toolbar\nThe Proje",
+            "truncated": true,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "newEvidence": {
+        "citedFacts": [
+          {
+            "id": "16c422d7-8de8-41f4-a2df-2a01ee48570c",
+            "entryId": "6eef5fb9-0877-410c-92f8-8caeedf6103f",
+            "entryNumber": 3,
+            "claim": "The User Profile can be accessed from the toolbar",
+            "entityKey": "6eef5fb9-0877-410c-92f8-8caeedf6103f",
+            "entityType": "Landing Page",
+            "sourceQuote": "In the landing page we should have a left tool bar  with the different menus the user can Access.\nThat menú bar can be shown and hided with the hamburger button. So the screen can be used in mobile.\nThe User Profile should be on it's own page and be accese",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3AA6FE855BA33900F06271895CB3EC76A6EE5AADA0706F0D9348691037524BD4",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "447d8d68-1e61-4910-8cc4-a77315f5c447",
+            "extractionJobId": null
+          },
+          {
+            "id": "2120ca93-333a-4624-ab6c-ec81861c4c85",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "The full entry screen will show the user that created that entry.",
+            "entityKey": "entry_creator",
+            "entityType": "EntryScreen",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "23fefbf5-2e0e-41aa-8bf0-22aca091753c",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "The User must have the IDUserRole field with a value selected from the UserRoles table.",
+            "entityKey": "User",
+            "entityType": "entity",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          },
+          {
+            "id": "383cf24f-e833-406b-8bc5-3639730d1149",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "From the grid in maintenance screens, a user can delete a record or navigate to one to update it.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "5f663b21-1774-49f7-b87d-29bdb4535987",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "In maintenance screens, a user can push a button to create a new record.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "863f1a9e-d4a7-4549-8007-11483177c528",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "anchorFactIds": [
+              "383cf24f-e833-406b-8bc5-3639730d1149",
+              "5f663b21-1774-49f7-b87d-29bdb4535987",
+              "6f5155c2-ceda-4829-8698-a062116a0a1a"
+            ],
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "text": "Maintenance screens\nThe screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating screens are different from the consult screen where the grid is shown.\n\nThis applies to projects, users, and timelines screens",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "934ad566-f759-48ea-9377-eccdfce4f8f1",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "anchorFactIds": [
+              "2120ca93-333a-4624-ab6c-ec81861c4c85",
+              "6a040fbc-5a50-428b-9e2f-a8fd0cff3c73",
+              "77450402-8b47-4ece-aff7-98c38ea68013",
+              "89345f33-3623-497a-8eb4-0e844cabd91e",
+              "cdc4a0a7-1a6e-4276-8871-d5237b909a63",
+              "2e309574-6be3-4f10-b26c-9613012684fc"
+            ],
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "text": "TimeLine Maintenance\nWhen we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated that text if they are available.\nWe could click on it to navigate to a full entry screen where we Will see:\nFull text of the entry\nThe user that created that entry\nLinks to download the artifacts(files) that created that entry\nAn option to add a new file to the entry\n\nWe Will see the same when creating the entry.\nSupported documents are: PDF, Word, Excel, .md files",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "93d6c8f5-14e1-488b-9406-8d8fe6bd8c1b",
+            "entryId": "6eef5fb9-0877-410c-92f8-8caeedf6103f",
+            "entryNumber": 3,
+            "anchorFactIds": [
+              "16c422d7-8de8-41f4-a2df-2a01ee48570c",
+              "99624473-dc50-4dfd-b3cb-602c09af62b4",
+              "aa537da0-fac1-4fab-8ca0-a9df503920c1"
+            ],
+            "sourceFingerprint": "3AA6FE855BA33900F06271895CB3EC76A6EE5AADA0706F0D9348691037524BD4",
+            "text": "Landing page\nIn the landing page we should have a left tool bar  with the different menus the user can Access.\nThat menú bar can be shown and hided with the hamburger button. So the screen can be used in mobile.\nThe User Profile should be on it's own page and be accesed from té toolbar\nThe Users sceeen should be on it's own page a",
+            "truncated": true,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "fixedJudgePrediction": {
+        "reasoning": "The answer correctly identifies that non-admin users can change certain fields in their User record, specifically mentioning the User Profile fields. However, it also acknowledges a limitation in that the specific fields that can be modified are not explicitly detailed in the evidence provided. This results in a partial answer, as it does not fully address the user's question about which specific fields can be changed. The evidence supports the claim that users can access and manage their User Profile, but it lacks clarity on the exact fields available for modification.",
+        "label": "bad"
+      },
+      "fixedJudgeError": null,
+      "independentAssessmentNotHumanAnnotation": "Persistent risk: toolbar navigation/entry screens do not establish which User fields non-admins may change. New caveat does not ground earlier permission claims. Old answer was similarly speculative; do not infer a new regression solely from old Good label."
+    },
+    {
+      "sourceOrdinal": 12,
+      "question": "Which Project fields identify the user who created the project and the project's main timeline?",
+      "oldAnswer": "The user who created the project can be identified using the entry creator field, which will display the user that created the entry when viewing the project timeline. Additionally, the project's main timeline is presented as a conversation, featuring various entries where the first 500 characters of each entry are visible, along with a link to download any relevant artifacts related to that entry. This information is accessible through the project interface, allowing users to navigate and view the project history comprehensively.",
+      "newAnswer": "The fields identifying the user who created the project and the project's main timeline include:\n\n1. **User Identification**: The full entry screen will show the user who created each entry. This is supported by the fact stating, \"The full entry screen will show the user that created that entry.\" (Fact ID: 2120ca93-333a-4624-ab6c-ec81861c4c85).\n   \n2. **Main Timeline**: The project timeline is described as a conversation where different entries are visible. It states, \"When entering a project, the timeline is seen as a conversation.\" (Fact ID: 9e7ecbac-45ce-4d23-ad80-130711385423).\n   \n3. **Timeline Entries**: It is noted that the timeline shows different entries with the statement, \"The timeline shows different entries.\" (Fact ID: 75d66ef5-4c38-43d8-82c7-e27429ed5e77).\n\nThus, the key fields that identify the project creator are embedded in the entry display, and the main timeline is recognized by its conversational nature. \n\nCited Fact IDs: [2120ca93-333a-4624-ab6c-ec81861c4c85, 9e7ecbac-45ce-4d23-ad80-130711385423, 75d66ef5-4c38-43d8-82c7-e27429ed5e77] \nCited Context Evidence IDs: [0eedd231-adcc-47f5-bddf-d9b07e81cb99, f5eeba7f-4e3f-42d1-a4f5-b236ad870e04, bd0a942e-f658-41a4-ad67-d49ca2b70701]  \n\nThe evidence does not furnish an exhaustive breakdown of all potential fields or related functionalities beyond these descriptions.",
+      "newOutcome": "Returned",
+      "newResearchStatus": "Partial",
+      "newError": null,
+      "oldEvidence": {
+        "citedFacts": [
+          {
+            "id": "2120ca93-333a-4624-ab6c-ec81861c4c85",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "The full entry screen will show the user that created that entry.",
+            "entityKey": "entry_creator",
+            "entityType": "EntryScreen",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "27892b6b-a2b5-4c53-95f2-42e8593ed3e6",
+            "entryId": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entryNumber": 6,
+            "claim": "You access a timeline inside a Project.",
+            "entityKey": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entityType": "TimelineMaintenance",
+            "sourceQuote": "Timeline maintenance should be accessed from the Project consultaton screen\nNot from the sidebar.\nYou Access a timeline inside a Project.",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "51438EFAEE0316E43A373F1D8E3500D9FC76918FE30F9241DEC1E17B5D4D4D13",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "e9257000-d229-4ed8-bf29-55bbe89773c3",
+            "extractionJobId": null
+          },
+          {
+            "id": "75d66ef5-4c38-43d8-82c7-e27429ed5e77",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "The timeline shows different entries.",
+            "entityKey": "timeline_entries",
+            "entityType": "Timeline",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "9e7ecbac-45ce-4d23-ad80-130711385423",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "When entering a project, the timeline is seen as a conversation.",
+            "entityKey": "project_timeline",
+            "entityType": "Project",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "cfc1f388-deec-4939-9cc9-073bcf22623b",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "There will be a link to download the artifacts that generated the timeline entry if they are available.",
+            "entityKey": "timeline_entry_artifacts",
+            "entityType": "TimelineEntry",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": []
+      },
+      "newEvidence": {
+        "citedFacts": [
+          {
+            "id": "2120ca93-333a-4624-ab6c-ec81861c4c85",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "The full entry screen will show the user that created that entry.",
+            "entityKey": "entry_creator",
+            "entityType": "EntryScreen",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "75d66ef5-4c38-43d8-82c7-e27429ed5e77",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "The timeline shows different entries.",
+            "entityKey": "timeline_entries",
+            "entityType": "Timeline",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "9e7ecbac-45ce-4d23-ad80-130711385423",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "When entering a project, the timeline is seen as a conversation.",
+            "entityKey": "project_timeline",
+            "entityType": "Project",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "0eedd231-adcc-47f5-bddf-d9b07e81cb99",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "anchorFactIds": [
+              "9e7ecbac-45ce-4d23-ad80-130711385423",
+              "2120ca93-333a-4624-ab6c-ec81861c4c85",
+              "89345f33-3623-497a-8eb4-0e844cabd91e",
+              "eb04cca1-b265-4821-893d-fd6301e4c360",
+              "75d66ef5-4c38-43d8-82c7-e27429ed5e77",
+              "cfc1f388-deec-4939-9cc9-073bcf22623b",
+              "6a040fbc-5a50-428b-9e2f-a8fd0cff3c73",
+              "ebb2a2a2-e62b-4684-9bb1-91bbc65dcd93",
+              "2e309574-6be3-4f10-b26c-9613012684fc",
+              "77450402-8b47-4ece-aff7-98c38ea68013"
+            ],
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "text": "TimeLine Maintenance\nWhen we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated that text if they are available.\nWe could click on it to navigate to a full entry screen where we Will see:\nFull text of the entry\nThe user that created that entry\nLinks to download the artifacts(files) that created that entry\nAn option to add a new file to the entry\n\nWe Will see the same when creating the entry.\nSupported documents are: PDF, Word, Excel, .md files",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "bd0a942e-f658-41a4-ad67-d49ca2b70701",
+            "entryId": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entryNumber": 6,
+            "anchorFactIds": [
+              "27892b6b-a2b5-4c53-95f2-42e8593ed3e6",
+              "a38ec519-bde8-47a8-9cf6-40753fd51d48",
+              "a51fdbf8-74d5-4380-9304-51fad81da96e"
+            ],
+            "sourceFingerprint": "51438EFAEE0316E43A373F1D8E3500D9FC76918FE30F9241DEC1E17B5D4D4D13",
+            "text": "TimeLine Maintenance Details\nTimeline maintenance should be accessed from the Project consultaton screen\nNot from the sidebar.\nYou Access a timeline inside a Project.",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "f5eeba7f-4e3f-42d1-a4f5-b236ad870e04",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "anchorFactIds": [
+              "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7",
+              "23fefbf5-2e0e-41aa-8bf0-22aca091753c",
+              "bb635dfe-350e-4205-9a10-d33194bb681f"
+            ],
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "text": "User Roles Maintenance\nThe table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "fixedJudgePrediction": {
+        "reasoning": "The answer accurately identifies the fields related to the user who created the project and the project's main timeline. It cites specific evidence that supports the claims about user identification and the nature of the timeline as a conversation. However, the answer does not provide a comprehensive overview of all potential fields or functionalities, which is a limitation. Despite this, the core claims are well-supported by the evidence provided, making the answer acceptable.",
+        "label": "good"
+      },
+      "fixedJudgeError": null,
+      "independentAssessmentNotHumanAnnotation": "Persistent entity transfer: Entry creator and conversation display do not identify Project creator/main-timeline fields. Old answer made similar unsupported claims. Judge good misses the core mismatch."
+    },
+    {
+      "sourceOrdinal": 13,
+      "question": "Who is allowed to add ProjectParticipant records, and from which maintenance screen are participants managed?",
+      "oldAnswer": "To add ProjectParticipant records, users must have the role of Admin (Fact: bb635dfe-350e-4205-9a10-d33194bb681f) . Participants can be managed from maintenance screens, which are designed to show a grid with existing data, allowing users to delete or navigate to records for updating, as well as create new records (Fact: 5f663b21-1774-49f7-b87d-29bdb4535987, Fact: 383cf24f-e833-406b-8bc5-3639730d1149). The functionality of these maintenance screens applies to projects, users, and timelines (Fact: 6f5155c2-ceda-4829-8698-a062116a0a1a).",
+      "newAnswer": "Users can add ProjectParticipant records, but specific permissions regarding who exactly holds that ability are not provided in the evidence. The evidence indicates that the general functionality for maintenance screens allows users to create new records, but does not specify roles or limitations regarding ProjectParticipant records specifically.\n\nParticipants are managed from the Maintenance screens, which apply to projects, users, and timelines. The maintenance screen should work in a way that upon entering, a grid with existing data is shown, allowing users to navigate to a record for updates or to delete it, and users can also push a button to create a new record.",
+      "newOutcome": "Returned",
+      "newResearchStatus": "Partial",
+      "newError": null,
+      "oldEvidence": {
+        "citedFacts": [
+          {
+            "id": "383cf24f-e833-406b-8bc5-3639730d1149",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "From the grid in maintenance screens, a user can delete a record or navigate to one to update it.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "5f663b21-1774-49f7-b87d-29bdb4535987",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "In maintenance screens, a user can push a button to create a new record.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "6f5155c2-ceda-4829-8698-a062116a0a1a",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "The maintenance screen functionality applies to projects, users, and timelines screens.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "creens are different from the consult screen where the grid is shown.\n\nThis applies to projects, users, and timelines screens",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "bb635dfe-350e-4205-9a10-d33194bb681f",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "In the existing record, the user should have the role Admin.",
+            "entityKey": "User",
+            "entityType": "entity",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "4a887a0b-a05a-4ddb-b173-8350c9289a94",
+            "entryId": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entryNumber": 6,
+            "anchorFactIds": [
+              "a38ec519-bde8-47a8-9cf6-40753fd51d48",
+              "a51fdbf8-74d5-4380-9304-51fad81da96e",
+              "27892b6b-a2b5-4c53-95f2-42e8593ed3e6"
+            ],
+            "sourceFingerprint": "51438EFAEE0316E43A373F1D8E3500D9FC76918FE30F9241DEC1E17B5D4D4D13",
+            "text": "TimeLine Maintenance Details\nTimeline maintenance should be accessed from the Project consultaton screen\nNot from the sidebar.\nYou Access a timeline inside a Project.",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "6f2883c8-768b-4988-9bfa-b75cba587718",
+            "entryId": "393a2a04-21a7-4bc9-8064-3909b978bdeb",
+            "entryNumber": 2,
+            "anchorFactIds": [
+              "826ff4f0-e8b7-43c1-8545-65832e0a1947"
+            ],
+            "sourceFingerprint": "6064BEA3BA38CB28BA912A939D3C3FF1F090F87B0FCE28E41B5AB09D54E17A80",
+            "text": "Login Screen\nThe login screen should show only Login information and links to Access to Password Recovery\nPassword Recovery should have two steps:\nRequest password recovery to an email\nAnd reset the password with the token sent\nBoth should be different urls and screens the user Will acces.\nBoth should not be showed on the login screen",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "809efb49-ddb9-439e-acda-dc22639a8bf6",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "anchorFactIds": [
+              "bb635dfe-350e-4205-9a10-d33194bb681f"
+            ],
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "text": "User Roles Maintenance\nThe table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "852ad760-4d05-461d-aa59-dd1191f9f5c7",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "anchorFactIds": [
+              "383cf24f-e833-406b-8bc5-3639730d1149",
+              "5f663b21-1774-49f7-b87d-29bdb4535987",
+              "6f5155c2-ceda-4829-8698-a062116a0a1a",
+              "af3d2509-b7c5-4c20-8af5-3204dce6cc02",
+              "0e45e929-4a41-4da9-9c39-af89c4130cc5"
+            ],
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "text": "Maintenance screens\nThe screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating screens are different from the consult screen where the grid is shown.\n\nThis applies to projects, users, and timelines screens",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "newEvidence": {
+        "citedFacts": [
+          {
+            "id": "0e45e929-4a41-4da9-9c39-af89c4130cc5",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "When entering maintenance screens, a grid with existing data should be shown.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "383cf24f-e833-406b-8bc5-3639730d1149",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "From the grid in maintenance screens, a user can delete a record or navigate to one to update it.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "5f663b21-1774-49f7-b87d-29bdb4535987",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "In maintenance screens, a user can push a button to create a new record.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "6f5155c2-ceda-4829-8698-a062116a0a1a",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "The maintenance screen functionality applies to projects, users, and timelines screens.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "creens are different from the consult screen where the grid is shown.\n\nThis applies to projects, users, and timelines screens",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "af3d2509-b7c5-4c20-8af5-3204dce6cc02",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "The editing and creating screens in maintenance are different from the consult screen where the grid is shown.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "850f121f-136d-409a-b072-d55d68b191e9",
+            "entryId": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entryNumber": 6,
+            "anchorFactIds": [
+              "a38ec519-bde8-47a8-9cf6-40753fd51d48",
+              "a51fdbf8-74d5-4380-9304-51fad81da96e"
+            ],
+            "sourceFingerprint": "51438EFAEE0316E43A373F1D8E3500D9FC76918FE30F9241DEC1E17B5D4D4D13",
+            "text": "TimeLine Maintenance Details\nTimeline maintenance should be accessed from the Project consultaton screen\nNot from the sidebar.\nYou Access a timeline inside a Project.",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "c46427c0-12e9-45c2-a779-c4a898e5773c",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "anchorFactIds": [
+              "383cf24f-e833-406b-8bc5-3639730d1149",
+              "5f663b21-1774-49f7-b87d-29bdb4535987",
+              "6f5155c2-ceda-4829-8698-a062116a0a1a",
+              "af3d2509-b7c5-4c20-8af5-3204dce6cc02",
+              "0e45e929-4a41-4da9-9c39-af89c4130cc5"
+            ],
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "text": "Maintenance screens\nThe screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating screens are different from the consult screen where the grid is shown.\n\nThis applies to projects, users, and timelines screens",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "fixedJudgePrediction": {
+        "reasoning": "The answer correctly states that users can add ProjectParticipant records but notes a limitation in not specifying which users have that ability. It also accurately describes the maintenance screens where participants are managed, including the functionality of creating new records and navigating existing ones. However, the lack of specific information about user roles or permissions for adding ProjectParticipant records is a significant limitation that affects the completeness of the answer. Overall, while the answer provides useful information, the lack of clarity on permissions makes it less than fully satisfactory.",
+        "label": "bad"
+      },
+      "fixedJudgeError": null,
+      "independentAssessmentNotHumanAnnotation": "Old unsupported Admin-only claim is removed, but new participant permissions/screen are still inferred from generic maintenance facts. No clean correctness fix established."
+    },
+    {
+      "sourceOrdinal": 14,
+      "question": "Which ProjectRole values are specified for participants, and can a participant's assigned project role be changed?",
+      "oldAnswer": "The specified ProjectRole values for participants are selectable roles for a user within the UserRoles table, with roles potentially including Admin. This indicates that a participant's assigned project role can indeed be changed, as users have the IDUserRole field with a value selected from the UserRole table allowing for role adjustments.",
+      "newAnswer": "The ProjectRole values specified for participants are selectable roles, such as Admin, as detailed in the context of the UserRoles table. Participants in a project can have their assigned project roles changed, as user roles are defined in the UserRoles table and can be selected or updated accordingly. This indicates that the role can be modified based on project requirements and participant needs.",
+      "newOutcome": "Returned",
+      "newResearchStatus": "Partial",
+      "newError": null,
+      "oldEvidence": {
+        "citedFacts": [
+          {
+            "id": "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "In the table UserRoles, roles are selectable for a user.",
+            "entityKey": "UserRoles",
+            "entityType": "table",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          },
+          {
+            "id": "bb635dfe-350e-4205-9a10-d33194bb681f",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "In the existing record, the user should have the role Admin.",
+            "entityKey": "User",
+            "entityType": "entity",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "004deccc-c11d-4548-8dc1-275f8ac48124",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "anchorFactIds": [
+              "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7",
+              "bb635dfe-350e-4205-9a10-d33194bb681f"
+            ],
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "text": "User Roles Maintenance\nThe table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "2c02cbc8-5778-4c63-8627-68c734725bba",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "anchorFactIds": [
+              "89345f33-3623-497a-8eb4-0e844cabd91e",
+              "eb04cca1-b265-4821-893d-fd6301e4c360",
+              "9e7ecbac-45ce-4d23-ad80-130711385423",
+              "2e309574-6be3-4f10-b26c-9613012684fc",
+              "77450402-8b47-4ece-aff7-98c38ea68013"
+            ],
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "text": "TimeLine Maintenance\nWhen we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated that text if they are available.\nWe could click on it to navigate to a full entry screen where we Will see:\nFull text of the entry\nThe user that created that entry\nLinks to download the artifacts(files) that created that entry\nAn option to add a new file to the entry\n\nWe Will see the same when creating the entry.\nSupported documents are: PDF, Word, Excel, .md files",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "newEvidence": {
+        "citedFacts": [
+          {
+            "id": "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "In the table UserRoles, roles are selectable for a user.",
+            "entityKey": "UserRoles",
+            "entityType": "table",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          },
+          {
+            "id": "bb635dfe-350e-4205-9a10-d33194bb681f",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "claim": "In the existing record, the user should have the role Admin.",
+            "entityKey": "User",
+            "entityType": "entity",
+            "sourceQuote": "The table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "2f1a251d-2d2a-477a-8681-33f45a030bd4",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "6600f355-d6b3-4611-bbfc-75e6bef633ef",
+            "entryId": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entryNumber": 6,
+            "anchorFactIds": [
+              "27892b6b-a2b5-4c53-95f2-42e8593ed3e6",
+              "a38ec519-bde8-47a8-9cf6-40753fd51d48",
+              "a51fdbf8-74d5-4380-9304-51fad81da96e"
+            ],
+            "sourceFingerprint": "51438EFAEE0316E43A373F1D8E3500D9FC76918FE30F9241DEC1E17B5D4D4D13",
+            "text": "TimeLine Maintenance Details\nTimeline maintenance should be accessed from the Project consultaton screen\nNot from the sidebar.\nYou Access a timeline inside a Project.",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "a1cb3bb5-390f-4643-9c4a-c4112fa6169e",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "anchorFactIds": [
+              "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7",
+              "bb635dfe-350e-4205-9a10-d33194bb681f"
+            ],
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "text": "User Roles Maintenance\nThe table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "fixedJudgePrediction": {
+        "reasoning": "The answer correctly identifies that the ProjectRole values for participants include selectable roles like Admin, which is supported by the evidence from the UserRoles table. It also accurately states that a participant's assigned project role can be changed, as indicated by the ability to select or update user roles. However, the evidence provided does not explicitly list all possible ProjectRole values, which could limit the completeness of the answer. Despite this limitation, the core claims about the roles and their modifiability are well-supported, making the answer acceptable overall.",
+        "label": "good"
+      },
+      "fixedJudgeError": null,
+      "independentAssessmentNotHumanAnnotation": "Persistent UserRole/ProjectRole conflation and unsupported mutability claim. UserRoles facts do not entail participant ProjectRole values or change permissions. Judge good is unvalidated."
+    },
+    {
+      "sourceOrdinal": 15,
+      "question": "How many timelines may a Project have, and how many of them may be its main timeline?",
+      "oldAnswer": "The specific number of timelines a project may have is not explicitly stated in the evidence; however, it implies that a project can have multiple timelines as the timeline is described as a conversation with different entries. Furthermore, it is not clearly indicated how many main timelines a project may possess. Therefore, it may be inferred that a project can have several timelines, but the rules surrounding main timelines are not delineated in the available evidence.",
+      "newAnswer": "A project can have multiple timelines, but the available evidence does not specify the maximum number of timelines that a project can have. However, it is implied that there is no limitation mentioned in the excerpts. Furthermore, there is no clear evidence from the provided data stating how many of these timelines may be considered the main timeline. Therefore, these aspects remain partially supported by the evidence at hand.",
+      "newOutcome": "Returned",
+      "newResearchStatus": "Partial",
+      "newError": null,
+      "oldEvidence": {
+        "citedFacts": [
+          {
+            "id": "27892b6b-a2b5-4c53-95f2-42e8593ed3e6",
+            "entryId": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entryNumber": 6,
+            "claim": "You access a timeline inside a Project.",
+            "entityKey": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entityType": "TimelineMaintenance",
+            "sourceQuote": "Timeline maintenance should be accessed from the Project consultaton screen\nNot from the sidebar.\nYou Access a timeline inside a Project.",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "51438EFAEE0316E43A373F1D8E3500D9FC76918FE30F9241DEC1E17B5D4D4D13",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "e9257000-d229-4ed8-bf29-55bbe89773c3",
+            "extractionJobId": null
+          },
+          {
+            "id": "383cf24f-e833-406b-8bc5-3639730d1149",
+            "entryId": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entryNumber": 4,
+            "claim": "From the grid in maintenance screens, a user can delete a record or navigate to one to update it.",
+            "entityKey": "51c51d61-2fd5-4f8c-b362-a31a9d8524e4",
+            "entityType": "Screen",
+            "sourceQuote": "The screen maintenance should work this way:\nWhen you enter them a grid with existing data should be shown.\nFrom the grid you can delete a record or navigate to one to update it\nAlso you can push a button to créate a new record.\nBoth editing and creating s",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "31960512-a9dd-4920-b631-f2394aebef2a",
+            "extractionJobId": null
+          },
+          {
+            "id": "77450402-8b47-4ece-aff7-98c38ea68013",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "Users can navigate to a full entry screen to see the full text of the entry.",
+            "entityKey": "full_entry_screen_navigation",
+            "entityType": "EntryScreen",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "9e7ecbac-45ce-4d23-ad80-130711385423",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "When entering a project, the timeline is seen as a conversation.",
+            "entityKey": "project_timeline",
+            "entityType": "Project",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "a38ec519-bde8-47a8-9cf6-40753fd51d48",
+            "entryId": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entryNumber": 6,
+            "claim": "Timeline maintenance should be accessed from the Project consultation screen.",
+            "entityKey": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entityType": "TimelineMaintenance",
+            "sourceQuote": "Timeline maintenance should be accessed from the Project consultaton screen\nNot from the sidebar.\nYou Access a timeline inside a Project.",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "51438EFAEE0316E43A373F1D8E3500D9FC76918FE30F9241DEC1E17B5D4D4D13",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "e9257000-d229-4ed8-bf29-55bbe89773c3",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": []
+      },
+      "newEvidence": {
+        "citedFacts": [
+          {
+            "id": "27892b6b-a2b5-4c53-95f2-42e8593ed3e6",
+            "entryId": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entryNumber": 6,
+            "claim": "You access a timeline inside a Project.",
+            "entityKey": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entityType": "TimelineMaintenance",
+            "sourceQuote": "Timeline maintenance should be accessed from the Project consultaton screen\nNot from the sidebar.\nYou Access a timeline inside a Project.",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "51438EFAEE0316E43A373F1D8E3500D9FC76918FE30F9241DEC1E17B5D4D4D13",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "e9257000-d229-4ed8-bf29-55bbe89773c3",
+            "extractionJobId": null
+          },
+          {
+            "id": "77450402-8b47-4ece-aff7-98c38ea68013",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "Users can navigate to a full entry screen to see the full text of the entry.",
+            "entityKey": "full_entry_screen_navigation",
+            "entityType": "EntryScreen",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          },
+          {
+            "id": "9e7ecbac-45ce-4d23-ad80-130711385423",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "claim": "When entering a project, the timeline is seen as a conversation.",
+            "entityKey": "project_timeline",
+            "entityType": "Project",
+            "sourceQuote": "When we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated th",
+            "sourceKind": "Entry",
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "clarificationEvidence": "[]",
+            "creationReviewId": "97a74520-5ce4-4f9e-9609-9ee31f830d55",
+            "extractionJobId": null
+          }
+        ],
+        "citedContexts": [
+          {
+            "evidenceId": "20a24a46-1d19-4682-bed4-79fa5f28b74e",
+            "entryId": "9e0c3fb0-c11e-48da-87fc-d2e0ed4c7f61",
+            "entryNumber": 7,
+            "anchorFactIds": [
+              "23fefbf5-2e0e-41aa-8bf0-22aca091753c",
+              "bb635dfe-350e-4205-9a10-d33194bb681f",
+              "7b0114db-1b8b-4109-bf34-ca2cf1d09cf7"
+            ],
+            "sourceFingerprint": "3BA5B766E07D2F21DDBEC542F81BFC44F6029D276E98D2330F2EAA8E5C07A8AD",
+            "text": "User Roles Maintenance\nThe table UserRoles are the roles that are selectable for a user.\nIt should not have the UserId\nThe User should have the IDUserRole field with a value selected from UserRole table.\nIn the existing record the user should have the role Admin",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "56bc1078-2605-4157-b237-75ac3ff07c5c",
+            "entryId": "0332b9f2-75b5-470d-8777-2182940e9aa2",
+            "entryNumber": 5,
+            "anchorFactIds": [
+              "9e7ecbac-45ce-4d23-ad80-130711385423",
+              "77450402-8b47-4ece-aff7-98c38ea68013",
+              "cdc4a0a7-1a6e-4276-8871-d5237b909a63",
+              "89345f33-3623-497a-8eb4-0e844cabd91e",
+              "75d66ef5-4c38-43d8-82c7-e27429ed5e77",
+              "cfc1f388-deec-4939-9cc9-073bcf22623b",
+              "2e309574-6be3-4f10-b26c-9613012684fc",
+              "6a040fbc-5a50-428b-9e2f-a8fd0cff3c73",
+              "eb04cca1-b265-4821-893d-fd6301e4c360",
+              "2120ca93-333a-4624-ab6c-ec81861c4c85",
+              "ebb2a2a2-e62b-4684-9bb1-91bbc65dcd93"
+            ],
+            "sourceFingerprint": "1CED46AB38A22C3129287EE1E8AFF8B78462E3D9E14828EF1DD7DE7AA5DD91BE",
+            "text": "TimeLine Maintenance\nWhen we enter a Project we Will see it's timeline as a conversation.\nWe should see the different entries of the timeline: By each entry we Will see the firs 500 characters of the entry of the timeline \nand a link to download the artifacts that generated that text if they are available.\nWe could click on it to navigate to a full entry screen where we Will see:\nFull text of the entry\nThe user that created that entry\nLinks to download the artifacts(files) that created that entry\nAn option to add a new file to the entry\n\nWe Will see the same when creating the entry.\nSupported documents are: PDF, Word, Excel, .md files",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          },
+          {
+            "evidenceId": "dacc409b-ec5c-41ac-a0e9-015949643224",
+            "entryId": "7a218ad3-5739-435a-91d9-666613ff09fe",
+            "entryNumber": 6,
+            "anchorFactIds": [
+              "27892b6b-a2b5-4c53-95f2-42e8593ed3e6",
+              "a38ec519-bde8-47a8-9cf6-40753fd51d48",
+              "a51fdbf8-74d5-4380-9304-51fad81da96e"
+            ],
+            "sourceFingerprint": "51438EFAEE0316E43A373F1D8E3500D9FC76918FE30F9241DEC1E17B5D4D4D13",
+            "text": "TimeLine Maintenance Details\nTimeline maintenance should be accessed from the Project consultaton screen\nNot from the sidebar.\nYou Access a timeline inside a Project.",
+            "truncated": false,
+            "evidenceKind": "SeparateSourceEntryContextNotFactProof"
+          }
+        ]
+      },
+      "fixedJudgePrediction": {
+        "reasoning": "The answer correctly states that a project can have multiple timelines but does not specify a maximum number, which aligns with the evidence that implies no limitation is mentioned. However, it also notes that there is no clear evidence regarding how many of these timelines may be considered the main timeline, which is accurate. The answer is grounded in the evidence provided, acknowledging the limitations of the available information. Therefore, it is a good response.",
+        "label": "good"
+      },
+      "fixedJudgeError": null,
+      "independentAssessmentNotHumanAnnotation": "Persistent unsupported plurality inference. Entry/conversation navigation does not establish project timeline cardinality. New absence caveats do not prove no maximum."
+    }
+  ],
+  "verifiedExample": {
+    "sourceOrdinal": 5,
+    "oldDatasetLine": 5,
+    "newDatasetLine": 5,
+    "oldQuote": "This request cannot be answered by read-only timeline fact search.",
+    "newQuote": "The user can navigate to an existing record from the grid to update (edit) it.",
+    "decisiveSourceQuote": "From the grid you can delete a record or navigate to one to update it",
+    "supportFactId": "383cf24f-e833-406b-8bc5-3639730d1149",
+    "sourceEntryNumber": 4,
+    "sourceFingerprint": "B15944497A661C61588851191ACCC3D26C16DF00184C68AC84C3F1D328FDD244",
+    "promptDelta": "Planning distinguishes descriptive CRUD/specification questions from execution requests; synthesis requires exact evidence entailment and limited unsupported parts.",
+    "interpretation": "Observed full-search example; fixed original judge unchanged. Not a judge-prompt improvement or causal proof."
+  }
+}

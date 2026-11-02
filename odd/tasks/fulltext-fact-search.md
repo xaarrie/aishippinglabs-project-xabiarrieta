@@ -1,0 +1,34 @@
+# PostgreSQL full-text fact search
+
+## Objective and authorization
+Replace substring fact matching with ranked PostgreSQL full-text search over Claim, EntityKey and EntityType. User explicitly selected implementation, then chose mixed/multiple languages => PostgreSQL `simple` text-search configuration. No language stemming, typo tolerance, synonyms or automatic accent folding are promised. No embeddings/external provider calls or entry-body search.
+
+## Context and scope
+Search Facts has two query paths in TimelineFactInformationSearch plus shared TimelineFactSearch used by review tools. Apply consistent FTS semantics across these while preserving each path's authorization, timeline/project scope, effective facts, chronology bounds, result/citation representations, bounded12 terms/300 chars, current model10/tool20/search4 limits, final evidence revalidation and deterministic tie-breaks. Preserve any-term OR recall. Full-text whole-lexeme matching intentionally replaces substring behavior. Empty/no-lexeme input must not become unbounded.
+
+## Design constraints
+Use installed Npgsql/EF API, parameterized query values and fixed trusted `simple` configuration. Add matching GIN index via a reversible new migration; ensure indexed vector expression and runtime SQL agree. Prefer smallest coherent design; no unnecessary stored columns, dependencies, runtime migration automation or broad schema edits. Non-PostgreSQL in-memory tests cannot prove actual FTS; keep a clearly separate provider fallback/test seam if needed, without production client-side filtering. Add SQL translation/schema tests and an opt-in dedicated PostgreSQL integration regression if infrastructure permits. Do not read secret values (.env/launchSettings/connection strings), run migrations against application data, create/start databases or enable integration flags without human approval. Existing explicit dedicated test opt-in may be honored only if repository safety guard passes. No real LLM/provider calls/exports/app restarts, source staging/commits/pushes. Preserve extensive pre-existing dirty/untracked work. Use approved SkipClientBuild=true and ignored in-repo artifacts for build/test isolation. Keep writes single-threaded.
+
+## Tasks
+- [x] F1 (writer verified, including regression corrections): Implement simple-language full-text fact predicates/relevance ranking, aligned GIN migration/index, focused deterministic regression/SQL-generation tests and concise deployment/semantic documentation. Observe meaningful RED/GREEN, preserving auth/evidence behavior.
+- [x] F2 (independently verified offline): Independently verify relevant tests/build, query/index agreement, scope/effective/citation invariants, migration reversibility and actual PostgreSQL test availability. Execute gated dedicated-database tests only with existing explicit authorization; otherwise report that runtime FTS/migration is pending, not proven by InMemory.
+
+## Acceptance and checks
+Full-word lexical matching and OR semantics with stable ranking, limits and order; no unbounded empty query. Claim/EntityKey/EntityType only, no SourceQuote/clarifications/entry bodies. Same simple config for query+index. Fact-review chronology/access and SearchFacts permissions/active facts/citations unchanged. No duplicate provider calls or model budget changes. Focused dotnet tests for TimelineFactInformationTests, TimelineFactSearchTests, research tools, new FTS SQL tests; host build with -p:SkipClientBuild=true and ignored in-repo --artifacts-path. Integration gating must be explicit, actual skipped/unavailable results recorded. Migration not applied to running app.
+
+## Progress and evidence
+User chose implementation, mixed languages => simple, then explicitly approved cohesive forecast450–650 authored lines and TimelineFactResearchToolsTests SQL assertion update. Installed EF Core/Npgsql provider/Npgsql10.0.0. Existing model-call10 change preserved.
+
+F1 implemented shared parameterized plainto_tsquery(simple, term) OR / ts_rank across all3 fact query paths. Required Claim/EntityKey/EntityType concatenation agrees exactly with reversible GIN expression-index migration20261025163000_TimelineFactFullTextIndex, runtime metadata, frozen target and snapshot. Only fact fields indexed/searched. Guide: dotnet/docs/fact-fulltext-search.md.
+
+TDD evidence: initial RED15 failures/99passes (substring behavior/no-term validation/missing FTS SQL/index); GREEN114/114 focused plus clean host build. Independent broad run found3 feature-caused test compatibility regressions (948passes/3failures), so F1 reopened. Bounded correction in TimelineFactModelTests/TimelineFactReviewPlannerTests reproduced RED34passes/3failures then GREEN37/37 and951/951 broad. Historical migration assertions now enumerate frozen TimelineFacts target without bypass filters; current snapshot compares latest TimelineFactFullTextIndex target. Actual SDK tool verifies ALICE positive and ALIC empty. No historical migration or production-source correction needed.
+
+Final independent F2:143/143 focused (including model/review regressions),951/951 broad offline,0failures/0skips; WebAPI build0warnings/errors. Flags: -p:SkipClientBuild=true --artifacts-path dotnet/tests/ProjectTimeline.Tests/bin/fact-fulltext-final. Broad filter: Category!=Live&Category!=LiveOpenAI&Category!=Integration&Category!=LiveModel&FullyQualifiedName!~BusinessTests&FullyQualifiedName!~TimelineFactPostgresTests. Parent spot-check8/8 FTS tests passed. Independent scoped status/diff unchanged. No blocking offline findings remain.
+
+Native ASSESS unassessable due pre-existing undeclared untracked scope; RDD off. Returned independentVerifier=true plan followed. No native review approval claimed.
+
+## Pending and intentionally excluded checks
+Actual PostgreSQL parsing/ranking, planner/index use, migration Up/Down execution, real-provider/BusinessTests and normal Vite execution remain unverified. PostgreSQL regression added but explicitly excluded, not counted passing or skipped. InMemory is approximate; generated SQL/schema scripts prove translation/model coherence only. No DB connection/create/migrate/drop, application data changes, paid calls, exports, process restart or commits/staging. Commit not authorized under active safety contract. Review size cannot be cleanly isolated from dirty baseline; user accepted forecast, unrelated changes preserved.
+
+## Next step
+Obtain separate authorization for PostgreSQL validation on an isolated disposable database (existing fixture creates/migrates/drops DB), never use application DB implicitly. Operator reviews/applies index migration20261025163000_TimelineFactFullTextIndex via normal deployment; ordinary CREATE INDEX can block writes. Application must be rebuilt/restarted to activate source changes. Dropping index does not revert app search semantics. No new user product decision is unresolved; runtime verification/deployment remain explicit follow-up.
